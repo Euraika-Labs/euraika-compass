@@ -10,4 +10,3 @@ export function validRegion(region: Region, imageWidth: number, imageHeight: num
 export function jobFinished(status: string): boolean {
   return ['complete', 'completed', 'succeeded', 'failed', 'cancelled', 'interrupted'].includes(status);
 }
-
