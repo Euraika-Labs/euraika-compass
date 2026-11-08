@@ -28,6 +28,18 @@ Dit voegt een te beheren databaseproces toe. U1 moet op Windows de vertrouwde Po
 
 Exacte versies en locks worden gekozen bij implementatietoelating. De relevante runtime, native libraries, licenties en beveiligingsupdates worden vastgelegd. Er worden nu geen libraries geïnstalleerd. Redis, Celery, een externe vectordatabase en een microserviceplatform zijn geen verplichte onderdelen van de eerste lokale versie.
 
+## TypeScript en proportionele kwaliteitscontroles
+
+Gebruikersbeslissing: React + TypeScript behouden met eenvoudige types en een beperkte lintconfiguratie. Type-inferentie is het vertrekpunt; expliciete domeintypes beschrijven onder meer bronrechten, dossierrevisies, onderzoeksstatussen en modeltoewijzingen. API-/modelgegevens worden daarnaast tijdens uitvoering gevalideerd. Vermijd ingewikkelde typeconstructies wanneer een eenvoudige interface of union volstaat.
+
+- Typecontrole, lint en tests hebben afzonderlijke commando's en rapportage. Een lintmelding is geen onverklaarde algemene buildfout.
+- Begin met een kleine, gecontroleerde verzameling ESLint-regels voor concrete fouten en relevant React-gedrag. Geen gestapelde overlappende presets of uitgebreide typed-/stylistic-lintconfiguratie bij de start.
+- Opmaak wordt automatisch verzorgd en staat los van inhoudelijke foutcontrole. Waarschuwingen worden gericht ingesteld; geen algemene nul-waarschuwingenregel die iedere nieuwe stijlmelding tot releaseblokkade maakt.
+- Echte type- en gedragsfouten worden opgelost. Geen algemene `any`-casts, globale uitschakeling van checks of onbeoordeelde suppressies om controles groen te maken. Een noodzakelijke externe integratiegrens wordt expliciet gevalideerd en afgebakend.
+- Nieuwe regels krijgen een concrete aanleiding en een passende scope. Gegenereerde code, buildoutput en derdepartijbestanden vallen buiten de eigen lintscope. Compatibele toolversies worden gelockt; wijzigingen aan de controles zijn zichtbaar en toetsbaar.
+
+Er is momenteel nog geen frontend of lintconfiguratie aangemaakt. U1 implementeert en controleert deze aanpak bij het opzetten van de werkelijke app.
+
 ## Drie opslaglagen
 
 ```mermaid
