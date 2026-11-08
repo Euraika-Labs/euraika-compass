@@ -99,7 +99,7 @@ class ControlledConnection:
         if max_tokens == 1200:
             text = json.dumps({"queries": ["mourning comfort"]})
         elif max_tokens == 800:
-            text = json.dumps({"ids": self.ranked_ids})
+            text = json.dumps({"selections": {collection: self.ranked_ids for collection in ["torah", "bible", "quran"]}})
         elif self.invalid:
             text = json.dumps({"answer": "A fabricated source [S99]"})
         else:
