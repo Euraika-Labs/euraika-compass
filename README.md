@@ -6,6 +6,15 @@ Euraika Compass is an open-source project for a locally hosted research and life
 
 **Project stage: planning and UI concepts. There is no runnable application or Pinokio installer yet.** The screenshots below are AI-generated design mockups, not captures of working software. Their example content and analysis labels are illustrative, not validated research results.
 
+## Project documents
+
+| Document | Purpose |
+| --- | --- |
+| [vision.md](vision.md) | Product purpose, intended users, principles, priorities, and long-term direction |
+| [functional.md](functional.md) | Central functional specification: features, user flows, source rules, orchestration, and failure behavior |
+| [Implementation plan](docs/plans/2026-11-08-1552-feat-religion-research-app-plan.md) | Technical approach, implementation units, evaluation, and release gates |
+| [Design concepts](docs/design/README.md) | UI explorations, saved images, prompts, and their limitations |
+
 ## Planned experience
 
 - Read named original-language editions alongside published translations.

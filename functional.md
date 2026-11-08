@@ -2,6 +2,8 @@
 
 Status: functionele baseline van 8 november 2026. Dit is het centrale functionele document voor Euraika Compass. Het beschrijft wat gebruikers kunnen doen en welk waarneembaar gedrag de app moet leveren. De software is nog niet gebouwd; providerkoppelingen, modelkwaliteit en wetenschappelijke resultaten zijn niet door dit document bewezen.
 
+[vision.md](vision.md) beschrijft het doel, de doelgroep en de richting van het product. Dit document vertaalt die visie naar functioneel gedrag; de technische plannen werken de bouw en verificatie uit.
+
 Dit document is leidend voor functioneel gedrag. Het [implementatieplan R1-R25](docs/plans/2026-11-08-1552-feat-religion-research-app-plan.md), de [interactie- en taalspecificatie](docs/design/interaction-and-localization.md), [bewijsmethode en modelarchitectuur](docs/plans/research-method-and-model-architecture.md) en het [manuscriptregister](docs/sources/manuscript-register.md) werken dit uit. Technische keuzes mogen deze functionele regels niet stilzwijgend veranderen. Nieuwe gebruikersbeslissingen worden hier verwerkt en in de relevante uitwerking doorgevoerd.
 
 ## Doel en uitgangspunten
