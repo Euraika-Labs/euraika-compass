@@ -124,7 +124,7 @@ Het roltoewijzingsscherm scheidt **persona**, **perspectief** en **modelroute**.
 
 De orchestrator verdeelt rollen uitsluitend over backend-toegelaten gekoppelde en ingeschakelde modellen. Niet-toegelaten routes zijn niet selecteerbaar; de reden is inspecteerbaar. Een providerkoppeling maakt niet ieder catalogusmodel beschikbaar. Zonder evaluatie heet een match `Provisional`, niet `Best model`.
 
-De gebruiker kan inspecteren, wijzigen en vastzetten. Een uitgevallen vastgezette rol blijft herkenbaar geblokkeerd. Alleen ingesteld fallbackbeleid kan een andere toegelaten route kiezen; de verandering wordt getoond. `No eligible model` levert een concrete herstelroute via de eigen instellingen en start geen nieuwe service.
+De gebruiker kan inspecteren, wijzigen en vastzetten. Een uitgevallen vastgezette rol blijft herkenbaar gepauzeerd, ook als een toegestane alternatieve route beschikbaar is. De UI biedt expliciet vrijgeven of opnieuw toewijzen; zolang de pin geldt volgt geen automatische vervanging of modelcall naar een vervanger. Alleen voor niet-vastgezette rollen kan vooraf toegestaan fallbackbeleid een andere toegelaten route kiezen; de verandering wordt getoond. Handmatige hertoewijzing blijft onderworpen aan dezelfde toelatingscontroles. `No eligible model` levert een concrete herstelroute via de eigen instellingen en start geen nieuwe service.
 
 De model-, web- en remote-scanstatus is afzonderlijk zichtbaar in de connection summary of een compacte uitklapbare inspectie. Een cloudgesprek krijgt geen `Fully local`-label. Credentials worden bij setup afgeschermd ingevoerd en niet teruggetoond of in browserstorage bewaard; een statuscontrole toont alleen veilige metadata.
 
@@ -164,7 +164,7 @@ WCAG 2.2 AA is het ontwerpdoel, geen al behaalde certificering. Toets onder meer
 
 Tabbladen, menu's, dialogen, bronnenlinks en paneelbediening werken zonder muis. Een resizable splitter heeft een toegankelijke naam, bereik/waarde en keyboardbediening; de APG-beschrijving is een ontwerpreferentie die nog met een werkende implementatie moet worden getoetst. [WAI-ARIA splitterpatroon](https://www.w3.org/WAI/ARIA/apg/patterns/windowsplitter/). Dragging is geen enige manier om een panelayout te wijzigen.
 
-Voer echte gebruikersflows uit met gesimuleerde én werkelijke fouttoestanden: tijdelijke Chat naar Research en terug; New research met autosave/herstart; interpretatie naar exacte bron; manuscript met ontbrekende mapping; pinned model bij uitval; moderator die pauzeert; export met geblokkeerd beeld; Arabic RTL met English referenties; toetsenbord en kleine schermen. Registreer observaties en onafgehandelde problemen. Screenshotinspectie en uitsluitend regex-/mocktests vervangen deze verificatie niet.
+Voer echte gebruikersflows uit met gesimuleerde én werkelijke fouttoestanden: tijdelijke Chat naar Research en terug; New research met autosave/herstart; interpretatie naar exacte bron; manuscript met ontbrekende mapping; vastgezet model bij uitval terwijl toegestane fallback beschikbaar is, zonder automatische vervanging en met expliciete herstelactie; moderator die pauzeert; export met geblokkeerd beeld; Arabic RTL met English referenties; toetsenbord en kleine schermen. Registreer observaties en onafgehandelde problemen. Screenshotinspectie en uitsluitend regex-/mocktests vervangen deze verificatie niet.
 
 ## 14. Bestaande concepten en implementatieoverdracht
 

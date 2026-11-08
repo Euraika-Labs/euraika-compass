@@ -4,7 +4,7 @@ Datum: 8 november 2026. Beoordeelde baseline: commit [`1e73cf08f5e73333a5cd0c2ac
 
 ## Uitkomst
 
-Deze documentreview bevestigt twee concrete inconsistenties, beide P2: één verouderde definitie is gecorrigeerd; één gedragsregel blijft een voorgestelde aanscherping. Er is geen P0/P1-ontwerpblokkade aangetoond. Dat is geen bewijs dat de app uitvoerbaar, veilig, wetenschappelijk juist of onpartijdig is: er bestaat nog geen geïmplementeerde app en de geplande runtime-, bron- en inhoudelijke proeven zijn niet uitgevoerd.
+Deze documentreview bevestigt twee concrete inconsistenties, beide P2. Beide zijn gecorrigeerd in de specificaties: de verouderde persona-definitie en, na expliciete goedkeuring door de gebruiker op 8 november 2026, de regel voor vastgezette rollen bij uitval. Er zijn geen open beslissingen uit deze review over. Er is geen P0/P1-ontwerpblokkade aangetoond. Dat is geen bewijs dat de app uitvoerbaar, veilig, wetenschappelijk juist of onpartijdig is: er bestaat nog geen geïmplementeerde app en de geplande runtime-, bron- en inhoudelijke proeven zijn niet uitgevoerd.
 
 P2 betekent hier een plaatselijke correctie die verkeerde implementatie of tegenstrijdige tests kan voorkomen. De review voegt geen nieuwe productscope toe. Geaccepteerde keuzes zoals PostgreSQL, eenvoudige TypeScript-controles, de primaire-tekstgerichte methode, officiële manuscriptbronnen, gekoppelde modelroutes en menselijke moderatie zijn niet opnieuw ter discussie gesteld.
 
@@ -34,21 +34,21 @@ De gegenereerde conceptbeelden en oude generatieprompts zijn illustratief. Zij z
 
 Baselineverwijzingen: [oude definitie, hoofdplan regel 102](https://github.com/Euraika-Labs/euraika-compass/blob/1e73cf08f5e73333a5cd0c2ac16d191e48e2c0a6/docs/plans/2026-11-08-1552-feat-religion-research-app-plan.md#L102), [onafhankelijke instellingen, functional.md regel 46](https://github.com/Euraika-Labs/euraika-compass/blob/1e73cf08f5e73333a5cd0c2ac16d191e48e2c0a6/functional.md#L46).
 
-## Bevinding 2 — Vastgezette rol en automatische fallback zijn niet eenduidig
+## Bevinding 2 — Vastgezette rol en automatische fallback waren niet eenduidig
 
-**Prioriteit:** P2. **Status:** voorstel, niet toegepast. **Beoordeling:** samenhang; bewijssterkte 75 volgens de reviewrubric.
+**Prioriteit:** P2. **Status:** gecorrigeerd na expliciete gebruikersgoedkeuring op 8 november 2026. **Beoordeling:** samenhang; bewijssterkte 75 volgens de reviewrubric.
 
-**Aanbeveling:** laat automatische vooraf toegestane fallback alleen gelden voor niet-vastgezette rollen. Een vastgezette rol blijft bij uitval geblokkeerd totdat de gebruiker haar expliciet vrijgeeft of opnieuw toewijst.
+**Goedgekeurde regel:** automatische vooraf toegestane fallback geldt alleen voor niet-vastgezette rollen. Een vastgezette rol blijft bij uitval gepauzeerd totdat de gebruiker haar expliciet vrijgeeft of opnieuw toewijst, ook als een toegestane alternatieve route beschikbaar is. Er volgt geen automatische vervanging of modelcall naar die vervanger. Handmatige hertoewijzing doorloopt dezelfde toelatingscontroles.
 
-**Gevolg bij ongewijzigde tekst:** als een vastgezet model uitvalt, kan één implementer een zichtbare vervanging toestaan, terwijl een ander diezelfde vervanging volgens de acceptatietest moet blokkeren. De UI en tests kunnen dan verschillend gedrag afdwingen.
+**Gevolg van de oude tekst:** als een vastgezet model uitviel, kon één implementer een zichtbare vervanging toestaan, terwijl een ander diezelfde vervanging volgens de acceptatietest moest blokkeren. De UI en tests konden dan verschillend gedrag afdwingen.
 
-**Voorgestelde wijziging:** maak de voorrang van vastzetten expliciet in de functionele specificatie, architectuur, design en aanvullende routeringsspecificatie. Voeg aan de bestaande acceptatieproeven één geval toe: een vastgezette rol valt uit terwijl een toegestane alternatieve route beschikbaar is; er volgt geen automatische vervanging en er start geen ongewenste modelcall.
+**Toegepaste correctie:** de functionele specificatie, architectuur, design en aanvullende routeringsspecificatie leggen dezelfde voorrang van vastzetten vast. De acceptatieproeven bevatten nu expliciet het geval waarin een vastgezette rol uitvalt terwijl een toegestane alternatieve route beschikbaar is: de rol blijft gepauzeerd, de toewijzing en pin blijven intact en er start geen modelcall naar een vervanger. Dezelfde proef zonder pin controleert dat vooraf toegestane fallback wel zichtbaar kan werken. Dit zijn vastgelegde acceptatieproeven voor de toekomstige implementatie; zij zijn nog niet met een werkende app uitgevoerd.
 
-**Bewijs:** de algemene gedragsregel staat zichtbare fallback toe en verbiedt een vastgezette rol alleen om “stilzwijgend” te verplaatsen. De aanvullende acceptatietekst zegt dat wijzigingen aan een vastgezette toewijzing worden geblokkeerd. Het design beschrijft een uitgevallen vastgezette rol als geblokkeerd, maar noemt direct daarna toegestaan fallbackbeleid zonder expliciete uitzondering voor pins. Het verschil gaat over zichtbaar versus geheel niet automatisch vervangen, niet alleen over een woordkeuze.
+**Bewijs uit de baseline:** de algemene gedragsregel stond zichtbare fallback toe en verbood een vastgezette rol alleen om “stilzwijgend” te verplaatsen. De aanvullende acceptatietekst zei dat wijzigingen aan een vastgezette toewijzing werden geblokkeerd. Het design beschreef een uitgevallen vastgezette rol als geblokkeerd, maar noemde direct daarna toegestaan fallbackbeleid zonder expliciete uitzondering voor pins. Het verschil ging over zichtbaar versus geheel niet automatisch vervangen, niet alleen over een woordkeuze.
 
 Baselineverwijzingen: [fallbackregel, functional.md regel 114](https://github.com/Euraika-Labs/euraika-compass/blob/1e73cf08f5e73333a5cd0c2ac16d191e48e2c0a6/functional.md#L114), [acceptatietest, aanvullende specificatie regel 95](https://github.com/Euraika-Labs/euraika-compass/blob/1e73cf08f5e73333a5cd0c2ac16d191e48e2c0a6/docs/plans/research-method-and-model-architecture.md#L95). Zie ook de routeringsparagrafen in architecture.md en design.md.
 
-De review heeft deze gedragsaanscherping niet als reeds besloten of geïmplementeerd gepresenteerd.
+De gedragsaanscherping is eerst als voorstel gerapporteerd en pas na goedkeuring in de specificaties toegepast. De routeringslogica zelf is nog niet geïmplementeerd.
 
 ## Bestaande open toelatingstaken vóór vrijgave
 
@@ -66,7 +66,7 @@ Het huidige evaluatiebudget is minimaal 3.600 menselijke beoordelingen per gekoz
 
 | Invalshoek | Uitkomst na synthese |
 | --- | --- |
-| Samenhang | Twee behouden bevindingen: één toegepast, één voorstel |
+| Samenhang | Twee behouden bevindingen, beide gecorrigeerd; de tweede na expliciete gebruikersgoedkeuring |
 | Uitvoerbaarheid | Geen aanvullende materiële bevinding |
 | Productkeuzes | Geen aanvullende materiële bevinding |
 | Gebruikerservaring | Geen aanvullende materiële bevinding |
@@ -77,8 +77,8 @@ Het huidige evaluatiebudget is minimaal 3.600 menselijke beoordelingen per gekoz
 
 De extra cross-modelpogingen voor product, beveiliging, kritische tegenvoorbeelden en de volledige documentbundel eindigden vóór een provider/modelaanroep met dezelfde prerequisite-skip. Er is geen onafhankelijke modelfamiliebeoordeling of modelovereenstemming aan de bewijssterkte toegevoegd. Er was geen authenticatiefout vastgesteld en er zijn geen nieuwe API-keys gevraagd of geconfigureerd.
 
-Er zijn geen onzekere vermoedens als fouten opgevoerd en geen generieke wensen voor meer detail aan de scope toegevoegd. Buiten de gecorrigeerde persona-definitie zijn de inhoudelijke productkeuzes tijdens de review intact gelaten.
+Er zijn geen onzekere vermoedens als fouten opgevoerd en geen generieke wensen voor meer detail aan de scope toegevoegd. De persona-definitie volgt de bestaande gebruikerskeuze; de fallbackregel is na expliciete goedkeuring aangescherpt. De overige inhoudelijke productkeuzes zijn intact gelaten.
 
 ## Vervolg
 
-Maak de betekenis van een vastgezette rol bij uitval expliciet voordat de routeringslogica en de betrokken tests worden gebouwd. Daarna kan de eerste technische proef volgens de bestaande bouwvolgorde beginnen. De uitkomsten van runtime-, bron- en mensenbeoordeling blijven bepalend voor verdere vrijgave.
+Beide bevindingen uit deze review zijn in de documentatie afgehandeld. De eerste technische proef kan volgens de bestaande bouwvolgorde beginnen. Bouw en toets de routeringslogica later met de vastgelegde voorrang van pins en de bijbehorende uitvalproeven. De uitkomsten van runtime-, bron- en mensenbeoordeling blijven bepalend voor verdere vrijgave.

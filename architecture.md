@@ -59,7 +59,7 @@ De lokale installatie blijft de eerste uitvoeringsvorm. Een centrale deelomgevin
 | Retrievalservice | Collectiescope, tekst-/vectorzoeken, kandidaten, deduplicatie en zoekdekking | Ontbrekend corpus vervangen door ongemarkeerd modelgeheugen |
 | Bewijsservice | Versievaste bewijsbundels, claims, verwijzingen en interpretatierelaties | Modelovereenstemming als bronbewijs tellen |
 | Onderzoeksworkflow | Begrensde stappen, toolplanning, verificatie en terminale toestanden | Beleid of moderatorregie laten overschrijven door broninhoud |
-| Routeringsservice | Eligible routes, evaluatiestatus, toewijzingen, pins en toegestaan fallbackbeleid | Ongekoppelde providers activeren of een vastgezette rol stilzwijgend verplaatsen |
+| Routeringsservice | Eligible routes, evaluatiestatus, toewijzingen, pins en toegestaan fallbackbeleid | Ongekoppelde providers activeren of een vastgezette rol automatisch herverdelen |
 | Modeladapters/workers | Uitvoering van toegelaten opdrachten en genormaliseerde resultaten | Secrets in modelcontext opnemen of zelf nieuwe tools/rechten verkrijgen |
 | Roundtableservice | Deelnemers, beurten, rondes, gedeeld bewijs en meningsverschillen | Ongevraagd een debat voortzetten of een winnaar uitroepen |
 | Export-/backupservice | Geselecteerde pakketten, manifesten, consistente snapshots en herstel | Secrets of geblokkeerde bronbytes meenemen in een deelpakket |
@@ -123,7 +123,7 @@ Een RoleAssignment bevat persona, perspectief, modelroute/revisie, bewijsversie,
 
 Een moderatoropdracht autoriseert één beurt of een expliciet begrensde ronde. De standaardvoorstelgrootte blijft vier deelnemers met één antwoord per aangevraagde ronde. Bewijsmateriaal heeft een vaste revisie per beurt. Nieuw bewijs wordt toegelaten en gedeeld voordat afhankelijke reacties volgen. Een synthese is een afzonderlijke gevraagde handeling en bewaart geschillen.
 
-Uitschakelen van een route verhindert volgende opdrachten. Bij uitval pauzeert de rol, tenzij vooraf toegestaan fallbackbeleid een andere eligible route kiest en de wijziging zichtbaar maakt. Een pin verhindert stilzwijgende herverdeling. Annuleren kan reeds verzonden context of reeds berekende providerkosten niet ongedaan maken.
+Uitschakelen van een route verhindert volgende opdrachten. Bij uitval pauzeert de rol. Alleen bij een niet-vastgezette rol mag vooraf toegestaan fallbackbeleid een andere eligible route kiezen en de wijziging zichtbaar maken. Een vastgezette rol blijft gepauzeerd totdat de gebruiker haar expliciet vrijgeeft of opnieuw toewijst, ook als een toegestane alternatieve route beschikbaar is. De backend blokkeert automatische hertoewijzing en modelcalls naar een vervanger zolang de pin geldt; handmatige hertoewijzing doorloopt dezelfde toelatingscontroles. Annuleren kan reeds verzonden context of reeds berekende providerkosten niet ongedaan maken.
 
 ## 8. Jobs, herstel en eventstromen
 
@@ -213,7 +213,7 @@ Pinokio beheert bij een lokale installatie eerst PostgreSQL-readiness, daarna AP
 | Grens | Vereist bewijs |
 | --- | --- |
 | Dossier versus tijdelijke Chat | Herstart herstelt opgeslagen onderzoek; tijdelijke inhoud is niet ongevraagd op schijf terechtgekomen |
-| Workflow en routes | Idempotentie, leaseconflict, annulering, budget, inactieve routes en pinned fallback met echte foutpaden |
+| Workflow en routes | Idempotentie, leaseconflict, annulering, budget en inactieve routes; echte uitval met en zonder pin, inclusief geblokkeerde automatische vervanging bij een pin ondanks toegestaan fallbackbeleid |
 | Bronnen en argumenten | Exacte verwijzingen/citaten, tegenbewijs, scopegaten, modelvertalinglabel en geen verboden secundaire bronlekkage |
 | Assets | Deduplicatie met afzonderlijke rechten, crashherstel, retentie bij cacheopruiming en eerlijke offlinebeschikbaarheid |
 | DB en lifecycle | Korte transacties, begrensde pools, migratie/backup/restore en gewone Pinokio-start/stop |

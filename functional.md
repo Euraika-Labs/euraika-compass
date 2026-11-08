@@ -111,7 +111,7 @@ Bij automatische rolverdeling kiest de orchestrator uit die lijst op basis van t
 
 Provider/model/versie, opdracht, bewijsversie, toewijzingswijzigingen en beknopte selectiegrond zijn zichtbaar. Keys blijven buiten prompts, frontendbundels, logs, exports en Git. Onbekende endpoints of door modellen verzonnen route-IDs worden geweigerd. Een ongeconfigureerde service wordt nooit automatisch aangesloten.
 
-Bij uitval pauzeert de rol, tenzij vooraf toegestane fallback een andere geschikte ingeschakelde route toestaat. Die wijziging wordt zichtbaar en een vastgezette rol wordt niet stilzwijgend verplaatst. Zonder geschikte route volgt geen verzonnen antwoord. Uitschakelen verhindert volgende calls; annuleren kan reeds verzonden gegevens niet terughalen.
+Bij uitval pauzeert de rol. Alleen voor een niet-vastgezette rol mag vooraf toegestane fallback een andere geschikte ingeschakelde route kiezen; die wijziging wordt zichtbaar. Een vastgezette rol blijft bij uitval gepauzeerd totdat de gebruiker haar expliciet vrijgeeft of opnieuw toewijst, ook als fallbackbeleid een geschikte alternatieve route toestaat. Er volgt geen automatische vervanging of modelcall naar die vervanger. Een handmatige hertoewijzing doorloopt dezelfde toelatingscontroles. Zonder geschikte route volgt geen verzonnen antwoord. Uitschakelen verhindert volgende calls; annuleren kan reeds verzonden gegevens niet terughalen.
 
 Cloudgebruik is expliciet ingesteld; geselecteerde gesprekscontext en toegestaan bewijs gaan dan naar de gekozen provider. Lokale modus blokkeert cloudmodelcalls. Webzoeken en remote manuscriptbeelden hebben eigen instellingen; lokale verwerking betekent niet automatisch dat deze andere verbindingen ook uitstaan. De gebruiker ziet dit onderscheid. Budgetten begrenzen tokens, uitgaande opdrachten en kosten; schattingen en werkelijk gerapporteerd verbruik blijven onderscheiden.
 
@@ -157,7 +157,7 @@ De server luistert standaard alleen lokaal. Geen ongevraagde LAN-toegang, prompt
 ## Fouten en beperkingen zijn functioneel gedrag
 
 - Geen geschikt gekoppeld model: rol blijft niet-toegewezen; geen verborgen externe oproep.
-- Uitgeschakelde/gefaalde koppeling: betrokken rol pauzeert; uitsluitend vooraf toegestane en zichtbare fallback naar een geschikte ingeschakelde koppeling. Een vastgezette rol verhuist niet stilzwijgend.
+- Uitgeschakelde/gefaalde koppeling: betrokken rol pauzeert. Alleen een niet-vastgezette rol kan vooraf toegestane, zichtbare fallback naar een geschikte ingeschakelde koppeling gebruiken. Een vastgezette rol blijft gepauzeerd totdat de gebruiker haar expliciet vrijgeeft of opnieuw toewijst; geen automatische vervanging of modelcall naar een vervanger.
 - Model heeft geen vereiste mogelijkheden, regio-/accounttoegang of gegevensrechten: kandidaat uitsluiten vóór toewijzing.
 - Ontbrekend corpus, manuscriptbeeld, transcriptie, vertaling of historische bron: concrete dekkingsmelding; geen verzonnen vervanging.
 - Tegenstrijdig of onvoldoende bewijs: verschillen tonen, zekerheid begrenzen en geen consensus fabriceren.
