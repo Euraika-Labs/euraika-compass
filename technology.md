@@ -2,6 +2,8 @@
 
 Status: aanbevolen architectuur, onderzocht op 8 november 2026. Er is nog geen backend geïnstalleerd, database aangemaakt of prestatietest uitgevoerd. [functional.md](functional.md) blijft leidend voor gedrag; dit document concretiseert de stack, bewaring en deelbaarheid.
 
+De componentgrenzen en uitvoeringscontracten staan in [architecture.md](architecture.md); schermen en interacties in [design.md](design.md). Dit document blijft de uitwerking van technologiekeuze, opslag en onderhoud.
+
 ## Keuze: PostgreSQL als standaard voor lokaal en centraal gebruik
 
 De persoonlijke Pinokio-app gebruikt React/TypeScript en FastAPI, met PostgreSQL voor gestructureerde gegevens, PostgreSQL full-text search en pgvector voor semantisch zoeken. Grote bronobjecten staan in een afzonderlijke lokale bestandsopslag. Vanaf de eerste versie kunnen opgeslagen dossiers als gecontroleerd pakket worden geëxporteerd en geïmporteerd. Een latere centrale deeldienst gebruikt dezelfde PostgreSQL-gebaseerde datalaag en private objectopslag, met eigen authenticatie en toegangscontrole. Databasedirectories worden nooit via bestandssynchronisatie gedeeld.

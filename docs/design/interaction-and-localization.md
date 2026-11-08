@@ -1,5 +1,7 @@
 # Interaction, languages, and web research
 
+The consolidated screen and interaction baseline is [design.md](../../design.md), with system contracts in [architecture.md](../../architecture.md). This document retains detailed language and web-research requirements under [functional.md](../../functional.md).
+
 Status: user-directed product requirements, 8 November 2026. This is a design specification, not implemented functionality. It extends the main implementation plan. The current visual references are `compass-chat-v4.png` and `compass-research-v4.png`.
 
 ## Two connected views

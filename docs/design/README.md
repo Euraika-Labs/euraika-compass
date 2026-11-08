@@ -1,5 +1,7 @@
 # Euraika Compass UI concepts
 
+The central interface and interaction specification is [design.md](../../design.md). System boundaries and execution contracts are in [architecture.md](../../architecture.md); these images remain supporting explorations.
+
 These images were generated with the built-in image generation tool as design explorations. They are not screenshots of a running application. Example source links, text, translations, and language-analysis labels illustrate the proposed interface and have not been validated as application results. No religious preference is implied by the selected sample passages.
 
 The current direction combines the **version 4 base views** and **version 5 theological research, Roundtable, and routing explorations**: two connected views, **Chat** and **Research**, with English as the default UI language and the Euraika blue/gold palette. A language selector illustrates English, Dutch, Arabic, French, and German. The [interaction, language, and web research specification](interaction-and-localization.md) defines intended behavior, including RTL and optional internet research. Screens illustrate different web-control states; first launch will keep web access disabled until configured and enabled. They do not show a real running session.

@@ -12,6 +12,8 @@ execution: code
 
 De centrale functionele specificatie staat in [functional.md](../../functional.md). Dit document beschrijft de implementatie, requirementsmapping en verificatie; technische uitwerking mag het functionele contract niet stilzwijgend veranderen.
 
+Gebruik [architecture.md](../../architecture.md) voor systeemgrenzen, workflows en API-/jobcontracten, [design.md](../../design.md) voor schermen/interacties en [technology.md](../../technology.md) voor stack en opslag. De documenten beschrijven voorgenomen gedrag en bevatten geen impliciete implementatie- of testclaims.
+
 ## Goal Capsule
 
 **Objective:** Gebruikers kunnen oorspronkelijke religieuze teksten en vertalingen bestuderen en persoonlijke of vergelijkende vragen bespreken met een controleerbare assistent die geen religie voortrekt.

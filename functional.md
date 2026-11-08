@@ -6,6 +6,8 @@ Status: functionele baseline van 8 november 2026. Dit is het centrale functionel
 
 Dit document is leidend voor functioneel gedrag. Het [implementatieplan R1-R27](docs/plans/2026-11-08-1552-feat-religion-research-app-plan.md), [technology.md](technology.md), de [interactie- en taalspecificatie](docs/design/interaction-and-localization.md), [bewijsmethode en modelarchitectuur](docs/plans/research-method-and-model-architecture.md) en het [manuscriptregister](docs/sources/manuscript-register.md) werken dit uit. Technische keuzes mogen deze functionele regels niet stilzwijgend veranderen. Nieuwe gebruikersbeslissingen worden hier verwerkt en in de relevante uitwerking doorgevoerd.
 
+[architecture.md](architecture.md) concretiseert de systeemonderdelen, gegevensstromen en uitvoeringscontracten; [design.md](design.md) concretiseert de schermen, interacties en vormgeving. Beide volgen dit functionele contract.
+
 ## Doel en uitgangspunten
 
 Euraika Compass verbindt studie van Thora, Bijbel en Koran aan gesprekken over levensvragen. De gebruiker kan zelf teksten en manuscripten inspecteren, interpretaties onderzoeken en AI-deelnemers onder eigen regie laten discussiëren. De app is opensource, draait als lokaal gehoste webapp onder Pinokio en kan expliciet gekozen cloudmodellen gebruiken.

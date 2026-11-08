@@ -1,0 +1,223 @@
+# Euraika Compass — Systeemarchitectuur
+
+Status: voorgestelde architectuur, 8 november 2026. Er is nog geen werkende app of database. Dit document bepaalt componentgrenzen, gegevensstromen en uitvoeringscontracten voor de afgesproken scope. Het is geen bewijs dat koppelingen, modellen of installatieprocedures al zijn getest.
+
+## 1. Plaats van dit document
+
+| Document | Verantwoordelijkheid |
+| --- | --- |
+| [vision.md](vision.md) | Doel, doelgroep en richting |
+| [functional.md](functional.md) | Leidend functioneel gedrag en bronbeleid |
+| [technology.md](technology.md) | Stack, databasekeuze, opslag, onderhoud en technische randvoorwaarden |
+| `architecture.md` | Samenhang, grenzen, contracten en uitvoering van het systeem |
+| [design.md](design.md) | Schermen, interacties, vormgeving en toegankelijkheid |
+| [Implementatieplan](docs/plans/2026-11-08-1552-feat-religion-research-app-plan.md) | Bouwvolgorde, requirements R1-R27 en verificatie V1-V9 |
+
+Technische uitwerking mag het functionele contract niet stilzwijgend wijzigen. Exacte dependencyversies, migraties en endpointschema's worden per bouwstap gelockt en getest. De endpointnamen hieronder zijn ontwerpcontracten, geen bestaande API.
+
+## 2. Architectuurkeuze
+
+Een modulaire Python/FastAPI-backend bedient een statisch gebouwde React/TypeScript-interface. PostgreSQL is de primaire database, ook in de lokale Pinokio-installatie. PostgreSQL full-text search en pgvector verzorgen de zoekrepresentaties. Grote bronbestanden staan buiten de database in een beheerde objectopslag. Afzonderlijke beheerde workers voeren langdurig onderzoek, downloads, indexering en lokale modeltaken uit.
+
+De backend bezit beleid, bronrechten, gegevensselectie, budgetten, uitvoering en opslag. Een LLM kan onderzoekstappen en roltoewijzingen voorstellen; uitvoerbare bevoegdheid blijft bij de backend. De browser krijgt geen directe databaseverbinding of providercredentials.
+
+```mermaid
+flowchart TB
+  U[Gebruiker] --> UI[React en TypeScript]
+  subgraph Local[Lokale Pinokio-installatie]
+    UI --> API[FastAPI met domeinservices]
+    API --> POLICY[Bronbeleid routecontrole en budget]
+    API --> PG[PostgreSQL en pgvector]
+    API --> STORE[Immutable bronobjecten]
+    API --> JOBS[Jobrunner met herstelstatus]
+    JOBS --> FLOW[Onderzoeksworkflow]
+    FLOW --> POLICY
+    FLOW --> TOOLS[Bronnen zoeken lezen en valideren]
+    FLOW --> ROUTES[Modeladapters]
+    ROUTES --> WORKERS[Lokale modelworkers]
+    TOOLS --> PG
+    TOOLS --> STORE
+  end
+  ROUTES --> CLOUD[Geselecteerde cloudmodellen]
+  TOOLS --> WEB[Ingeschakelde zoekprovider]
+  TOOLS --> INST[Toegelaten instellingen en beeldservices]
+  API --> EXPORT[Gekozen dossierpakket]
+  EXPORT --> SHARE[Optionele latere deeldienst]
+```
+
+De lokale installatie blijft de eerste uitvoeringsvorm. Een centrale deelomgeving hergebruikt domeinlogica en opslaginterfaces, maar krijgt eigen authenticatie, toegangscontrole en deployment. Er is geen directe synchronisatie van PostgreSQL-datadirectories of automatische publicatie van lokale dossiers.
+
+## 3. Componenten en eigenaarschap
+
+| Component | Bezit | Mag niet zelfstandig beslissen |
+| --- | --- | --- |
+| Webinterface | Presentatie, paneel-/tabstate, conceptinvoer, zichtbare gebruikerskeuzes | Bronrechten toekennen, inactieve modellen gebruiken of rechtstreeks providercalls uitvoeren |
+| API-/applicatielaag | Gevalideerde opdrachten, workspacecontext, idempotentie, antwoord-/eventcontracten | Een onvolledige run als voltooid presenteren |
+| Dossierservice | Onderzoek, drafts, revisies, notities en bewuste opslag van gesprekken | Tijdelijke persoonlijke gesprekken stilzwijgend duurzaam bewaren |
+| Bronservice | Toegelaten edities, instellingen, bronrevisies, licentiestatus en passagecontext | Een websnippet of latere uitleg als primaire tekst behandelen |
+| Assetservice | Download, hash, herkomst, afgeleiden, retentie en beschikbaarheid | Bewaarrecht gelijkstellen aan deel- of cloudverwerkingsrecht |
+| Retrievalservice | Collectiescope, tekst-/vectorzoeken, kandidaten, deduplicatie en zoekdekking | Ontbrekend corpus vervangen door ongemarkeerd modelgeheugen |
+| Bewijsservice | Versievaste bewijsbundels, claims, verwijzingen en interpretatierelaties | Modelovereenstemming als bronbewijs tellen |
+| Onderzoeksworkflow | Begrensde stappen, toolplanning, verificatie en terminale toestanden | Beleid of moderatorregie laten overschrijven door broninhoud |
+| Routeringsservice | Eligible routes, evaluatiestatus, toewijzingen, pins en toegestaan fallbackbeleid | Ongekoppelde providers activeren of een vastgezette rol stilzwijgend verplaatsen |
+| Modeladapters/workers | Uitvoering van toegelaten opdrachten en genormaliseerde resultaten | Secrets in modelcontext opnemen of zelf nieuwe tools/rechten verkrijgen |
+| Roundtableservice | Deelnemers, beurten, rondes, gedeeld bewijs en meningsverschillen | Ongevraagd een debat voortzetten of een winnaar uitroepen |
+| Export-/backupservice | Geselecteerde pakketten, manifesten, consistente snapshots en herstel | Secrets of geblokkeerde bronbytes meenemen in een deelpakket |
+
+Dit zijn interne modules en grenzen; zij vereisen niet ieder een netwerkservice. De eerste versie heeft geen verplichte microservice-, Redis- of externe vectordatabaselaag.
+
+## 4. Domein- en opslagmodel
+
+Persoonlijke onderzoeksobjecten hebben een workspace-/eigenaarscope. De lokale versie start met één workspace. Toekomstige centrale autorisatie wordt ook toegepast bij zoeken en bestandslevering; alleen een gefilterde lijst in de UI is onvoldoende.
+
+| Domein | Kernobjecten en relaties |
+| --- | --- |
+| Teksten | Work → Edition → SourceRevision → Passage; CollectionMembership en Alignment bewaren scope en referentiesystemen |
+| Manuscripten | Manuscript → Folio/Canvas → AssetOrigin; een passagekoppeling heeft een aantoonbare mapping en onzekerheidsstatus |
+| Bronbestanden | Blob identificeert bytes; AssetOrigin koppelt die aan een bron, rechten en herkomst; afgeleiden verwijzen naar hun ouder |
+| Onderzoek | Dossier → Draft en DossierRevision; ResearchRun gebruikt een EvidenceBundleRevision en levert claims/interpretaties/resultaten |
+| Bewijs | EvidenceItem verwijst naar een exacte bronrevisie/locatie; Citation koppelt een claim aan dat bewijs; steun en tegenbewijs zijn afzonderlijk zichtbaar |
+| Discussie | Participant, RoleAssignment, Round, Turn en Message verwijzen naar modelroute en gebruikte bewijsversie |
+| Uitvoering | Job, Attempt, RunEvent en UsageRecord leggen voortgang en verbruik vast; credentials blijven afzonderlijke secrets |
+
+Bronrevisies, aangehaalde bytes en afgeronde onderzoeksresultaten worden niet in plaats gewijzigd. Een nieuwe analyse of gewijzigde bron maakt een nieuwe revisie. Drafts hebben gecontroleerde updates met een verwachte revisie; een versieconflict levert een expliciete conflictrespons op en overschrijft geen nieuwer werk.
+
+Zoeknormalisatie, `tsvector` en embeddings zijn afleidingen. Hun keys bevatten bron-, chunking-, model- en indexrevisies. Originele tekst/diakritiek blijven intact. Exact vectorzoeken is de eerste baseline; approximate indexen worden pas na recall-/performanceproeven toegelaten.
+
+Een gedeelde blobhash betekent dezelfde bytes, niet dezelfde licentie, wetenschappelijke betekenis of toegangsrechten. Bestandslevering verloopt via een bevoegde bron-/assetreferentie; een hash alleen is geen toegangsbewijs. Een dossier gebruikt pointers naar bestaande objecten in plaats van kopieën van iedere scan per bericht.
+
+## 5. Gegevenslevensduur en privacy
+
+| Toestand | Inhoudelijke bewaring | Herstel |
+| --- | --- | --- |
+| Tijdelijke Chat | Gespreksinhoud en inhoudelijke events blijven in de actieve sessie; geen automatische DB-dossieropslag | Herverbinding zolang de sessie leeft; geen belofte van herstel na appherstart |
+| Alleen Research-weergave openen | Behoudt de opslagstatus van het bestaande gesprek | Een layoutwissel maakt geen dossier of nieuwe modelrun |
+| `New research` of `Save as dossier` | Expliciete dossieraanmaak; daarna automatische draft-/resultaatbewaring | Onderbroken runs en bevestigde drafts blijven heropenbaar |
+| Openbare toegelaten bronobjecten | Rechtenbewust herbruikbaar, los van persoonlijke promptinhoud | Alleen lokaal aanwezige bytes krijgen een offlineclaim |
+| Dossierexport | Alleen geselecteerde revisie, persoonlijke inhoud en toegelaten objecten | Import als afzonderlijke herkomst/revisie |
+
+Technische gebruiksregistratie mag status, foutcode, route-ID en kosten bevatten, maar geen ongevraagde persoonlijke vraagtekst. Een taakrecord voor tijdelijke Chat is geen achterdeur om die inhoud of een volledige eventstream te bewaren. Persoonlijke context wordt alleen aan een expliciet gekozen cloudroute geleverd. Zoekproviders krijgen geminimaliseerde onderwerptermen; dit is een andere gegevensstroom dan cloudgesprekscontext.
+
+Lokale modelmodus, webonderzoek en remote manuscripttoegang hebben onafhankelijke schakelaars. De backend controleert deze voor iedere uitgaande opdracht. Secrets worden via backendinstellingen opgeslagen en nooit teruggeleverd in statusresponses, prompts, dossierpakketten of diagnostiek.
+
+## 6. Onderzoeksworkflow en bewijscontrole
+
+1. Valideer vraag, scope, opslagstatus, verbindingen en uitvoeringsbudget.
+2. Maak bij duurzaam onderzoek de run en bijbehorende job atomair aan; leg gebruikte bron-/policy-/routeconfiguratie vast.
+3. Bepaal de geschikte routes en benodigde bron-/taalhulpmiddelen. Een exacte passagevraag hoeft geen volledig thematisch zoektraject te starten.
+4. Onderzoek iedere gevraagde collectie met context, gerelateerde passages en tegenbewijs. Toegestane webbronnen worden echt gelezen; zoeksnippets blijven leads.
+5. Leg de bewijsbundel vast met bronlocaties, type bewijs, onzekerheid, dekking en gebruiksstatus. Overlappende passagefamilies worden niet als onafhankelijke bewijzen dubbel geteld.
+6. Laat het gekozen model voorgestelde lezingen/claims maken op basis van die bundel. Gebruik een tweede model alleen binnen de ingestelde opdracht en budgetten.
+7. Valideer verwijzingen, edities, citaatbereiken en gebruiksrechten; vul letterlijke citaten vanuit de opgeslagen editie in. Beoordeel inhoudelijke ondersteuning afzonderlijk.
+8. Toon het antwoord met onderbouwing, verschillen en beperkingen en bewaar bij een dossier een nieuwe resultaatrevisie.
+
+Dezelfde bronregels gelden voor alle persona's en collecties. Hadith is standaard uitgesloten en geen uitlegautoriteit; de beperkte mogelijke contextuele uitzondering vereist afzonderlijke toelating volgens [functional.md](functional.md). Een website of deelnemer kan die grens niet omzeilen. Latere interpretaties kunnen onderwerp van vergelijking zijn zonder daarmee gezag over de primaire tekst te krijgen.
+
+Een providerstream is conceptuitvoer. Status en een passende niet-inhoudelijke erkenning kunnen direct verschijnen; substantieve schriftclaims worden pas na broncontrole weergegeven. De UI ontvangt gevalideerde inhoudsblokken en bronrelaties, geen ongemarkeerde ruwe modelclaims of verzonnen verborgen redeneertranscripten.
+
+## 7. Orchestrator en Roundtable
+
+De backend filtert modelroutes eerst op koppeling, ingeschakelde status, account/regio, mogelijkheden, gegevens-/bronrechten, evaluatiegeldigheid en budget. De orchestrator kiest uitsluitend route-IDs uit die lijst. Ook de orchestratorroute zelf moet toegelaten zijn. Een LLM-antwoord dat een onbekende route noemt wordt geweigerd.
+
+Een RoleAssignment bevat persona, perspectief, modelroute/revisie, bewijsversie, automatische of handmatige keuze en pinstatus. Geschiktheid volgt taak-/taalevaluatie; zonder bewijs blijft de keuze voorlopig. Meerdere rollen mogen één model gebruiken en worden niet als onafhankelijke deskundigen voorgesteld.
+
+Een moderatoropdracht autoriseert één beurt of een expliciet begrensde ronde. De standaardvoorstelgrootte blijft vier deelnemers met één antwoord per aangevraagde ronde. Bewijsmateriaal heeft een vaste revisie per beurt. Nieuw bewijs wordt toegelaten en gedeeld voordat afhankelijke reacties volgen. Een synthese is een afzonderlijke gevraagde handeling en bewaart geschillen.
+
+Uitschakelen van een route verhindert volgende opdrachten. Bij uitval pauzeert de rol, tenzij vooraf toegestaan fallbackbeleid een andere eligible route kiest en de wijziging zichtbaar maakt. Een pin verhindert stilzwijgende herverdeling. Annuleren kan reeds verzonden context of reeds berekende providerkosten niet ongedaan maken.
+
+## 8. Jobs, herstel en eventstromen
+
+```mermaid
+stateDiagram-v2
+  [*] --> Queued
+  Queued --> Running
+  Running --> AwaitingModerator
+  AwaitingModerator --> Running
+  Running --> Verifying
+  Verifying --> Complete
+  Running --> Partial
+  Verifying --> Partial
+  Queued --> Cancelled
+  Running --> Cancelled
+  AwaitingModerator --> Cancelled
+  Verifying --> Cancelled
+  Running --> Interrupted
+  Running --> Failed
+  Queued --> Failed
+  Complete --> [*]
+  Partial --> [*]
+  Cancelled --> [*]
+  Interrupted --> [*]
+  Failed --> [*]
+```
+
+Dit is het kernmodel, geen volledige uitputtende toestandslijst. `AwaitingModerator` doet geen nieuwe modelcalls. Pauze/annulering wordt als opdracht bevestigd; de terminale toestand volgt pas wanneer uitvoering is afgebroken of als onzeker is geregistreerd. Een mislukking of herstart gedurende andere actieve fasen kan eveneens Interrupted/Failed opleveren en krijgt transitieproeven.
+
+Workers claimen persistente jobs atomair en gebruiken een lease/attempt-ID met heartbeat. De voltooiing controleert dat de lease nog geldig is, zodat een verouderde worker geen later resultaat overschrijft. Kortstondige rijvergrendeling, bijvoorbeeld `FOR UPDATE SKIP LOCKED`, dient jobclaiming; zij blijft niet open tijdens een modelcall. [PostgreSQL locking-clause](https://www.postgresql.org/docs/current/sql-select.html).
+
+Interne opdrachten gebruiken een workspace-gebonden idempotentiesleutel. Herhaling van een browserrequest of eventherverbinding maakt niet opnieuw een betaalde run aan. Dit levert geen algemene exactly-once-garantie voor externe providers op: bij onbekende cloudafloop wordt de poging als onzeker gemarkeerd en niet blind opnieuw uitgevoerd.
+
+HTTP-opdrachten starten werk; SSE levert voortgang met oplopende event-ID, run-ID, eventtype, payloadschemaversie en tijdstip. Duurzame dossiers kunnen bevestigde events herhalen vanaf een cursor; bij een verlopen cursor wordt eerst de actuele runstatus opgehaald. Tijdelijke Chat heeft alleen sessiegebonden replay. Streamingchunks worden gebatcht/gecheckpoint, niet elk afzonderlijk als DB-transactie geschreven. [FastAPI SSE](https://fastapi.tiangolo.com/tutorial/server-sent-events/).
+
+## 9. API-grenzen
+
+Voorgestelde routes onder `/api/v1`; de uiteindelijke OpenAPI-contracten krijgen tests vóór implementatie van de betrokken schermen.
+
+| Opdracht | Contract |
+| --- | --- |
+| `GET /capabilities` | Redacted mogelijkheden, toegelaten routes, connectiestatus en beperkingen; geen secrets |
+| `POST /conversations` | Tijdelijke sessie aanmaken zonder stilzwijgend dossier |
+| `POST /dossiers` | Expliciet duurzaam onderzoek beginnen of geselecteerde chatinhoud bewaren |
+| `PATCH /dossiers/{id}/draft` | Gevalideerde draftupdate met verwachte revisie en bevestigde bewaartoestand |
+| `POST /research-runs` | Scope, dossier-/sessiereferentie, opdracht en idempotentiesleutel; retourneert run-ID |
+| `GET /runs/{id}` en `GET /runs/{id}/events` | Status/snapshot en bevoegde eventstream |
+| `POST /runs/{id}/cancel` | Annulering aanvragen zonder voltooiing voor te wenden |
+| `POST /roundtables/{id}/commands` | Begrensde moderatoractie met verwachte discussie-/bewijsversie |
+| `GET /sources/{id}` en `GET /passages/{id}` | Exacte revisie, bronlocatie, dekking, rechten en toegelaten inhoud |
+| `GET /assets/{origin_id}` | Bestandslevering via bevoegde bronherkomst met juiste representatie/attributie |
+| `POST /dossiers/{id}/exports` | Een gekozen revisie en expliciete inhoudsselectie naar exportjob |
+| `POST /imports` | Begrensd pakket controleren en als afzonderlijke herkomst importeren |
+
+Gedeelde foutenvelop: stabiele code, gelokaliseerbare berichtsleutel, veilige details, request-ID, eventuele run-ID en retry-status. Onderscheid validatiefout, revisieconflict, ontbrekende capability, geweigerd brongebruik, budgetlimiet, providerfout en opslagfout. Verberg credentials en persoonlijke inhoud in technische foutdetails.
+
+Types worden eenvoudig gehouden en waar passend uit backendcontracten afgeleid. TypeScript vervangt geen runtimevalidatie van model-, browser-, bron- of importgegevens. De afgesproken beperkte lint-/typecontrole staat in [technology.md](technology.md).
+
+## 10. Assetpipeline, citaties en retentie
+
+De bronservice controleert institutionele toelating en gebruiksstatus vóór fetching en vóór ieder volgend gebruik. De assetservice downloadt begrensd naar staging, controleert inhoud, berekent een hash en plaatst bytes onder hun identiteit. De DB-transactie koppelt vervolgens herkomst/rechten en dossierverwijzing. Bestandssysteem en database hebben geen gezamenlijke transactie: herstel behandelt verweesde staging/objecten en ontbrekende blobs expliciet.
+
+Een verwijzing naar tekst noemt editie-/bronrevisie, passage en een vastgelegd selectorreferentiesysteem. Beeldverwijzingen noemen manuscript, canvas/folio, beeldrepresentatie en alleen onderbouwde regioselectoren. Een preview, crop of samengestelde tegelweergave is een afgeleide met ouderrelatie. Een moderne versnummering levert niet automatisch een exacte manuscriptregio.
+
+Gebruikte toegelaten duurzame objecten krijgen een RetentionPin voor relevante dossier-/backuprevisies. Tijdelijke cache heeft eigen quota en opruimregels. Verwijderen controleert daadwerkelijke referenties; een hash alleen is geen voldoende retentieteller. Gewijzigde bronbytes maken een nieuwe revisie. Rechtenwijziging, volle schijf en onbereikbaarheid krijgen een beschikbaarheidsstatus zonder geciteerd materiaal stilzwijgend te vervangen.
+
+## 11. Vertrouwensgrenzen en rechten
+
+Browser, broninhoud, provideruitvoer en importpakketten zijn externe invoer. De backend valideert schemas, IDs, omvang, referenties en werkspacescope. Broninstructies veranderen geen policy, persona, budget of toegelaten endpoint. Webextractie voert geen willekeurige paginascripts uit; URL-/redirectcontrole blokkeert onveilige lokale/private doelen en ongeoorloofde schema's.
+
+De lokale API luistert standaard op loopback. De applicatie moet onverwachte browser-originrequests en onbevoegde beheeracties afwijzen; localhost is geen autorisatiemodel. API-keys/databasecredentials staan in backendsecretopslag. Het UI kan een key bij setup eenmalig invoeren, maar bewaart die niet in browserstorage, bundel, URL, logs of dossier.
+
+Model-, web- en scanverbindingen zijn afzonderlijke grants. Provider-/modelmetadata is geen bewijs dat een account die route mag gebruiken. Uitvoerings- en exportbeleid controleert per asset bekijken, bewaren, afleiden, extern verwerken, delen en training afzonderlijk. Hadith-/commentaarregels blijven ook op via web verkregen bewijs van toepassing.
+
+## 12. Delen, backup en deployment
+
+De eerste deelroute is een versieerbaar dossierpakket met leesbaar rapport, manifest, hashes, herkomst en uitsluitend geselecteerde toegelaten bestanden. Bronverwijzingen blijven aanwezig als de beeldbytes niet gedeeld mogen worden. Import controleert schema, paden, omvang en hashes en overschrijft geen bestaand dossier. Een onderzoekspakket is geen volledige databasebackup.
+
+De optionele latere deeldienst publiceert gekozen momentopnamen met gebruikers-/resource-autorisatie en private objectopslag. Alle assetrequests krijgen dezelfde toegangscontrole. Toegangsintrekking stopt toekomstig ophalen; reeds gedownloade kopieën zijn niet terug te halen. Realtime gezamenlijk bewerken blijft afzonderlijke scope.
+
+Backups koppelen een consistente PostgreSQL-snapshot aan een manifest van de bijbehorende immutable bytes. Het backuptraject houdt die objecten vast, verifieert ze en test restore op een aparte locatie voordat herstel actief wordt. Zoekindexen zijn herbouwbaar; persoonlijke notities en geciteerde bronbytes niet. Uitwerking van dump/snapshot, onderhoud en opslaglocaties staat in [technology.md](technology.md).
+
+Pinokio beheert bij een lokale installatie eerst PostgreSQL-readiness, daarna API en workers. De UI verschijnt na backendgereedheid en meldt apart of modelroutes ontbreken. Stop beëindigt beheerde taken en processen gecontroleerd; een extern beheerde database wordt niet gestopt. Update/reset behouden de datadirectory, blobs en instellingen; schema-/extensionwijzigingen vereisen een backup- en herstelproef. Windows-distributie en pgvectorcompatibiliteit zijn U1-toelating, geen reeds bewezen installatie.
+
+## 13. Verificatie en open implementatiebeslissingen
+
+| Grens | Vereist bewijs |
+| --- | --- |
+| Dossier versus tijdelijke Chat | Herstart herstelt opgeslagen onderzoek; tijdelijke inhoud is niet ongevraagd op schijf terechtgekomen |
+| Workflow en routes | Idempotentie, leaseconflict, annulering, budget, inactieve routes en pinned fallback met echte foutpaden |
+| Bronnen en argumenten | Exacte verwijzingen/citaten, tegenbewijs, scopegaten, modelvertalinglabel en geen verboden secundaire bronlekkage |
+| Assets | Deduplicatie met afzonderlijke rechten, crashherstel, retentie bij cacheopruiming en eerlijke offlinebeschikbaarheid |
+| DB en lifecycle | Korte transacties, begrensde pools, migratie/backup/restore en gewone Pinokio-start/stop |
+| Externe grenzen | Geweigerde broninjectie, onveilige fetching, ongeldige imports en geen secrets in uitvoer/export |
+| Centrale deelroute | Afzonderlijke autorisatie-/intrekkingstests vóór die functie wordt vrijgegeven |
+
+Vóór de betrokken bouwstap worden exact gelockt: Windows-installatieroute, secretstore, provider-/SDK-versies, OpenAPI-schemas, importformaat, opslagquota, tijd-/kostenbudgetten, evaluatiegeldigheid en hersteldetails. De bestaande functionele keuzes worden daarbij behouden. Tests en menselijke evaluaties volgen V1-V9 van het implementatieplan; er zijn hier geen resultaten verzonnen.

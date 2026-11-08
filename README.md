@@ -13,6 +13,8 @@ Euraika Compass is an open-source project for a locally hosted research and life
 | [vision.md](vision.md) | Product purpose, intended users, principles, priorities, and long-term direction |
 | [functional.md](functional.md) | Central functional specification: features, user flows, source rules, orchestration, and failure behavior |
 | [technology.md](technology.md) | Recommended stack, local/server database choices, durable source assets, autosave, sharing, maintenance, and backup |
+| [architecture.md](architecture.md) | Component boundaries, data model, research execution, model routing, jobs/events, API contracts, trust boundaries, and deployment |
+| [design.md](design.md) | Interface structure, Euraika design tokens, Chat/Research/Roundtable interactions, source states, localization, and accessibility |
 | [Implementation plan](docs/plans/2026-11-08-1552-feat-religion-research-app-plan.md) | Technical approach, implementation units, evaluation, and release gates |
 | [Design concepts](docs/design/README.md) | UI explorations, saved images, prompts, and their limitations |
 
