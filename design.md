@@ -6,7 +6,7 @@ Status: ontwerpbaseline, 8 november 2026. Dit document beschrijft de beoogde erv
 
 ## 1. Ontwerpdoel
 
-Compass biedt een rustige gespreksomgeving en een krachtige onderzoekswerkruimte in dezelfde app. Een gebruiker kan een levensvraag bespreken, bronnen openen, een theologische kwestie onderzoeken en meerdere AI-perspectieven onder eigen moderatie laten reageren. De interface maakt steeds duidelijk wat tekst, vertaling, historisch gegeven, hypothese en interpretatie is.
+Compass is een persoonlijke, neutrale theologische onderzoekswerkbank met een rustige gespreksomgeving. De gebruiker onderzoekt teksten en argumenten, kan een levensvraag bespreken en meerdere AI-perspectieven onder eigen moderatie laten reageren. De interface maakt steeds duidelijk wat tekst, vertaling, historisch gegeven, hypothese en interpretatie is. Praktische broncontrole en gebruikersregie staan centraal; de UI deelt geen geloofswaarheden of gecertificeerde theologische oordelen uit.
 
 De belangrijkste ontwerpprincipes zijn leesbaarheid, inspecteerbare onderbouwing, menselijke regie en dezelfde visuele behandeling van Thora, Bijbel en Koran. Verschillen in dekking of argumentsterkte blijven zichtbaar; een symmetrische vormgeving betekent geen geforceerde inhoudelijke gelijkheid.
 
@@ -92,18 +92,18 @@ Voor alle collecties gelden de primaire-tekstgerichte bronregels uit [functional
 
 ## 7. Manuscriptviewer en broninspectie
 
-De viewer toont uitsluitend toegelaten echte beelden. De kop bevat instelling, manuscriptnaam/signatuur en folio/canvas. De gebruiker kan zoomen, pannen, navigeren en waar toegestaan een beschikbare beeldrepresentatie kiezen. Transcriptie en vertaling staan in afzonderlijk benoemde panelen; ontbrekende gegevens worden niet door ongemarkeerde AI-invulling vervangen.
+De viewer toont authentieke, herleidbare beelden. De kop bevat verantwoordelijke bron/eigenaar, manuscriptnaam/signatuur en folio/canvas waar bekend. Bibliotheek- en wetenschappelijke catalogi zijn voorkeursreferenties; verifieerbare auteurs-/eigenaars-/projectsites en kopieën met een duidelijke herkomstketen zijn eveneens bruikbaar. De gebruiker kan zoomen, pannen, navigeren en een beschikbare beeldrepresentatie kiezen. Transcriptie en vertaling staan in afzonderlijk benoemde panelen; ontbrekende gegevens worden niet door ongemarkeerde AI-invulling vervangen. Een echt document maakt de daarin gedane claims niet automatisch waar.
 
 Overlays verbinden een passage/woord alleen met een regio als de mapping is onderbouwd. Anders opent de app het juiste beschikbare folio zonder een verzonnen precieze highlight. Vermeld of de weergave een origineel bronbestand, thumbnail, crop, tegelweergave of andere afgeleide is. Datering toont methode/toeschrijving en bereik; perkamentdatum en compositiedatum worden niet als hetzelfde gegeven gepresenteerd.
 
-De SourceInspector bevat cataloguslink, editie/bronrevisie, taal, auteur/vertaler waar bekend, raadpleegtijd, attributie, rechten en beschikbaarheid. De officiële instelling blijft bereikbaar. Waar embedded weergave beperkt is, is `Open official viewer` een werkelijke alternatiefroute met een duidelijke toelichting.
+De SourceInspector bevat bron-/cataloguslink, editie/bronrevisie, taal, auteur/vertaler waar bekend, raadpleegtijd, herkomstonderbouwing, attributie, gevonden gebruiksinformatie en beschikbaarheid. De oorspronkelijke bron en eventuele kopieketen blijven bereikbaar. Een bron hoeft geen publieke herdistributielicentie te hebben om persoonlijk te worden geraadpleegd; bekende beperkingen op bewaren, extern verwerken of delen blijven zichtbaar. Waar embedded weergave niet werkt of beperkt is, biedt `Open source` een werkelijke alternatiefroute; bij een institutionele viewer kan het label `Open official viewer` blijven.
 
 | Bewaarlabel | Betekenis voor de gebruiker |
 | --- | --- |
 | `Local copy retained` | Toegelaten bevestigde bytes zijn duurzaam aanwezig en gekoppeld aan herkomst |
 | `Temporary cache` | Tijdelijk beschikbaar; geen garantie voor later offline onderzoek |
 | `Remote reference only` | Alleen verwijzing/metadata; online bron blijft nodig |
-| `Retention blocked` | Duurzame bewaring is niet toegelaten of nog niet beoordeeld |
+| `Retention blocked` | Duurzame bewaring is voor deze bron beperkt of niet mogelijk; raadplegen via de bronlink kan beschikbaar blijven |
 | `Download failed` / `Storage full` | Bytes zijn niet volledig bevestigd; herstelactie beschikbaar |
 
 Bewaarstatus, deelrecht en inhoudelijke kwaliteit zijn afzonderlijke eigenschappen. Een dossier kan `Saved` zijn terwijl een bronbeeld nog ontbreekt; toon dan bijvoorbeeld `Dossier saved · 1 source unavailable offline`. Dossierpinnen voorkomen stilzwijgende verwijdering door gewone tijdelijke cacheopruiming.
@@ -122,7 +122,7 @@ Nieuwe berichten stelen geen focus of scrollpositie wanneer de gebruiker eerdere
 
 Het roltoewijzingsscherm scheidt **persona**, **perspectief** en **modelroute**. De tabel toont rol, toewijzing, selectiegrond, automatische/handmatige modus en pin. Een afzonderlijke verbindingenlijst onderscheidt `Not connected`, `Disabled`, `Checking`, `Available` en `Unavailable`.
 
-De orchestrator verdeelt rollen uitsluitend over backend-toegelaten gekoppelde en ingeschakelde modellen. Niet-toegelaten routes zijn niet selecteerbaar; de reden is inspecteerbaar. Een providerkoppeling maakt niet ieder catalogusmodel beschikbaar. Zonder evaluatie heet een match `Provisional`, niet `Best model`.
+De orchestrator verdeelt rollen uitsluitend over gekoppelde en ingeschakelde modellen die de benodigde mogelijkheden hebben en passen binnen gegevenskeuze, concrete bronbeperkingen en budget. Niet-beschikbare routes zijn niet selecteerbaar; de reden is inspecteerbaar. Een providerkoppeling maakt niet ieder catalogusmodel beschikbaar. De gebruiker kan een geschikt gekoppeld model proberen zonder voorafgaande expert- of benchmarktoelating. Zonder relevante gebruiksproef heet een voorgestelde match `Provisional`, niet `Best model`; kwaliteitsnotities zijn observaties met datum/configuratie, geen keurmerk.
 
 De gebruiker kan inspecteren, wijzigen en vastzetten. Een uitgevallen vastgezette rol blijft herkenbaar gepauzeerd, ook als een toegestane alternatieve route beschikbaar is. De UI biedt expliciet vrijgeven of opnieuw toewijzen; zolang de pin geldt volgt geen automatische vervanging of modelcall naar een vervanger. Alleen voor niet-vastgezette rollen kan vooraf toegestaan fallbackbeleid een andere toegelaten route kiezen; de verandering wordt getoond. Handmatige hertoewijzing blijft onderworpen aan dezelfde toelatingscontroles. `No eligible model` levert een concrete herstelroute via de eigen instellingen en start geen nieuwe service.
 
@@ -132,7 +132,7 @@ De model-, web- en remote-scanstatus is afzonderlijk zichtbaar in de connection 
 
 Een dossier toont titel, huidige draft/resultaatrevisie, wijzigingstijd, bronbeschikbaarheid en bewaartoestand. Autosave gebeurt gedebounced; `Saved` verschijnt na backendbevestiging. Heranalyse bewaart eerdere resultaten en opent een nieuwe gekoppelde revisie. Een revisieconflict behoudt de lokale invoer en biedt een expliciete keuze voor opnieuw laden of apart bewaren.
 
-De exportflow is: revisie kiezen → persoonlijke inhoud selecteren → opgenomen en uitgesloten bronbestanden bekijken → pakket maken. Persoonlijke notities/discussie worden bewust geselecteerd. Toon per weggelaten object de reden en de officiële verwijzing waar toegestaan. Een export bevat geen secrets, ruwe database of ongevraagd volledige geschiedenis. Import toont herkomst en maakt een afzonderlijk dossier.
+De exportflow is: revisie kiezen → persoonlijke inhoud selecteren → opgenomen en uitgesloten bronbestanden bekijken → pakket maken. Persoonlijke notities/discussie worden bewust geselecteerd. Toon per weggelaten object de reden en de bronverwijzing waar beschikbaar. Persoonlijke raadpleging is geen automatische toestemming om een bronbestand verder te verspreiden. Een export bevat geen secrets, ruwe database of ongevraagd volledige geschiedenis. Import toont herkomst en maakt een afzonderlijk dossier.
 
 Een latere deelservice krijgt een aparte publicatieflow met momentopname en leestoegang. Die route wordt niet als werkende knop aangeboden vóór zij bestaat. Intrekken wordt eerlijk uitgelegd als het stoppen van toekomstig ophalen; gedownloade kopieën verdwijnen daardoor niet.
 
@@ -146,7 +146,7 @@ Een latere deelservice krijgt een aparte publicatieflow met momentopname en lees
 | Partial / Interrupted | Afgerond werk behouden, exacte ontbrekende stap | Onderbouwd hervatten of nieuwe poging kiezen |
 | Provider-/budgetfout | Betrokken rol en reden, status van eerdere poging | Route/budget inspecteren; geen stille herhaling |
 | Save failed / Storage full | Lokale conceptinvoer behouden, geen opgeslagenclaim | Opnieuw bewaren, opslag beheren of export indien mogelijk |
-| Bron niet bewaarbaar/deelbaar | Inhoudelijke beperking bij betrokken object | Officiële bron openen of verwijzingen exporteren |
+| Bron niet bewaarbaar/deelbaar | Concrete beperking bij betrokken object | Oorspronkelijke bron openen of verwijzingen exporteren |
 
 Een bevestigingsdialoog wordt gebruikt bij relevante onomkeerbare gevolgen, bijvoorbeeld definitief verwijderen of publiceren van persoonlijke inhoud. Er komt geen herhaalde toestemming voor al ingestelde modeltoewijzing, gewone autosave of een layoutwissel. Nieuwe gegevensdeling blijft een expliciete gebruikersactie.
 
@@ -176,6 +176,6 @@ Voer echte gebruikersflows uit met gesimuleerde én werkelijke fouttoestanden: t
 | [Roundtable v5](docs/design/compass-theology-roundtable-v5.png) | Deelnemers, gedeeld bewijs en moderatorregie |
 | [Routering v5](docs/design/compass-orchestrator-routing-v5.png) | Voorbeeldrolverdeling, demo-koppelingen en pin |
 
-De [ontwerpcatalogus en prompts](docs/design/README.md) bewaren herkomst en beperkingen. Concepten verschillen op details in spacing, knopstijl, tabgroepering en voorbeeldconnectiestatus. Gedeelde componenten en de functionele regels bepalen de consistente implementatie. Demo-verbindingen zijn geen echte accountstatus, voorbeeldlezingen geen uitgevoerde wetenschap en gegenereerde glyphs geen definitieve merkassets. De manuscriptviewer moet nog als werkend ontwerp worden uitgewerkt met toegelaten echte bronnen.
+De [ontwerpcatalogus en prompts](docs/design/README.md) bewaren herkomst en beperkingen. Concepten verschillen op details in spacing, knopstijl, tabgroepering en voorbeeldconnectiestatus. Gedeelde componenten en de functionele regels bepalen de consistente implementatie. Demo-verbindingen zijn geen echte accountstatus, voorbeeldlezingen geen uitgevoerde wetenschap en gegenereerde glyphs geen definitieve merkassets. De manuscriptviewer wordt als werkend ontwerp uitgewerkt met echte, herleidbare onlinebronnen.
 
-Bij de bouw krijgt ieder onderdeel zijn normale, lege, lopende, fout-, beperkte- en hersteltoestand, plus Engelse en gelokaliseerde teksten. Leg component-/OpenAPI-contracten en bronselectoren vast voordat de betrokken interactie wordt aangesloten. Behoud de eenvoudige TypeScript- en beperkte lintaanpak. De functionele acceptatie en inhoudelijke evaluatie uit V1-V9 blijven de vrijgavebasis.
+Bouw eerst een werkende persoonlijke flow: vraag → vergelijking → exacte passage of scan → eigen notitie → bewaren → heropenen. Werk daarbij de benodigde normale, lege, fout- en hersteltoestanden en Engelse/gelokaliseerde teksten uit. Component-/OpenAPI-contracten en bronselectoren groeien mee met die interacties. Behoud de eenvoudige TypeScript- en beperkte lintaanpak. Controleer de flow met enkele representatieve eigen vragen en echte bronnen, inclusief context, tegenbewijs, toetsenbord en RTL. De praktische controles uit V1-V9 helpen fouten vinden; zij vereisen geen groot benchmarkprogramma of externe beoordelingscommissie.

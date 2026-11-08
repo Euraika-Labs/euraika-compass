@@ -4,17 +4,21 @@ Status: richtinggevend productdocument, 8 november 2026. De visie beschrijft de 
 
 ## Visie
 
-Euraika Compass wil mensen helpen zelfstandig richting te vinden door de Thora, Bijbel en Koran zorgvuldig te onderzoeken en hun vragen daarover te bespreken. De gebruiker moet kunnen volgen hoe een antwoord ontstaat: vanuit een benoemde tekst, in samenhang met andere passages, met historische en taalkundige onderbouwing en ruimte voor verschillende lezingen.
+Euraika Compass is een neutrale theologische onderzoekstool voor persoonlijk gebruik. De gebruiker onderzoekt de Thora, Bijbel en Koran, vergelijkt teksten en interpretaties en weegt zelf argumenten af. AI helpt bronnen vinden en analyseren; de gebruiker bepaalt de vraag, onderzoeksrichting en conclusie.
+
+De gebruiker moet kunnen volgen hoe een antwoord ontstaat: vanuit een benoemde tekst, in samenhang met andere passages, met historische en taalkundige onderbouwing en ruimte voor verschillende lezingen. Het uitgangspunt is een bruikbare onderzoekswerkbank met praktische kwaliteitscontroles. Een geloofspositie of een theologische uitkomst wordt niet vooraf ingebouwd.
 
 Diezelfde omgeving biedt plaats aan een persoonlijke vraag over verlies, verantwoordelijkheid, vergeving of zingeving. De gebruiker kiest hoe diep het gesprek gaat en kan vanuit een eenvoudige reflectie doorstappen naar de teksten, manuscripten en argumenten erachter.
 
 ## Missie
 
-We verbinden toegankelijke gesprekken met controleerbaar bronnenonderzoek. AI helpt relevante gegevens te vinden, taal te onderzoeken, perspectieven te vergelijken en argumenten te toetsen. De gebruiker houdt zeggenschap over de vraag, de onderzoeksrichting, de modelverbindingen en de betekenis die hij of zij aan de uitkomst geeft.
+We verbinden zelfstandig theologisch onderzoek met toegankelijke gesprekken en controleerbare bronnen. AI helpt relevante gegevens te vinden, taal te onderzoeken, perspectieven te vergelijken en argumenten te toetsen. De gebruiker houdt zeggenschap over de vraag, de onderzoeksrichting, de modelverbindingen en de betekenis die hij of zij aan de uitkomst geeft.
 
 Onze bijdrage is geslaagd wanneer mensen beter kunnen begrijpen wat een bron zegt, waarom interpretaties verschillen en waarop hun eigen afweging berust.
 
 ## Voor wie we bouwen
+
+De eerste versie is een persoonlijke onderzoeksomgeving. De opensourcecode kan door anderen worden gebruikt, maar een centrale dienst, institutionele certificering en een beoordelingsorganisatie zijn geen voorwaarden voor deze app.
 
 - Mensen die levensvragen willen bespreken en inzichten uit de drie tekstcollecties willen verkennen, met behoud van hun eigen overtuiging en autonomie.
 - Nieuwsgierige lezers die oorspronkelijke teksten, vertalingen en historische handschriften willen bekijken zonder eerst een volledig onderzoeksinstrumentarium te moeten beheersen.
@@ -33,7 +37,9 @@ Euraika Compass brengt die behoeften bij elkaar met twee verbonden ervaringen: e
 
 ### 1. Primaire bronnen en hun herkomst blijven zichtbaar
 
-Een gebruiker moet kunnen teruggaan naar de benoemde teksteditie of een echt manuscript uit een toegelaten institutionele of wetenschappelijke collectie. Scan, transcriptie, reconstructie, vertaling en interpretatie blijven herkenbaar. De historische waarde van een bron wordt met herkomst, methode en beperkingen uitgelegd.
+Een gebruiker moet kunnen teruggaan naar de benoemde teksteditie, het echte manuscript of de oorspronkelijke onlinepublicatie. Alle authentieke en herleidbare onlinebronnen kunnen voor persoonlijk onderzoek worden gebruikt: bibliotheekcollecties, wetenschappelijke publicaties, auteurspagina's, projectrepositories en andere identificeerbare publicaties. Institutionele en wetenschappelijke bronnen zijn belangrijke referenties, zonder een exclusieve toegangspoort te vormen.
+
+Scan, transcriptie, reconstructie, vertaling en interpretatie blijven herkenbaar. Authenticiteit betekent dat duidelijk is wat het materiaal is en waar het vandaan komt; zij bewijst niet dat iedere bewering of interpretatie erin waar is. Herkomst, methode en beperkingen bepalen welk gewicht een bron in het argument krijgt.
 
 ### 2. Dezelfde zorgvuldigheid voor iedere collectie
 
@@ -61,15 +67,15 @@ Persoonlijke gesprekken bewaren de ruimte voor verdriet, twijfel en eigen keuzes
 
 ### 7. Modellen zijn verwisselbare hulpmiddelen
 
-We willen de bruikbaarste mogelijkheden van krachtige cloudmodellen combineren met lokale bron-, zoek- en taalhulpmiddelen. Roltoewijzing volgt getoetste geschiktheid en de door de gebruiker ingeschakelde verbindingen. Nieuwe modellen moeten kunnen worden beoordeeld zonder de productprincipes of de bronbank te vervangen.
+We willen de bruikbaarste mogelijkheden van krachtige cloudmodellen combineren met lokale bron-, zoek- en taalhulpmiddelen. Roltoewijzing volgt de taak, mogelijkheden, voorkeuren en de door de gebruiker ingeschakelde verbindingen. Praktische proefvragen maken sterke en zwakke kanten zichtbaar; een voorafgaand deskundigenpanel is geen voorwaarde om een gekoppeld model te gebruiken.
 
-Meerdere modellen leveren meer onderzoekshoeken, maar kunnen ook dezelfde fouten delen. Bronnen, kritische toetsing en menselijke beoordeling blijven daarom bepalend.
+Meerdere modellen leveren meer onderzoekshoeken, maar kunnen ook dezelfde fouten delen. Bronnen en controleerbare argumenten blijven bepalend. De gebruiker kan uitkomsten controleren en corrigeren; deskundige beoordeling kan helpen wanneer een vraag die expertise vraagt.
 
 ### 8. Toegankelijkheid en controle horen bij kwaliteit
 
 De bediening start in het Engels en wordt meertalig, met onder meer Nederlands, Arabisch, Frans en Duits. Brontaal, gesprekstaal en interfacetaal zijn afzonderlijke keuzes. Ondersteuning van Arabisch en Hebreeuws omvat hun leesrichting en tekstkenmerken. Gebruikers moeten ook met toetsenbord en op kleinere schermen kunnen werken.
 
-De gebruiker kiest cloudverwerking, webonderzoek en remote manuscripttoegang bewust en ziet wat lokaal blijft of extern wordt verwerkt. Dossiers worden bewust bewaard. Openheid over code en methode gaat samen met respect voor afzonderlijke bron-, beeld- en modelrechten.
+De gebruiker kiest cloudverwerking, webonderzoek en remote manuscripttoegang bewust en ziet wat lokaal blijft of extern wordt verwerkt. Dossiers worden bewust bewaard. Persoonlijk raadplegen is het uitgangspunt; praktische informatie over lokale bewaring, cloudverwerking en delen blijft aan de bron gekoppeld. Online beschikbaarheid wordt niet als algemene toestemming voor herpublicatie of training opgevat en toegang wordt niet omzeild.
 
 ## Hoe we prioriteiten stellen
 
@@ -81,9 +87,9 @@ Een uitbreiding verdient voorrang wanneer zij het begrip, de controleerbaarheid 
 
 We willen groeien naar een meertalige onderzoeksomgeving waarin teksten, manuscripten, taalgegevens en interpretatieve argumenten verbonden zijn. Een gebruiker kan een vraag stellen, de relevante getuigen en context inspecteren, verschillende perspectieven laten reageren en het resultaat met zijn beperkingen opnieuw openen.
 
-Die groei gebeurt via toegelaten bronpakketten en getoetste model-/taalmogelijkheden. Nieuwe bronnen, talen en modellen krijgen hun eigen herkomst-, rechten- en kwaliteitsbeoordeling. Samenwerking aan opensourcecode, broncorrecties en evaluaties moet het product beter controleerbaar maken.
+Die groei gebeurt door authentieke bronnen toe te voegen en nieuwe model-/taalmogelijkheden praktisch uit te proberen. De app registreert herkomst, geconstateerde beperkingen en relevante gebruiksvoorwaarden. Samenwerking aan opensourcecode, broncorrecties en voorbeelden kan het product beter controleerbaar maken.
 
-Voor de eerste persoonlijke beta hebben de bestaande Chat/Research-scope, manuscriptweergave, bewijs- en interpretatieonderzoek en gemodereerde Roundtable prioriteit. Verdere uitbreidingen zoals audio, meerdere menselijke accounts en eigen handschriftherkenning vragen afzonderlijke beslissingen en tests. Deze visie activeert geen verborgen roadmapbeloften.
+Voor de eerste bruikbare persoonlijke versie hebben de bestaande Chat/Research-scope, manuscriptweergave, bewijs- en interpretatieonderzoek en gemodereerde Roundtable prioriteit. We controleren echte bronnen en gebruikersflows met een kleine gevarieerde verzameling proefvragen. Er is geen verplicht grootschalig benchmarkprogramma of minimumaantal deskundigenbeoordelingen. Verdere uitbreidingen zoals audio, meerdere menselijke accounts en eigen handschriftherkenning vragen afzonderlijke beslissingen en tests.
 
 ## Waaraan we succes herkennen
 
@@ -95,4 +101,4 @@ Voor de eerste persoonlijke beta hebben de bestaande Chat/Research-scope, manusc
 - Een dossier maakt duidelijk wat destijds is onderzocht, welke bronnen en modellen werden gebruikt en wat bij heranalyse verandert.
 - Onderzoek kan met behoud van herkomst en bronrechten worden heropend of bewust gedeeld; een toegelaten gebruikte bronkopie blijft beschikbaar voor latere controle.
 
-Deze uitkomsten worden met gebruikersproeven, bronkundige beoordeling en de evaluatiecontracten uit de functionele en technische documenten onderzocht. Populariteit, vloeiende antwoorden en overeenstemming tussen modellen vervangen dat bewijs niet.
+Deze uitkomsten worden met praktische broncontroles, gerichte proefvragen en echte gebruikersflows onderzocht. De controles richten zich op terugvindbare citaten, context en tegenbewijs, toegeschreven interpretaties, eerlijke beperkingen en betrouwbaar bewaren. Bevindingen en correcties blijven eenvoudig terug te vinden; vloeiende antwoorden of overeenstemming tussen modellen maken verdere controle niet overbodig.

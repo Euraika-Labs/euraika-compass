@@ -1,5 +1,7 @@
 # Theological research and routing: version 5 prompts
 
+Historical prompt archive. The current scope is a personal-use neutral theological research tool with practical quality checks and authentic, traceable online sources. The original prompts are preserved as image provenance; [functional.md](../../functional.md) takes precedence over any older institutional-only, project-evaluation or release-gate wording in them. A provisional role fit can be used without a prior expert benchmark; the existing pin rule remains in force.
+
 Tool: built-in `image_gen`, opaque background. The existing `compass-research-v4.png` was used as a visual-identity reference for each independently generated screenshot. These are concepts, not captures of a running application. Files were copied into this workspace and visually inspected.
 
 | Output | Purpose |

@@ -10,7 +10,7 @@ Dit document is leidend voor functioneel gedrag. Het [implementatieplan R1-R27](
 
 ## Doel en uitgangspunten
 
-Euraika Compass verbindt studie van Thora, Bijbel en Koran aan gesprekken over levensvragen. De gebruiker kan zelf teksten en manuscripten inspecteren, interpretaties onderzoeken en AI-deelnemers onder eigen regie laten discussiëren. De app is opensource, draait als lokaal gehoste webapp onder Pinokio en kan expliciet gekozen cloudmodellen gebruiken.
+Euraika Compass is een neutrale theologische onderzoekstool voor persoonlijk gebruik. De gebruiker kan de Thora, Bijbel en Koran onderzoeken, teksten en manuscripten inspecteren, interpretaties vergelijken en AI-deelnemers onder eigen regie laten discussiëren. Een gewone Chat biedt daarnaast ruimte voor levensvragen. De app is opensource, draait als lokaal gehoste webapp onder Pinokio en kan expliciet gekozen cloudmodellen gebruiken.
 
 Geen religie krijgt een eigen voorkeurspositie. Onpartijdigheid betekent gelijke bewijsregels, zorgvuldigheid en respect; niet evenveel woorden, geforceerde overeenstemming of evenveel geloofwaardigheid voor elke bewering. Het systeem toont verschillen en onzekerheden en claimt geen absolute afwezigheid van bias.
 
@@ -25,7 +25,7 @@ Thora, Bijbel en Koran behouden hun eigen corpus-, editie- en interpretatieconte
 | Gewone Chat | Levensvragen bespreken met vijf kiesbare persona's; gepaste reactie en vervolgvraag; relevante bronnen uitklappen; geen automatisch debat of verplichte citatendump | R2-R6, R17 |
 | Research | Tabbladen en aanpasbare panelen met teksten, vertalingen, bronnen, woordonderzoek, bewijs, context, interpretaties en notities; vanuit Chat openen en terugkeren zonder context/conceptbericht te verliezen | R1, R7-R9, R17 |
 | Tekstbibliotheek | Exacte editie, taal en corpus-/canonbereik kiezen; vers en omliggende passage openen; oorspronkelijke tekst, gepubliceerde vertaling en modelvertaling onderscheiden; ontbrekende dekking zichtbaar houden | R1, R7-R10 |
-| Manuscripten | Echte scans van toegelaten institutionele/wetenschappelijke collecties, ook Koranhandschriften, met zoom/folio/herkomst; afzonderlijke transcriptie/vertaling; anders officiële viewerlink bij beperkingen | R21 |
+| Manuscripten | Echte, herleidbare scans uit authentieke onlinebronnen, ook Koranhandschriften, met zoom/folio/herkomst; afzonderlijke transcriptie/vertaling; oorspronkelijke viewerlink bij beperkingen | R21 |
 | Onderzoeksmethode | Voor iedere collectie dezelfde tekstuele/historische/taalkundige bewijsregels; passagecontext, verwante passages en tegenbewijs; E1/E2/E3 met bron, methode, onzekerheid en onderscheid tussen observatie, hypothese en conclusie | R4-R5, R8-R9, R22 |
 | Interpretaties | Lezingen vergelijken via woordgebruik, vertaling, tekstvarianten, genre, tijd/context en aannames; steun- en tegenbewijs uitleggen; beter onderbouwde lezing waar mogelijk, met behouden onzekerheid en werkelijke verschillen | R23 |
 | Secundaire bronnen | Commentaar en overlevering krijgen geen automatische interpretatieve autoriteit; hadith standaard uitgesloten, geen pakket toegelaten; beperkte mogelijke uitzondering uitsluitend individueel aantoonbare directe herkomst als context; geen omweg via webcitaten | R10, R22-R23 |
@@ -67,13 +67,15 @@ De vormgeving gebruikt Euraika Blue `#001C3A`, aanvullend blauw `#003369`, Gold 
 
 ## Bronnen, manuscripten en onderzoeksargument
 
-Een bronvermelding toont het bronsoort, de exacte editie/versie, taal, auteur/vertaler indien bekend en een inspecteerbare locatie. Originele tekst, tekstkritische reconstructie, wetenschappelijke transcriptie, gepubliceerde vertaling, modelvertaling en annotatie zijn aparte lagen. Letterlijke citaten worden vanuit de toegelaten bron ingevoegd en gecontroleerd. Een geldig citaat bewijst nog niet dat een interpretatie er inhoudelijk door ondersteund wordt.
+Alle authentieke, herleidbare en toegankelijke onlinebronnen kunnen voor persoonlijk onderzoek worden opgenomen. Dit omvat primaire teksten en scans, wetenschappelijke publicaties, oorspronkelijke auteurspagina's, projectrepositories en gedocumenteerde interpretaties. Institutionele of wetenschappelijke publicatie is een waardevolle aanwijzing voor herkomst en methode, geen exclusieve toelatingseis. Een niet-institutionele bron wordt op haar eigen herkomst en inhoud beoordeeld.
 
-Voor manuscripten gebruikt de app een gecontroleerd register van officiële bibliotheek-, universiteits-, museum-, archief- of wetenschappelijke projectcollecties, inclusief islamitische Koranhandschriften. Vereist: verantwoordelijke instelling/redactie, catalogusrecord, signatuur, herkomst en passende gebruiksrechten. Alleen een domeinnaam of institutioneel logo is onvoldoende. Toegestane gedelegeerde beeldhosts moeten via de instelling zijn geverifieerd.
+Een bronvermelding toont bronsoort, exacte editie/versie, taal, auteur/vertaler indien bekend en een inspecteerbare locatie. Authenticiteit gaat over de identiteit en herkomst van het materiaal, niet over de waarheid van al zijn uitspraken. Originele tekst, tekstkritische reconstructie, wetenschappelijke transcriptie, gepubliceerde vertaling, modelvertaling en annotatie zijn aparte lagen. Letterlijke citaten worden uit de opgehaalde bron ingevoegd en gecontroleerd. Een geldig citaat bewijst nog niet dat een interpretatie er inhoudelijk door ondersteund wordt.
+
+Voor manuscripten houdt de app een uitbreidbaar bronregister bij, inclusief islamitische Koranhandschriften. Bibliotheken, universiteiten, musea, archieven en wetenschappelijke projecten zijn de eerste referenties; authentieke scans via andere onlinepublicaties kunnen worden toegevoegd wanneer zij naar het echte object en een controleerbare herkomst terugleiden. Bewaar oorspronkelijke publicatie of catalogusrecord, signatuur/objectidentiteit waar beschikbaar, verantwoordelijke maker/collectie en beeldherkomst. Een institutioneel logo of willekeurige mirror alleen bewijst die herkomst niet. Van gedelegeerde beeldhosts wordt de relatie met de oorspronkelijke bron vastgelegd.
 
 De viewer biedt zoom, folio-/paginanavigatie en recto/verso waar relevant, met beschikbare transcriptie/vertaling naast de scan. Datering heeft een bron, methode en onzekerheid; datum van materiaal, afschrift en veronderstelde compositie worden niet gelijkgesteld. Een handschrift is niet automatisch het auteursexemplaar. Ontbrekende bladen, onzekere letters en reconstructies blijven zichtbaar. Geen verzonnen vers-folio-/woordkoppelingen en geen gegenereerde manuscriptbeelden als historische bron.
 
-Beeldtoegang, lokaal bewaren, indexeren, extern modelgebruik, export en training hebben afzonderlijke rechten. Bij beperkte toegang blijft een catalogusrecord met officiële viewerlink beschikbaar. De app omzeilt geen blokkades. Manuscripten zijn niet automatisch offline beschikbaar omdat de tekstbibliotheek lokaal staat.
+De app gebruikt bronnen voor persoonlijk lezen en onderzoek en registreert praktische beperkingen voor bekijken, lokaal bewaren, indexeren, extern modelgebruik, export en training afzonderlijk. Ontbrekende herpublicatierechten blokkeren niet automatisch het persoonlijk raadplegen van een toegankelijke bron. Online beschikbaarheid geeft op zichzelf geen algemene toestemming om materiaal opnieuw te publiceren, toegangscontroles te omzeilen of het voor training te gebruiken. Bij beperkte integratie blijft de oorspronkelijke publicatie-/viewerlink beschikbaar. Manuscripten zijn niet automatisch offline beschikbaar omdat de tekstbibliotheek lokaal staat.
 
 Een daadwerkelijk geraadpleegd en toegelaten bronbeeld wordt tijdens onderzoek automatisch lokaal bewaard voor hergebruik, wanneer duurzame lokale bewaring is toegestaan en voldoende opslag beschikbaar is. Een zoekhit veroorzaakt geen volledige manuscriptdownload. Bron, folio/canvas, kwaliteit/resolutie, raadpleegtijd, attributie, rechten en inhoudshash blijven gekoppeld. Dossiers verwijzen naar hetzelfde opgeslagen object; gewijzigde bytes krijgen een nieuwe revisie. Thumbnails, crops en bekeken tegels worden niet als volledig origineel beschreven.
 
@@ -85,7 +87,7 @@ Voor inhoudelijke uitleg volgt het systeem dezelfde methode bij alle collecties:
 2. Inspecteer de primaire passage en omliggende literaire context in een benoemde editie.
 3. Zoek relevante passages én tegenbewijs elders in de gekozen collectie; registreer zoekbereik en gaten. Claim geen volledige inspectie van een heel boek wanneer die niet is uitgevoerd.
 4. Maak bewijsitems E1/E2/E3 met bewering/waarneming, bron en locatie, tijd/context, methode en onzekerheid. Onderscheid observatie, toegeschreven hypothese en gevolgtrekking.
-5. Onderzoek historische, taalkundige en materiële context met toegelaten wetenschappelijke bronnen. Vermijd anachronisme en ongefundeerde daterings- of auteursclaims.
+5. Onderzoek historische, taalkundige en materiële context met herleidbare bronnen en geef wetenschappelijk onderbouwde gegevens passend gewicht. Schrijf andere standpunten aan hun maker toe; vermijd anachronisme en ongefundeerde daterings- of auteursclaims.
 6. Vergelijk relevante lezingen met woordgebruik, grammatica, vertaling, tekstvarianten, genre, aannames, steun- en tegenbewijs.
 7. Geef een onderbouwde beoordeling voor de gestelde vraag en benoem onzekerheden, alternatieven en wat de conclusie zou kunnen veranderen.
 
@@ -103,11 +105,11 @@ Persoonlijke vragen gebruiken geminimaliseerde onderwerptermen in plaats van vol
 
 ## Modellen, verbindingen en rolverdeling
 
-Het algemene LLM kan de orchestrator zijn voor gesprek, onderzoek en rolverdeling. Cloudkandidaten omvatten de door de gebruiker genoemde providers Mistral, Alibaba Cloud voor onder meer Qwen/GLM, OpenAI, Anthropic en MiniMax; OpenRouter is een optionele gateway naar een concrete upstream-provider. Welke routes als eerste worden gebouwd en vrijgegeven volgt hun toelating. Lokale embeddings, reranking, citaatcontrole en kandidaat-vertaalworkers blijven afzonderlijke hulpmiddelen. Een lokale algemene modelroute blijft mogelijk voor offline/private gebruik met getoonde beperkingen.
+Het algemene LLM kan de orchestrator zijn voor gesprek, onderzoek en rolverdeling. Cloudkandidaten omvatten de door de gebruiker genoemde providers Mistral, Alibaba Cloud voor onder meer Qwen/GLM, OpenAI, Anthropic en MiniMax; OpenRouter is een optionele gateway naar een concrete upstream-provider. De gebruiker kan beschikbare routes instellen en uitproberen. Lokale embeddings, reranking, citaatcontrole en kandidaat-vertaalworkers blijven afzonderlijke hulpmiddelen. Een lokale algemene modelroute blijft mogelijk voor offline/private gebruik met getoonde beperkingen.
 
-**Alleen gekoppelde en ingeschakelde modellen zijn selecteerbaar.** De backend geeft de orchestrator een gefilterde lijst en controleert iedere gekozen route opnieuw. Verbinding, modelbeschikbaarheid binnen account/regio, mogelijkheden, gegevensbeleid, bronrechten, evaluatiestatus en budget bepalen toelating. Een model uit een algemene catalogus of een suggestie van een deelnemer is geen geldige verbinding. De orchestrator zelf moet eveneens een toegelaten route gebruiken.
+**Alleen gekoppelde en ingeschakelde modellen zijn selecteerbaar.** De backend geeft de orchestrator een gefilterde lijst en controleert iedere gekozen route opnieuw. Verbinding, modelbeschikbaarheid binnen account/regio, vereiste mogelijkheden, gegevensbeleid, toepasselijke bronbeperkingen en budget bepalen of de route uitvoerbaar is. Een formele benchmark of deskundigenbeoordeling is geen voorwaarde om een werkende route persoonlijk te gebruiken. Een model uit een algemene catalogus of een suggestie van een deelnemer is geen geldige verbinding. De orchestrator zelf gebruikt eveneens een geschikte ingestelde route.
 
-Bij automatische rolverdeling kiest de orchestrator uit die lijst op basis van taak, persona/perspectief, taal, beoordeelde geschiktheid en kosten-/latencyvoorkeuren. Zonder tests blijft de match voorlopig; de app claimt geen bewezen beste model. De gebruiker kan de toewijzing inspecteren, wijzigen of vastzetten. Meerdere rollen mogen hetzelfde model gebruiken; dat levert geen onafhankelijke experts op.
+Bij automatische rolverdeling kiest de orchestrator uit die lijst op basis van taak, persona/perspectief, taal, beschikbare mogelijkheden, eerdere proefresultaten en kosten-/latencyvoorkeuren. Zonder eigen proefresultaten blijft de match voorlopig; de app claimt geen bewezen beste model. De gebruiker kan de toewijzing inspecteren, wijzigen of vastzetten. Meerdere rollen mogen hetzelfde model gebruiken; dat levert geen onafhankelijke experts op.
 
 Provider/model/versie, opdracht, bewijsversie, toewijzingswijzigingen en beknopte selectiegrond zijn zichtbaar. Keys blijven buiten prompts, frontendbundels, logs, exports en Git. Onbekende endpoints of door modellen verzonnen route-IDs worden geweigerd. Een ongeconfigureerde service wordt nooit automatisch aangesloten.
 
@@ -115,7 +117,7 @@ Bij uitval pauzeert de rol. Alleen voor een niet-vastgezette rol mag vooraf toeg
 
 Cloudgebruik is expliciet ingesteld; geselecteerde gesprekscontext en toegestaan bewijs gaan dan naar de gekozen provider. Lokale modus blokkeert cloudmodelcalls. Webzoeken en remote manuscriptbeelden hebben eigen instellingen; lokale verwerking betekent niet automatisch dat deze andere verbindingen ook uitstaan. De gebruiker ziet dit onderscheid. Budgetten begrenzen tokens, uitgaande opdrachten en kosten; schattingen en werkelijk gerapporteerd verbruik blijven onderscheiden.
 
-Lokale vertalers worden per oude taal en richting toegelaten op basis van bronkundige beoordeling. Ondersteuning van een taalcode of modern Arabisch bewijst geen kwaliteit op Bijbels Hebreeuws, Oudgrieks of Koranisch Arabisch. Gepubliceerde toegelaten vertalingen blijven controlebasis. Ontbrekende specialistische ondersteuning wordt gemeld.
+Lokale vertalers worden per oude taal en richting met enkele gevarieerde passages vergeleken met de brontekst en benoemde gepubliceerde vertalingen. Let op ontkenning, namen, meerduidigheid en interpretatieve toevoegingen; vraag waar nodig bronkundige hulp. Ondersteuning van een taalcode of modern Arabisch bewijst geen kwaliteit op Bijbels Hebreeuws, Oudgrieks of Koranisch Arabisch. Modelvertalingen blijven herkenbare voorstellen die de gebruiker kan controleren. Ontbrekende specialistische ondersteuning of onvoldoende gecontroleerde kwaliteit wordt gemeld; een verplicht beoordelingspanel is geen gebruiksvoorwaarde.
 
 ## Roundtable en menselijke moderatie
 
@@ -129,7 +131,7 @@ Een synthese bewaart overeenkomsten, verschillen, tegenbewijs en open vragen met
 
 De UI start in het Engels. Eerste lokalisatiedoelen zijn Engels, Nederlands, Arabisch, Frans en Duits, met uitbreidbare berichtcatalogi. De gekozen UI-taal wordt bewaard, onafhankelijk van gesprekstaal en brontaal/vertaling. Taalkeuze vertaalt of overschrijft oudere berichten niet automatisch. Persona-omschrijvingen, foutmeldingen, lege toestanden en toegankelijkheidsnamen worden mee gelokaliseerd.
 
-Arabische UI gebruikt RTL. Arabische/Hebreeuwse passages en LTR-vertalingen behouden hun eigen richting in ieder scherm. Gemengde referenties, cijfers, URL's, diakritiek, selectie en kopiëren worden getest. Een vertaald menu is geen bewijs van antwoord- of vertaalkwaliteit in die taal; capability-/evaluatiebeperkingen blijven zichtbaar.
+Arabische UI gebruikt RTL. Arabische/Hebreeuwse passages en LTR-vertalingen behouden hun eigen richting in ieder scherm. Gemengde referenties, cijfers, URL's, diakritiek, selectie en kopiëren worden getest. Een vertaald menu is geen bewijs van antwoord- of vertaalkwaliteit in die taal; mogelijkheden, eigen proefresultaten en bekende beperkingen blijven zichtbaar.
 
 Gewone gesprekken zijn tijdelijk. Bewust bewaren maakt een dossier met antwoord/discussie, eigen notities, bewijsitems, bronverwijzingen en relevante bron-, model-, policy- en zoekversies. Wie `New research` start of een chat bewust omzet, maakt expliciet een onderzoeksdossier; vanaf dat moment bewaart de app drafts, afgeronde resultaten en herstelstatus automatisch, met zichtbare bevestiging of fout. Heranalyse maakt een nieuwe gekoppelde versie. Geschiedenis toont bewust bewaarde gesprekken en aangemaakte onderzoeksdossiers. Geen impliciet achtergrondgeheugen tussen gesprekken en geen automatische inzet van persoonlijke vragen als trainings- of testdata.
 
@@ -149,7 +151,7 @@ De server luistert standaard alleen lokaal. Geen ongevraagde LAN-toegang, prompt
 
 1. **Levensvraag:** Chat → persona → gesprek → optioneel bronnen openen → eventueel verder in Research → alleen op verzoek bewaren.
 2. **Theologische kwestie:** onderzoeksdossier starten → automatische draftbewaring → vraag en scope → passages/context en verwante passages/tegenbewijs → historische/taalkundige bewijsitems → alternatieve interpretaties → nieuwe resultaatrevisie.
-3. **Manuscript:** toegelaten catalogusrecord → scan/folio met herkomst en rechten → beschikbare transcriptie/vertaling → alleen onderbouwde passagekoppeling; beperkingen geven een expliciete melding of officiële link.
+3. **Manuscript:** herleidbaar bron-/catalogusrecord → scan/folio met herkomst en gebruiksinformatie → beschikbare transcriptie/vertaling → alleen onderbouwde passagekoppeling; beperkingen geven een expliciete melding of oorspronkelijke viewerlink.
 4. **Roundtable:** deelnemers/perspectieven kiezen → orchestrator filtert geschikte ingeschakelde koppelingen → toewijzingen inspecteren/pinnen → moderator vraagt beurt/ronde → bronnen en bezwaren delen → moderator vraagt synthese of stopt.
 5. **Beheer:** bron/model/provider en taal instellen → rechten, mogelijkheden en omvang controleren → expliciet downloaden/activeren → gewone start; geen key nodig om beschikbare lokale teksten te lezen.
 6. **Delen:** dossierrevisie kiezen → persoonlijke inhoud en toegelaten bestanden selecteren → exportoverzicht controleren → pakket maken → op andere installatie importeren met behoud van herkomst en zichtbare ontbrekende bronnen.
@@ -162,15 +164,23 @@ De server luistert standaard alleen lokaal. Geen ongevraagde LAN-toegang, prompt
 - Ontbrekend corpus, manuscriptbeeld, transcriptie, vertaling of historische bron: concrete dekkingsmelding; geen verzonnen vervanging.
 - Tegenstrijdig of onvoldoende bewijs: verschillen tonen, zekerheid begrenzen en geen consensus fabriceren.
 - Tijdslimiet, kostenlimiet, annulering of providerfout: beëindigde/gedeeltelijke toestand met bruikbare afgeronde resultaten; geen eindeloze herhaling.
-- Gewijzigd model, bron, policy of route: eerdere relevante evaluatieclaim vervalt totdat opnieuw getoetst is.
+- Gewijzigd model, bron, policy of route: eerdere proefresultaten blijven aan hun oude versie gekoppeld; relevante controles worden gericht herhaald en oude resultaten gelden niet automatisch voor de wijziging.
 - Schijf vol of onvolledige bronbewaring: geen vals opgeslagen/offline-label; concrete fout en herstelactie, zonder geciteerd materiaal stilzwijgend op te ruimen.
 - Niet-deelbaar object of ontbrekend bestand: export meldt de beperking en gebruikt waar toegestaan een verwijzing; import claimt geen volledige offline reproduceerbaarheid.
 
-## Beschreven versus nog te valideren
+## Praktische kwaliteitscontroles
 
-De functionele baseline is beschreven. Uitwerking van concrete componenten, API-/datacontracten en foutcodes gebeurt per implementatie-eenheid vóór de betreffende bouwstap. Nog vast te stellen door toelating en tests: beste model per rol/taal, exact beschikbare account-/regioroutes, definitieve bron-/beeldrechten, passage-foliomappings, kwaliteit van lokale historische vertalingen, gemeten prestaties en kosten, en menselijke evaluatiedekking. Dit zijn geen al bewezen eigenschappen van het ontwerp.
+De persoonlijke app wordt bruikbaar gemaakt met gerichte controles op echte bronnen en gebruikersflows. Er is geen verplicht grootschalig evaluatieprogramma, vast minimumaantal beoordelingen, gecertificeerde neutraliteit of deskundigenpanel als voorwaarde om onderzoek te doen. De controles uit V1-V9 van het hoofdplan zijn praktische hulpmiddelen om concrete fouten te vinden en te herstellen.
 
-De tests en gates van het hoofdplan V1-V9 en de aanvullende specificaties bepalen vrijgave. De ontwerpbeelden bewijzen geen werkende interface, wetenschappelijke juistheid, bronbeschikbaarheid of modelkwaliteit. Lokalisatie is een afzonderlijke claim van antwoordkwaliteit in die taal. Een technische preview kan eerder, met open beperkingen zichtbaar.
+- **Bron en citaat:** open de verwijzing, controleer editie/locatie en vergelijk letterlijke citaten met het opgehaalde materiaal. Registreer waar een bron vandaan komt en wat er onzeker blijft.
+- **Context en interpretatie:** probeer vragen die omliggende context, verwante passages en tegenbewijs vereisen. Controleer dat een eigen lezing, toegeschreven standpunt en vastgesteld tekstgegeven herkenbaar blijven.
+- **Neutrale werkwijze:** probeer dezelfde soorten kritische vragen bij alle drie collecties en wissel persona of bronvolgorde. Behoud legitieme verschillen; zoek ongefundeerde voorkeur, weggelaten bezwaren en valse consensus.
+- **Model en taal:** gebruik een kleine, gevarieerde verzameling eigen proefvragen per gebruikte taak/taal. Vergelijk waar nuttig een andere route of gepubliceerde vertaling en noteer beperkingen zonder ongemeten kwaliteitsscores.
+- **Bediening en bewaring:** doorloop vraag → bron → passage/folio → notitie → dossier → heropenen. Controleer ook uitval, annuleren, vastgezette rollen, export/import, backup/herstel en offlinebeschikbaarheid.
+
+De gebruiker kan een fout markeren, een bron of argument corrigeren en het onderzoek opnieuw uitvoeren met behoud van de oude revisie. Deskundige hulp is nuttig voor moeilijke taal- of historische vragen, zonder iedere uitkomst van de tool vooraf te hoeven certificeren.
+
+De functionele baseline is beschreven. Concrete componenten, API-/datacontracten en foutcodes worden per bouwstap uitgewerkt. Beschikbare account-/regioroutes, bronbestanden, passage-foliomappings, vertaalgedrag, prestaties en kosten moeten nog met echte gegevens worden geprobeerd. De ontwerpbeelden bewijzen geen werkende interface of onderzoeksresultaat. Bekende beperkingen blijven zichtbaar terwijl de persoonlijke tool stapsgewijs bruikbaar wordt.
 
 ## Ontwerpbeelden
 

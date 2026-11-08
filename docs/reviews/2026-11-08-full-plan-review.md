@@ -2,11 +2,13 @@
 
 Datum: 8 november 2026. Beoordeelde baseline: commit [`1e73cf08f5e73333a5cd0c2ac16d191e48e2c0a6`](https://github.com/Euraika-Labs/euraika-compass/tree/1e73cf08f5e73333a5cd0c2ac16d191e48e2c0a6).
 
+**Historisch reviewverslag.** Later op 8 november 2026 heeft de gebruiker de scope verduidelijkt: persoonlijk, neutraal theologisch onderzoek met praktische kwaliteitscontroles en authentieke, herleidbare internetbronnen. Het zware evaluatieprogramma en de uitsluitend institutionele bronselectie zijn vervallen. De actuele regels staan in [functional.md](../../functional.md) en V1-V9 van het [implementatieplan](../plans/2026-11-08-1552-feat-religion-research-app-plan.md). De twee hieronder beschreven documentcorrecties blijven geldig; de oude review geldt niet als beoordeling van alle latere wijzigingen.
+
 ## Uitkomst
 
 Deze documentreview bevestigt twee concrete inconsistenties, beide P2. Beide zijn gecorrigeerd in de specificaties: de verouderde persona-definitie en, na expliciete goedkeuring door de gebruiker op 8 november 2026, de regel voor vastgezette rollen bij uitval. Er zijn geen open beslissingen uit deze review over. Er is geen P0/P1-ontwerpblokkade aangetoond. Dat is geen bewijs dat de app uitvoerbaar, veilig, wetenschappelijk juist of onpartijdig is: er bestaat nog geen geïmplementeerde app en de geplande runtime-, bron- en inhoudelijke proeven zijn niet uitgevoerd.
 
-P2 betekent hier een plaatselijke correctie die verkeerde implementatie of tegenstrijdige tests kan voorkomen. De review voegt geen nieuwe productscope toe. Geaccepteerde keuzes zoals PostgreSQL, eenvoudige TypeScript-controles, de primaire-tekstgerichte methode, officiële manuscriptbronnen, gekoppelde modelroutes en menselijke moderatie zijn niet opnieuw ter discussie gesteld.
+P2 betekent hier een plaatselijke correctie die verkeerde implementatie of tegenstrijdige tests kan voorkomen. Deze review voegde destijds geen productscope toe. PostgreSQL, eenvoudige TypeScript-controles, de primaire-tekstgerichte methode, gekoppelde modelroutes en menselijke moderatie bleven behouden. Het bronbeleid is nadien op gebruikersinstructie verbreed naar authentieke, herleidbare onlinebronnen.
 
 ## Omvang en methode
 
@@ -50,17 +52,17 @@ Baselineverwijzingen: [fallbackregel, functional.md regel 114](https://github.co
 
 De gedragsaanscherping is eerst als voorstel gerapporteerd en pas na goedkeuring in de specificaties toegepast. De routeringslogica zelf is nog niet geïmplementeerd.
 
-## Bestaande open toelatingstaken vóór vrijgave
+## Uitvoeringswerk na de review
 
-Dit zijn belangrijke losse eindjes voor de uitvoering, maar geen nieuw gevonden ontwerpfouten. Het plan benoemt hun eigenaarschap en blokkeert de bijbehorende kwaliteitsclaims zolang bewijs ontbreekt.
+Dit zijn praktische bouwtaken die nog niet zijn uitgevoerd. Zij vragen werkende voorbeelden en herstel van concrete fouten; het eerdere formele evaluatieprogramma is geen voorwaarde meer voor persoonlijk gebruik.
 
 | Taak | Waar belegd | Wat nog moet worden aangetoond |
 | --- | --- | --- |
 | PostgreSQL/pgvector onder Windows en Pinokio | Eerste technische basis en lifecycle-eenheid | Vertrouwde distributie, installatie, opslaglocatie, gereedheid, start/stop, update en backup/restore met echte processen |
-| Exacte bronedities en gebruiksrechten | Bronpakketten en manuscriptregister | Benoemde JPS-/Koranvertaling, dekking, alignering en rechten voor lokaal gebruik, cloudverwerking, bewaring en delen; een bronvermelding is geen toegelaten connector |
-| Model- en taalprofiel voor de inhoudelijke beta | Retrieval-/datasetfase en evaluatie-eenheid | Toegelaten routeconfiguratie, rol-/taalkwaliteit, kosten en deskundige menselijke beoordeling; geen blanket vrijgave van alle verbonden modellen |
+| Bronnen daadwerkelijk openen | Bronimport en manuscriptregister | Herleidbare editie/scan, juiste koppeling en bekende gebruiksbeperkingen; de startlijst is geen gesloten institutionele whitelist |
+| Modellen en talen uitproberen | Modelinstellingen en praktische controlevoorbeelden | Werkende gekoppelde routes, bruikbaar brongebruik, bekende taalbeperkingen en zichtbare kosten; geen verplichte deskundigenbeoordeling |
 
-Het huidige evaluatiebudget is minimaal 3.600 menselijke beoordelingen per gekozen basisreleaseconfiguratie: 3.000 voor 1.500 basisantwoorden en 600 voor de steekproef van 300 variantantwoorden, plus gemarkeerde gevallen. Extra talen, vertaalrichtingen, routeringscombinaties, manuscripten en Roundtable worden daar niet stilzwijgend door gedekt. De technische preview is al expliciet toegestaan voordat inhoudelijke beta-gates zijn gepasseerd.
+De vroegere verplichte testvolumes, panels en statistische vrijgavedrempels zijn op verzoek van de gebruiker vervangen door een kleine groeiende verzameling eigen onderzoeksvragen, bron-/citaatcontroles en werkelijke UI-/bewaarproeven. Hun oorspronkelijke formulering is terug te vinden in de gelinkte Git-baseline en bepaalt het huidige plan niet meer.
 
 ## Reviewdekking
 
@@ -81,4 +83,4 @@ Er zijn geen onzekere vermoedens als fouten opgevoerd en geen generieke wensen v
 
 ## Vervolg
 
-Beide bevindingen uit deze review zijn in de documentatie afgehandeld. De eerste technische proef kan volgens de bestaande bouwvolgorde beginnen. Bouw en toets de routeringslogica later met de vastgelegde voorrang van pins en de bijbehorende uitvalproeven. De uitkomsten van runtime-, bron- en mensenbeoordeling blijven bepalend voor verdere vrijgave.
+Beide bevindingen uit deze review zijn in de documentatie afgehandeld. De eerste technische proef kan volgens de bestaande bouwvolgorde beginnen. Bouw en toets de routeringslogica met de vastgelegde voorrang van pins en de bijbehorende uitvalproeven. Gebruik de actuele praktische controles bij het bouwen van de persoonlijke onderzoekswerkbank.

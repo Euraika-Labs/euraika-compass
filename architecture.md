@@ -1,6 +1,6 @@
 # Euraika Compass — Systeemarchitectuur
 
-Status: voorgestelde architectuur, 8 november 2026. Er is nog geen werkende app of database. Dit document bepaalt componentgrenzen, gegevensstromen en uitvoeringscontracten voor de afgesproken scope. Het is geen bewijs dat koppelingen, modellen of installatieprocedures al zijn getest.
+Status: architectuur voor een persoonlijke, neutrale theologische onderzoekstool, bijgewerkt op 8 november 2026. Er is nog geen werkende app of database. Dit document bepaalt componentgrenzen, gegevensstromen en uitvoeringscontracten voor de afgesproken scope. Praktische bron-, functie- en herstelcontroles begeleiden de bouw; de app is geen systeem voor geloofscertificering of een industrieel evaluatieprogramma.
 
 ## 1. Plaats van dit document
 
@@ -13,7 +13,7 @@ Status: voorgestelde architectuur, 8 november 2026. Er is nog geen werkende app 
 | [design.md](design.md) | Schermen, interacties, vormgeving en toegankelijkheid |
 | [Implementatieplan](docs/plans/2026-11-08-1552-feat-religion-research-app-plan.md) | Bouwvolgorde, requirements R1-R27 en verificatie V1-V9 |
 
-Technische uitwerking mag het functionele contract niet stilzwijgend wijzigen. Exacte dependencyversies, migraties en endpointschema's worden per bouwstap gelockt en getest. De endpointnamen hieronder zijn ontwerpcontracten, geen bestaande API.
+Technische uitwerking mag het functionele contract niet stilzwijgend wijzigen. Dependencyversies, migraties en endpointschema's worden tijdens de betrokken bouwstap gekozen en met de werkende interactie gecontroleerd. De endpointnamen hieronder zijn bouwvoorstellen, geen bestaande API of vooraf volledig vast te leggen protocol.
 
 ## 2. Architectuurkeuze
 
@@ -40,12 +40,12 @@ flowchart TB
   end
   ROUTES --> CLOUD[Geselecteerde cloudmodellen]
   TOOLS --> WEB[Ingeschakelde zoekprovider]
-  TOOLS --> INST[Toegelaten instellingen en beeldservices]
+  TOOLS --> INST[Herleidbare onlinebronnen en beeldservices]
   API --> EXPORT[Gekozen dossierpakket]
   EXPORT --> SHARE[Optionele latere deeldienst]
 ```
 
-De lokale installatie blijft de eerste uitvoeringsvorm. Een centrale deelomgeving hergebruikt domeinlogica en opslaginterfaces, maar krijgt eigen authenticatie, toegangscontrole en deployment. Er is geen directe synchronisatie van PostgreSQL-datadirectories of automatische publicatie van lokale dossiers.
+De lokale installatie voor persoonlijk onderzoek is de eerste uitvoeringsvorm. Een eventuele latere centrale deelomgeving kan domeinlogica en opslaginterfaces hergebruiken en krijgt eigen authenticatie en toegangscontrole. Zij is geen voorwaarde voor de lokale app. Er is geen directe synchronisatie van PostgreSQL-datadirectories of automatische publicatie van lokale dossiers.
 
 ## 3. Componenten en eigenaarschap
 
@@ -54,12 +54,12 @@ De lokale installatie blijft de eerste uitvoeringsvorm. Een centrale deelomgevin
 | Webinterface | Presentatie, paneel-/tabstate, conceptinvoer, zichtbare gebruikerskeuzes | Bronrechten toekennen, inactieve modellen gebruiken of rechtstreeks providercalls uitvoeren |
 | API-/applicatielaag | Gevalideerde opdrachten, workspacecontext, idempotentie, antwoord-/eventcontracten | Een onvolledige run als voltooid presenteren |
 | Dossierservice | Onderzoek, drafts, revisies, notities en bewuste opslag van gesprekken | Tijdelijke persoonlijke gesprekken stilzwijgend duurzaam bewaren |
-| Bronservice | Toegelaten edities, instellingen, bronrevisies, licentiestatus en passagecontext | Een websnippet of latere uitleg als primaire tekst behandelen |
+| Bronservice | Herleidbare bronnen, edities, bronrevisies, authenticiteitsinformatie, bekende gebruiksbeperkingen en passagecontext | Authenticiteit van een document gelijkstellen aan waarheid of uitlegautoriteit van zijn beweringen |
 | Assetservice | Download, hash, herkomst, afgeleiden, retentie en beschikbaarheid | Bewaarrecht gelijkstellen aan deel- of cloudverwerkingsrecht |
 | Retrievalservice | Collectiescope, tekst-/vectorzoeken, kandidaten, deduplicatie en zoekdekking | Ontbrekend corpus vervangen door ongemarkeerd modelgeheugen |
 | Bewijsservice | Versievaste bewijsbundels, claims, verwijzingen en interpretatierelaties | Modelovereenstemming als bronbewijs tellen |
 | Onderzoeksworkflow | Begrensde stappen, toolplanning, verificatie en terminale toestanden | Beleid of moderatorregie laten overschrijven door broninhoud |
-| Routeringsservice | Eligible routes, evaluatiestatus, toewijzingen, pins en toegestaan fallbackbeleid | Ongekoppelde providers activeren of een vastgezette rol automatisch herverdelen |
+| Routeringsservice | Beschikbare geschikte routes, praktische kwaliteitsnotities, toewijzingen, pins en toegestaan fallbackbeleid | Ongekoppelde providers activeren of een vastgezette rol automatisch herverdelen |
 | Modeladapters/workers | Uitvoering van toegelaten opdrachten en genormaliseerde resultaten | Secrets in modelcontext opnemen of zelf nieuwe tools/rechten verkrijgen |
 | Roundtableservice | Deelnemers, beurten, rondes, gedeeld bewijs en meningsverschillen | Ongevraagd een debat voortzetten of een winnaar uitroepen |
 | Export-/backupservice | Geselecteerde pakketten, manifesten, consistente snapshots en herstel | Secrets of geblokkeerde bronbytes meenemen in een deelpakket |
@@ -117,9 +117,9 @@ Een providerstream is conceptuitvoer. Status en een passende niet-inhoudelijke e
 
 ## 7. Orchestrator en Roundtable
 
-De backend filtert modelroutes eerst op koppeling, ingeschakelde status, account/regio, mogelijkheden, gegevens-/bronrechten, evaluatiegeldigheid en budget. De orchestrator kiest uitsluitend route-IDs uit die lijst. Ook de orchestratorroute zelf moet toegelaten zijn. Een LLM-antwoord dat een onbekende route noemt wordt geweigerd.
+De backend filtert modelroutes eerst op koppeling, ingeschakelde status, account/regio, benodigde mogelijkheden, gekozen gegevensbeleid, concrete bronbeperkingen en budget. De orchestrator kiest uitsluitend route-IDs uit die lijst. Ook de orchestratorroute zelf moet daaraan voldoen. Een LLM-antwoord dat een onbekende route noemt wordt geweigerd. Een voorafgaande expertbeoordeling of benchmarkscore is geen voorwaarde om een gekoppeld model persoonlijk te gebruiken.
 
-Een RoleAssignment bevat persona, perspectief, modelroute/revisie, bewijsversie, automatische of handmatige keuze en pinstatus. Geschiktheid volgt taak-/taalevaluatie; zonder bewijs blijft de keuze voorlopig. Meerdere rollen mogen één model gebruiken en worden niet als onafhankelijke deskundigen voorgesteld.
+Een RoleAssignment bevat persona, perspectief, modelroute/revisie, bewijsversie, automatische of handmatige keuze en pinstatus. Eerdere gebruiksproeven, taak-/taalmogelijkheden en gebruikersvoorkeur helpen bij de keuze; zonder relevante observaties heet de match voorlopig. Een model- of configuratiewijziging maakt oude kwaliteitsnotities mogelijk achterhaald, zonder de persoonlijke tool op een nieuw evaluatieprogramma te laten wachten. Meerdere rollen mogen één model gebruiken en worden niet als onafhankelijke deskundigen voorgesteld.
 
 Een moderatoropdracht autoriseert één beurt of een expliciet begrensde ronde. De standaardvoorstelgrootte blijft vier deelnemers met één antwoord per aangevraagde ronde. Bewijsmateriaal heeft een vaste revisie per beurt. Nieuw bewijs wordt toegelaten en gedeeld voordat afhankelijke reacties volgen. Een synthese is een afzonderlijke gevraagde handeling en bewaart geschillen.
 
@@ -161,7 +161,7 @@ HTTP-opdrachten starten werk; SSE levert voortgang met oplopende event-ID, run-I
 
 ## 9. API-grenzen
 
-Voorgestelde routes onder `/api/v1`; de uiteindelijke OpenAPI-contracten krijgen tests vóór implementatie van de betrokken schermen.
+Voorgestelde routes onder `/api/v1`; werkende OpenAPI-contracten en de bijbehorende schermen worden per functie samen uitgewerkt en praktisch gecontroleerd.
 
 | Opdracht | Contract |
 | --- | --- |
@@ -184,7 +184,9 @@ Types worden eenvoudig gehouden en waar passend uit backendcontracten afgeleid. 
 
 ## 10. Assetpipeline, citaties en retentie
 
-De bronservice controleert institutionele toelating en gebruiksstatus vóór fetching en vóór ieder volgend gebruik. De assetservice downloadt begrensd naar staging, controleert inhoud, berekent een hash en plaatst bytes onder hun identiteit. De DB-transactie koppelt vervolgens herkomst/rechten en dossierverwijzing. Bestandssysteem en database hebben geen gezamenlijke transactie: herstel behandelt verweesde staging/objecten en ontbrekende blobs expliciet.
+De bronservice registreert authentieke, herleidbare onlinebronnen voor persoonlijk onderzoek. Bibliotheek- en wetenschappelijke catalogi zijn waar beschikbaar de voorkeursreferentie, maar een controleerbare auteurssite, eigenaars-/projectrepository of kopie met aantoonbare herkomstketen kan ook worden gebruikt. Er is geen institutionele allowlist als exclusieve ingang. Onbekende of gegenereerde beelden worden niet als echte manuscriptgetuigen opgevoerd. De service bewaart bronsoort, authenticiteitsonderbouwing en concrete gebruiksbeperkingen; een echt document is niet automatisch inhoudelijk juist.
+
+De assetservice downloadt via beschikbare toegang begrensd naar staging, controleert inhoud, berekent een hash en plaatst bytes onder hun identiteit. De DB-transactie koppelt vervolgens herkomst/gebruiksinformatie en dossierverwijzing. Bestandssysteem en database hebben geen gezamenlijke transactie: herstel behandelt verweesde staging/objecten en ontbrekende blobs expliciet. Persoonlijk raadplegen vereist geen publieke herdistributielicentie; toegang wordt niet omzeild en bewaren, cloudverwerking, delen en training blijven afzonderlijke gebruiksvormen.
 
 Een verwijzing naar tekst noemt editie-/bronrevisie, passage en een vastgelegd selectorreferentiesysteem. Beeldverwijzingen noemen manuscript, canvas/folio, beeldrepresentatie en alleen onderbouwde regioselectoren. Een preview, crop of samengestelde tegelweergave is een afgeleide met ouderrelatie. Een moderne versnummering levert niet automatisch een exacte manuscriptregio.
 
@@ -220,4 +222,4 @@ Pinokio beheert bij een lokale installatie eerst PostgreSQL-readiness, daarna AP
 | Externe grenzen | Geweigerde broninjectie, onveilige fetching, ongeldige imports en geen secrets in uitvoer/export |
 | Centrale deelroute | Afzonderlijke autorisatie-/intrekkingstests vóór die functie wordt vrijgegeven |
 
-Vóór de betrokken bouwstap worden exact gelockt: Windows-installatieroute, secretstore, provider-/SDK-versies, OpenAPI-schemas, importformaat, opslagquota, tijd-/kostenbudgetten, evaluatiegeldigheid en hersteldetails. De bestaande functionele keuzes worden daarbij behouden. Tests en menselijke evaluaties volgen V1-V9 van het implementatieplan; er zijn hier geen resultaten verzonnen.
+Werk Windows-installatie, secretstore, provider-/SDK-versies, OpenAPI-schemas, importformaat, opslagquota, tijd-/kostenbudgetten en herstel tijdens de betrokken bouwstap uit. Gebruik eerst de kleinste werkende persoonlijke flow en voeg alleen details toe die daarvoor nodig zijn. De controles uit V1-V9 van het implementatieplan bestaan uit representatieve eigen vragen, bron-/citaatcontroles en echte gebruikersflows. Leg kort vast wat werkt, wat fout ging en wat nog onzeker is. Er geldt geen verplichte grote testset, expertpanel of statistische neutraliteitsvrijgave.

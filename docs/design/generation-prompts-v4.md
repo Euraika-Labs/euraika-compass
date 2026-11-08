@@ -1,5 +1,7 @@
 # Version 4 generation prompts
 
+Historical prompt archive. The current scope is a personal-use neutral theological research tool with practical quality checks and authentic, traceable online sources. The original prompts are preserved as image provenance; [functional.md](../../functional.md) takes precedence over any older source or evaluation restrictions in them.
+
 Tool: built-in `image_gen`, opaque background. These are AI-generated design concepts, not implemented screens. Each request edited the corresponding local version 3 exploration. The exploratory references are not current deliverables; the selected version 4 outputs are stored in this directory. Public brand colors were checked on https://www.euraika.net/ on 8 November 2026.
 
 Both outputs were visually inspected for English interface labels, blue/gold treatment, the Chat/Research switch, and the five-language menu. Arabic RTL interaction, fonts, accessibility, translations, panel behavior, and model answers require implementation and live testing. Small differences in switch placement, button style, and spacing between generated images must be normalized into shared components during implementation. Mockup language-menu options do not establish working localization.

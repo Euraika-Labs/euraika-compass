@@ -1,6 +1,6 @@
 # Euraika Compass UI concepts
 
-The central interface and interaction specification is [design.md](../../design.md). System boundaries and execution contracts are in [architecture.md](../../architecture.md); these images remain supporting explorations.
+The central interface and interaction specification is [design.md](../../design.md). System boundaries and execution contracts are in [architecture.md](../../architecture.md); these images remain supporting explorations. The current product is a personal-use neutral theological research tool, with practical source and app checks. Historical prompts below preserve how the images were made; any old institutional-only or mandatory evaluation wording is superseded by [functional.md](../../functional.md).
 
 These images were generated with the built-in image generation tool as design explorations. They are not screenshots of a running application. Example source links, text, translations, and language-analysis labels illustrate the proposed interface and have not been validated as application results. No religious preference is implied by the selected sample passages.
 
@@ -22,6 +22,8 @@ The first direction used warm ivory, forest green, and sage. Version 2 introduce
 ## Design principles
 
 - A persona selector changes conversation style, not religious preference.
+- Research supports the user's own theological investigation; AI interpretations remain inspectable and open to challenge.
+- Authentic, traceable online sources can be used for personal research. Institutional catalogs are useful references, not an exclusive source whitelist. Source authenticity and the truth of an interpretation remain separate questions.
 - Chat and Research share context; switching layouts does not automatically save a temporary chat or start another research run.
 - English is the initial UI language. UI language, conversation language, and source/translation language are separate preferences.
 - Euraika navy `#001C3A`, supporting blue `#003369`, gold `#F4A616`, and charcoal `#1E2D39` were checked against the [Euraika website](https://www.euraika.net/) on 8 November 2026. Use dark text/icons on gold and verify actual contrast in implementation.
