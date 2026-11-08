@@ -49,7 +49,7 @@ Start met een rustige sans-serif voor bediening en lopende UI-tekst, circa 16 px
 
 Gebruik een consistente 4/8-px-ruimteschaal, dunne scheidingen, beperkte schaduw en herkenbare kleine lijniconen. Geneste kaarten worden beperkt waar doorlopende tekst of een eenvoudige tabel duidelijker is. Belangrijke acties hebben een tekstlabel; destructieve of onomkeerbare acties krijgen een passende bevestiging, gewone paneel-/persona-/taalwissels niet.
 
-Gedeelde componenten: AppShell, ModeSwitch, ConnectionSummary, LanguagePicker, DossierStatus, PersonaSelector, ChatComposer, ConversationMessage, SourceReference, SourceInspector, EvidenceTable, InterpretationComparison, ManuscriptViewer, ParticipantList, ModeratorConsole, RoleAssignmentTable en ExportReview. Naamgeving is een bouwvoorstel, geen reeds aanwezige code.
+Gedeelde componenten: AppShell, ModeSwitch, ConnectionSummary, LanguagePicker, DossierStatus, PersonaSelector, ChatComposer, ConversationMessage, SourceReference, SourceInspector, EvidenceTable, InterpretationComparison, ManuscriptViewer, ImageImport, TranscriptionEditor, ParticipantList, ModeratorConsole, RoleAssignmentTable en ExportReview. Naamgeving is een bouwvoorstel, geen reeds aanwezige code.
 
 ## 4. Chat voor levensvragen
 
@@ -61,6 +61,8 @@ De persona is zichtbaar met een korte omschrijving. Diepte, perspectief en model
 
 De composer bewaart niet-verzonden tekst bij modewissels en fouten. Verzenden toont dat de opdracht ontvangen is; annuleren en opnieuw verbinden maken de uitvoeringsstatus duidelijk. Een mislukte netwerkverbinding stuurt dezelfde vraag niet ongemerkt opnieuw als betaalde opdracht.
 
+`Attach image` laat een eigen foto of scan toevoegen. De bijlage toont een preview, tijdelijke of dossierbewaring en een actie `Read text`. Het toevoegen alleen start geen automatische betaalde beeldanalyse. De gebruiker kan naar Research gaan voor regiokeuze en het naast elkaar controleren van beeld en transcriptie, met behoud van de oorspronkelijke vraag.
+
 ## 5. Research-werkruimte
 
 Brede schermen tonen een bron-/dossiernavigator, een centrale lees-/onderzoeksruimte en een assistentpaneel. Binnen de werkruimte kunnen notities/woordonderzoek als onderste paneel worden geopend. Panelen zijn aanpasbaar en inklapbaar; tabbladen hebben herkenbare titels, sluitacties en behoud van context. De laatste bruikbare layout kan worden hersteld.
@@ -69,7 +71,7 @@ Brede schermen tonen een bron-/dossiernavigator, een centrale lees-/onderzoeksru
 | --- | --- |
 | Overview | Vraag, gekozen scope, edities, dekking, resultaatrevisie en open vragen |
 | Text reader | Benoemde brontekst en gekozen vertalingen, omliggende context, selectie en woordonderzoek |
-| Manuscripts | Werkelijke scan, folio/canvas, zoom, herkomst en beschikbare transcriptie/vertaling |
+| Manuscripts / Images | Werkelijke scan of eigen foto, folio/canvas waar bekend, zoom, herkomst en beeldtekst/transcriptie naast vertaling |
 | Evidence | E1/E2/E3, bronlocatie, bewijssoort, methode, onzekerheid en koppelingen naar claims |
 | Context | Literaire, historische, taalkundige en materiële gegevens met onderscheid in dateringen |
 | Interpretations | Voorgestelde/toegeschreven lezingen, steun, tegenbewijs, aannames en open geschillen |
@@ -97,6 +99,18 @@ De viewer toont authentieke, herleidbare beelden. De kop bevat verantwoordelijke
 Overlays verbinden een passage/woord alleen met een regio als de mapping is onderbouwd. Anders opent de app het juiste beschikbare folio zonder een verzonnen precieze highlight. Vermeld of de weergave een origineel bronbestand, thumbnail, crop, tegelweergave of andere afgeleide is. Datering toont methode/toeschrijving en bereik; perkamentdatum en compositiedatum worden niet als hetzelfde gegeven gepresenteerd.
 
 De SourceInspector bevat bron-/cataloguslink, editie/bronrevisie, taal, auteur/vertaler waar bekend, raadpleegtijd, herkomstonderbouwing, attributie, gevonden gebruiksinformatie en beschikbaarheid. De oorspronkelijke bron en eventuele kopieketen blijven bereikbaar. Een bron hoeft geen publieke herdistributielicentie te hebben om persoonlijk te worden geraadpleegd; bekende beperkingen op bewaren, extern verwerken of delen blijven zichtbaar. Waar embedded weergave niet werkt of beperkt is, biedt `Open source` een werkelijke alternatiefroute; bij een institutionele viewer kan het label `Open official viewer` blijven.
+
+### Tekst lezen uit een foto of scan
+
+De gebruiker kan een eigen beeld importeren of bij een geraadpleegde scan `Read text` kiezen. Toon het originele beeld naast een bewerkbare transcriptie, met een afzonderlijke vertaling. Paginakeuze, zoom, regioselectie, rotatie en een eventuele contrastvoorvertoning helpen lezen; bewerkingen krijgen een afgeleid-label en veranderen het origineel niet. Een foto met onbekende herkomst kan persoonlijk worden onderzocht met `Origin unknown`; OCR stelt haar ouderdom of authenticiteit niet vast.
+
+Vóór een opdracht zijn gekozen pagina/regio, taal of schrift en lokale worker of gekoppelde beeldgeschikte modelroute zichtbaar. Een herkende taal/schriftkeuze kan worden aangepast. Een externe route toont of het hele beeld of de uitsnede wordt verzonden; lokale modus biedt geen stille cloudfallback. `Read text` en `Read selected area again` starten begrensd werk met voortgang en annulering. Onvoldoende beeldkwaliteit, een niet-ondersteund schrift of ontbrekende geschikte route krijgen een herstelactie: andere uitsnede/afbeelding, andere ingestelde route of handmatig transcriberen.
+
+De eerste uitvoer heet `Automatic transcription · Not reviewed`. Onzekere letters en onleesbare plekken blijven zichtbaar, ook bij vertaling en later onderzoek. Geen aangevulde bekende verswoorden als zogenaamd uit de foto gelezen tekst. Een gewenste reconstructie wordt apart weergegeven. Alleen werkelijk beschikbare regio-/regelgegevens verbinden tekst met beeld; zonder mapping kan een gebruiker zelf een regio vastleggen, maar verschijnt geen verzonnen precieze highlight of zekerheidspercentage.
+
+De gebruiker kan tekst corrigeren en een gekozen bereik als nagekeken vastleggen. `User corrected` en het nagekeken bereik worden apart getoond; eerdere machinelezingen blijven bereikbaar. Een aangeleverde wetenschappelijke transcriptie is een eigen vergelijkingslaag. `Translate`, `Compare with an edition` en `Research this reading` gebruiken de geselecteerde transcriptierevisie, met verwijzing naar de bronfoto/regio. Het slagen van OCR of een eigen correctie geeft geen automatisch geverifieerd canoniek citaat of historisch keurmerk.
+
+Een tijdelijke Chat-foto en de bijbehorende lezing blijven sessiegebonden; mogelijke private tijdelijke staging wordt opgeruimd. Alleen bewust bewaren als dossier maakt de gekozen foto en transcriptierevisies duurzaam. De UI onderscheidt bij beeldtekst `Reading`, `Partial / Unreadable`, `Not supported`, `Cancelled`, `Read failed` en de afzonderlijke bewaartoestand. Een `Saved`-label betekent bewaring, niet dat de tekst foutloos is gelezen.
 
 | Bewaarlabel | Betekenis voor de gebruiker |
 | --- | --- |
@@ -147,6 +161,7 @@ Een latere deelservice krijgt een aparte publicatieflow met momentopname en lees
 | Provider-/budgetfout | Betrokken rol en reden, status van eerdere poging | Route/budget inspecteren; geen stille herhaling |
 | Save failed / Storage full | Lokale conceptinvoer behouden, geen opgeslagenclaim | Opnieuw bewaren, opslag beheren of export indien mogelijk |
 | Bron niet bewaarbaar/deelbaar | Concrete beperking bij betrokken object | Oorspronkelijke bron openen of verwijzingen exporteren |
+| Beeldtekst onzeker of niet ondersteund | Bronbeeld en werkelijk gelezen delen behouden; onleesbare tekens en routebeperking zichtbaar | Regio opnieuw lezen, andere ingestelde route kiezen of handmatig corrigeren |
 
 Een bevestigingsdialoog wordt gebruikt bij relevante onomkeerbare gevolgen, bijvoorbeeld definitief verwijderen of publiceren van persoonlijke inhoud. Er komt geen herhaalde toestemming voor al ingestelde modeltoewijzing, gewone autosave of een layoutwissel. Nieuwe gegevensdeling blijft een expliciete gebruikersactie.
 
@@ -165,6 +180,8 @@ WCAG 2.2 AA is het ontwerpdoel, geen al behaalde certificering. Toets onder meer
 Tabbladen, menu's, dialogen, bronnenlinks en paneelbediening werken zonder muis. Een resizable splitter heeft een toegankelijke naam, bereik/waarde en keyboardbediening; de APG-beschrijving is een ontwerpreferentie die nog met een werkende implementatie moet worden getoetst. [WAI-ARIA splitterpatroon](https://www.w3.org/WAI/ARIA/apg/patterns/windowsplitter/). Dragging is geen enige manier om een panelayout te wijzigen.
 
 Voer echte gebruikersflows uit met gesimuleerde én werkelijke fouttoestanden: tijdelijke Chat naar Research en terug; New research met autosave/herstart; interpretatie naar exacte bron; manuscript met ontbrekende mapping; vastgezet model bij uitval terwijl toegestane fallback beschikbaar is, zonder automatische vervanging en met expliciete herstelactie; moderator die pauzeert; export met geblokkeerd beeld; Arabic RTL met English referenties; toetsenbord en kleine schermen. Registreer observaties en onafgehandelde problemen. Screenshotinspectie en uitsluitend regex-/mocktests vervangen deze verificatie niet.
+
+Probeer ook eigen foto → regio → automatische transcriptie → eigen correctie → vertaling → bewaren/heropenen. Gebruik een scherp en een moeilijk beeld, een gedraaid fragment, handschrift waar ondersteund en gemengde RTL/LTR-tekst. Controleer bron-/regiolinks, onzekere letters, correctierevisies, tijdelijke opruiming en dat een lokale opdracht geen externe beeldcall veroorzaakt. Handmatige tekstinvoer en regiokeuze moeten ook zonder uitsluitend slepen bereikbaar zijn.
 
 ## 14. Bestaande concepten en implementatieoverdracht
 

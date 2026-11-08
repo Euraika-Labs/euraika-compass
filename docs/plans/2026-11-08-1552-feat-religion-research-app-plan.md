@@ -52,6 +52,7 @@ Een algemene chatbot kan brontekst, vertaling, overlevering en eigen aannames ve
 - **Gewone Chat en krachtige Research zijn twee verbonden weergaven.** Gebruikerskeuze: rustig levensvragen bespreken en daarnaast met flexibele panelen, tabbladen en bronnen werken. Governs R17.
 - **Engels standaard, meertalig en Euraika-huisstijl.** Gebruikerskeuze: onder meer Nederlands, Arabisch, Frans en Duits; blauw en geel. UI-, gespreks- en brontaal blijven afzonderlijk instelbaar. Governs R18, R20.
 - **De app kan zelf aanvullende webbronnen zoeken en lezen.** Gebruikerskeuze; alleen met ingeschakelde webtoegang en zichtbare herkomst. Governs R19.
+- **Tekst rechtstreeks uit foto's en scans lezen is een kernfunctie.** (session-settled: user-directed — niet meer uitgesteld tot een latere OCR/HTR-uitbreiding.) Automatische lezing, eigen correcties, vertaling en interpretatie blijven afzonderlijk controleerbaar naast het beeld. Governs R28.
 
 ### Requirements
 
@@ -67,7 +68,7 @@ Een algemene chatbot kan brontekst, vertaling, overlevering en eigen aannames ve
 **Bronnen en betrouwbaarheid**
 
 - R7. Elke bron heeft editie, taal, auteur/vertaler, bronsoort, canonlidmaatschap, versie/hash en verwijzingen. Elke passage kan tot meerdere collecties behoren zonder onafhankelijke bewijskopie te worden.
-- R8. Letterlijke citaten worden door software uit de vastgelegde editie ingevuld. Beweringen met een schriftuurlijke basis hebben passagekoppelingen; modelvertaling, bestaande vertaling, tekstobservatie, toegeschreven interpretatie en eigen reflectie zijn herkenbaar verschillend.
+- R8. Letterlijke citaten uit tekstedities worden door software uit de vastgelegde editie ingevuld. Bij beeldbronnen verwijst een lezing naar de foto/regio en de gekozen transcriptierevisie met haar leesstatus; automatisch gelezen tekst is niet vanzelf een geverifieerd citaat. Beweringen met een schriftuurlijke basis hebben passagekoppelingen; modelvertaling, bestaande vertaling, tekstobservatie, toegeschreven interpretatie en eigen reflectie zijn herkenbaar verschillend.
 - R9. Elke gevraagde collectie wordt afzonderlijk onderzocht. Ontbrekende dekking, onvoltooide analyse en onvoldoende bronnen worden expliciet vermeld; modelgeheugen vervangt nooit ongemerkt ontbrekende bronresultaten.
 - R10. Originele bestanden en tekst blijven ongewijzigd bewaard. Zoekrepresentaties en annotaties zijn aparte afleidingen met herkomst. Toon-, indexeer-, exporteer- en trainingsrechten worden per brongebruik geregistreerd.
 
@@ -90,6 +91,7 @@ Een algemene chatbot kan brontekst, vertaling, overlevering en eigen aannames ve
 - R25. Chat biedt naast één-op-één expliciet een Roundtable met gelabelde AI-deelnemers. Persona, analytisch perspectief en model zijn afzonderlijke keuzes. De gebruiker modereert deelnemers, spreekbeurten, pauze, bronvragen en synthese. Een gedeeld dossier met vaste bewijsversies, begrensde rondes/kosten, bronregels en zichtbare geschillen voorkomen eindeloze autonome discussie of een stilzwijgend uitgeroepen winnaar.
 - R26. Expliciet gestarte onderzoeksdossiers krijgen automatische draftbewaring en herstelbare runstatus. Gekozen revisies kunnen via een manifest-/rapport-/bestandenpakket worden gedeeld en apart geïmporteerd, met zichtbare rechten- en beschikbaarheidsbeperkingen. Geen ruwe appdatabase, secrets of ongevraagde persoonlijke geschiedenis. Een latere centrale deeldienst publiceert uitsluitend gekozen momentopnamen met eigen toegangscontrole.
 - R27. Toegelaten daadwerkelijk geraadpleegde bronbeelden worden automatisch lokaal bewaard als de voorwaarden duurzame bewaring toestaan. Bytes worden eenmaal opgeslagen en via bron-/asset-/dossierrevisies hergebruikt, met herkomst, kwaliteit, hash en rechten. Geciteerde duurzame objecten worden niet stilzwijgend als tijdelijke cache verwijderd. Onbekende rechten, mislukking en volle opslag hebben een zichtbare toestand; lokale bewaartoestemming is geen deeltoestemming.
+- R28. De gebruiker kan een eigen foto/scan importeren of een geraadpleegd bronbeeld kiezen en de zichtbare tekst rechtstreeks laten transcriberen. Selecteer pagina/regio en waar nodig taal/schrift. Een geschikte lokale OCR-/handschriftworker of expliciet gekozen gekoppelde beeldroute levert een controleerbaar voorstel, met onzekere/onleesbare delen en werkelijke regiokoppelingen waar beschikbaar. De gebruiker kan naast het beeld corrigeren, opnieuw laten lezen, vergelijken met een bestaande transcriptie, vertalen en verder onderzoeken. Origineel beeld, afgeleide uitsnede, automatische lezing, eigen correctie, reconstructie en vertaling blijven aparte revisies. Er worden geen ontbrekende letters uit bekende schriftteksten aangevuld als zogenaamd gelezen tekst; OCR bewijst geen authenticiteit en maakt een citaat niet automatisch geverifieerd. Privébeelden volgen de tijdelijke Chat-/bewuste dossierbewaring en gekozen lokale/cloudverwerking.
 
 ### Personas
 
@@ -113,6 +115,7 @@ De persona is een begrensd configuratieprofiel voor gespreksstijl en methode, on
 - F6. Van levensvraag naar onderzoek: normaal chatten, relevante bronnen uitklappen, 'Open in Research' kiezen, passage/vertalingen naast gesprek inspecteren en terugkeren zonder context of conceptbericht te verliezen. Covers R17.
 - F7. Talen: Engelse eerste start, UI-taal kiezen, afzonderlijke gesprekstaal/edities behouden; Arabisch toont RTL met per tekstblok de juiste richting. Covers R18.
 - F8. Webonderzoek: gebruiker configureert en activeert provider; assistent zoekt met geminimaliseerde termen, leest bronnen en toont herkomst/beperkingen. Uitschakelen of provideruitval laat lokale bronnen bruikbaar. Covers R13, R19.
+- F9. Foto lezen: eigen foto of bronbeeld openen → pagina/regio en geschikte leesroute kiezen → tekstvoorstel naast beeld controleren en zo nodig corrigeren → afzonderlijk vertalen/zoeken/onderzoeken → expliciet dossier met oorspronkelijke foto en leesrevisies bewaren. Een tijdelijke Chat-upload wordt niet stilzwijgend een blijvend bronobject. Covers R8, R13-R14, R21, R24, R27-R28.
 
 ### Acceptance Examples
 
@@ -124,12 +127,13 @@ De persona is een begrensd configuratieprofiel voor gespreksstijl en methode, on
 - AE6. Na model-timeout, annulering of geheugenfout verschijnt zichtbaar gedeeltelijk onderzoek; afgeronde bronresultaten blijven beschikbaar en geen ongecontroleerde synthese krijgt het label voltooid. Covers R9, R12.
 - AE7. Een Engelse UI kan een Nederlands gesprek en een Arabische brontekst tonen. Overschakelen naar Arabische UI spiegelt de bediening waar passend, behoudt LTR-verwijzingen en verandert geen origineel tekstbestand. Covers R18.
 - AE8. Een webpagina die instructies bevat of een onjuist vers citeert, verandert het beleid niet en vervangt geen lokale editie. Een onbereikbare pagina wordt geen zogenaamd gelezen bron. Met web uit zijn er nul zoek-/fetchaanroepen. Covers R8-R10, R13, R19.
+- AE9. Bij een foto van een gedeeltelijk onleesbare Hebreeuwse of Arabische tekst kiest de gebruiker een regio. Het tekstvoorstel markeert onzekerheid en vult een bekend vers niet uit geheugen aan. De gebruiker corrigeert zichtbare tekens, vraagt een afzonderlijke vertaling en bewaart het onderzoek. Heropenen toont oorspronkelijke foto, geselecteerde regio, automatische en eigen lezing met hun herkomst. Een onbekende maker/datering blijft onbekend. Ontbrekende leesmogelijkheden worden getoond zonder stille cloudfallback. Covers R8-R10, R13-R15, R18, R21-R24, R27-R28.
 
 ### Scope Boundaries
 
 De persoonlijke versie omvat alle persona's, beide werkmodi, vijf initiële UI-lokalisaties, optioneel geconfigureerd webonderzoek, authentieke onlinebronnen en eigen imports, bronverwijzingen en dossiers. Functies groeien in kleine werkende stappen. De gebruiker kan ongeteste model-/taalopties kiezen met zichtbare beperkingen; geconstateerde technische onbruikbaarheid wordt niet verborgen. Optioneel webonderzoek is geen cloudinference of toestemming om gesprekken naar een provider te sturen.
 
-**Deferred for later:** Finetuning, stem/audio, meerdere menselijke accounts, LAN-toegang, eigen OCR/HTR, een volledig vooraf samengesteld commentarenpakket en het verspreiden van derdepartijbronpakketten. Individuele authentieke commentaren zijn nu al als toegeschreven onderzoeksobject bruikbaar onder de bronpolicy. Manuscriptweergave, optionele cloudmodellen en door één gebruiker gemodereerde AI-discussie vallen binnen R21-R25. Deze verbindingen worden niet stilzwijgend geactiveerd.
+**Deferred for later:** Finetuning, stem/audio, meerdere menselijke accounts, LAN-toegang, zelf trainen van handschriftherkenners, een volledig vooraf samengesteld commentarenpakket en het verspreiden van derdepartijbronpakketten. Individuele authentieke commentaren zijn nu al als toegeschreven onderzoeksobject bruikbaar onder de bronpolicy. Manuscriptweergave, optionele cloudmodellen, gemodereerde AI-discussie en tekst lezen uit eigen foto's/scans vallen binnen R21-R25 en R28. Deze verbindingen worden niet stilzwijgend geactiveerd.
 
 Dossierexport/import en automatisch rechtenbewust bewaren van gebruikte bronbeelden vallen onder R26-R27 binnen de persoonlijke scope. Een online deeldienst en realtime gezamenlijk bewerken vragen afzonderlijke implementatie/vrijgave. De publieke documentatierepository blijft onderscheiden van het publiceren van persoonlijke dossiers of derdepartijbeelden.
 
@@ -206,6 +210,16 @@ Latijn/Vulgata, Septuaginta en uitgebreidere commentaren komen als latere benoem
 
 Authenticiteit betekent dat het materiaal echt en herleidbaar is; zij bewijst niet dat de inhoud historisch juist of theologisch gezaghebbend is. Academische en institutionele bronnen helpen herkomst en methode toetsen, maar zijn niet de enige toegestane aanbieders. Commentaar blijft gelabeld als toegeschreven interpretatie; de gebruiker kan het vergelijken en bekritiseren. De specifieke hadithuitsluiting blijft gelden.
 
+### Foto's en scans rechtstreeks lezen
+
+Een gebruiker kan een foto van een boekpagina, manuscript, fragment of inscriptie onderzoeken, ook als er nog geen gepubliceerde transcriptie is. Bewaar de vindplaats of eigen herkomstinformatie; laat onbekende identiteit, ouderdom en authenticiteit expliciet open. Het lezen van tekens stelt die eigenschappen niet vast.
+
+De leesroute is: origineel beeld → optionele afgeleide uitsnede/rotatie → automatische transcriptie → eigen nagekeken correctie → afzonderlijke vertaling en interpretatie. OCR richt zich op gedrukte tekst; handschrift- of visionherkenning wordt gebruikt waar de gekozen route het betrokken schrift aankan. Er is nog geen engine of model gekozen en er is geen garantie voor elk oud schrift. Hebreeuws/Aramees, Grieks en Arabisch zijn relevante praktijkgevallen, met hun eigen richting en diakritiek.
+
+Het voorstel toont onzekere of onleesbare tekens; een leemte mag alleen als afzonderlijk gelabelde reconstructie worden aangevuld. Eventuele woord-/regelcoördinaten verwijzen naar werkelijk gelezen regio's. Een canonieke passage kan als vergelijkingskandidaat worden gevonden, maar mag niet ongemerkt de beeldlezing vervangen. Een citaat uit een beeld verwijst naar beeld/regio en transcriptierevisie met leesstatus; een succesvolle OCR-run is geen citaatverificatie.
+
+De backend kiest een lokale beeldworker of een door de gebruiker gekozen gekoppelde route met beeldmogelijkheden. Toon of het hele beeld of alleen een uitsnede naar een cloudroute gaat. Lokale modus blokkeert cloudbeeldcalls; ontbrekende ondersteuning leidt tot een bruikbare beperking. Tijdelijke privé-uploadstaging wordt opgeruimd en niet als openbare broncache hergebruikt. Bewust bewaard onderzoek houdt oorspronkelijke foto, gebruikte afleidingen en leesrevisies vast.
+
 ### High-Level Technical Design
 
 ```mermaid
@@ -216,7 +230,10 @@ flowchart TB
   API --> R[PostgreSQL tekstzoeken en semantische retrieval]
   R --> V[Versievaste pgvector-index]
   API --> AS[Immutable bronobjecten buiten de database]
+  API --> IMG[Beeldimport regio en transcripties]
+  IMG --> AS
   API --> O[Begrensde onderzoeksworkflow en gedeelde policy]
+  O --> IMG
   O --> W[Optionele webzoek- en extractieadapter]
   W --> E[Webbewijs met herkomst en gebruiksstatus]
   E --> C
@@ -228,7 +245,7 @@ flowchart TB
   C --> UI
 ```
 
-**Gegevensmodel:** Work, Edition, Passage, CollectionMembership, TranslationAlignment, TokenAnnotation, SourceLicense, SourceRevision, ResearchRun, EvidenceItem, Claim, Citation, Conversation, Dossier en ModelRevision. Alignering kan een-op-veel/veel-op-een zijn en bewaart de referentiesystemen aan beide kanten. Geen gedwongen gelijke versnummering of woordalignering.
+**Gegevensmodel:** Work, Edition, Passage, CollectionMembership, TranslationAlignment, TokenAnnotation, SourceLicense, SourceRevision, ResearchRun, EvidenceItem, Claim, Citation, Conversation, Dossier en ModelRevision. Voor beeldlezen komen daar ImageRegion, TranscriptionJob en TranscriptionRevision bij: invoerhash, pagina/regio en transformaties, gebruikte engine/modelversie, taal/schrift, automatische/eigen leeslaag en nagekeken bereik. Alignering kan een-op-veel/veel-op-een zijn en bewaart de referentiesystemen aan beide kanten. Geen gedwongen gelijke versnummering of woordalignering.
 
 **Weblaag en UI-contract:** Voeg WebQuery, WebDocumentRevision, FetchStatus en per-gebruikrechten toe aan bewijsregistratie; webdocumenten zijn geen Edition. De read-only provideradapter deelt het bestaande runbudget en heeft timeouts, antwoord-/redirectlimieten, queryminimalisatie en controle op onveilige URL-doelen. De concrete provider wordt pas na actuele API-/voorwaardencontrole gekozen en gebruikt eigen lokale credentials buiten Git en frontendbundel. De volledige eisen en verificaties voor R17-R20 staan in de [interactie-, taal- en webspecificatie](../design/interaction-and-localization.md). Offline en web-uit blijven volwaardige lokale paden; webresultaten geven geen toestemming voor permanente indexering, export of training.
 
@@ -304,11 +321,13 @@ Bijwerken bewaart de vorige werkende configuratie; databaseschemawijzigingen kri
 
 **Goal:** Werkende lokale app-shell en bewezen algemene modelroute als basis voor beide werkmodi.
 
-**Requirements:** R11-R13, R15, R24. **Dependencies:** Geen.
+**Requirements:** R11-R13, R15, R24, R28. **Dependencies:** Geen.
 
 **Files:** `app/backend/pyproject.toml`, `app/backend/religion_app/main.py`, `app/backend/religion_app/models/`, `app/frontend/package.json`, `app/frontend/src/`, `app/config/models.yaml`, `app/tests/integration/test_model_runtime.py`.
 
 **Approach:** KTD1, KTD4, KTD8. Proef één gekozen route: een gekoppeld cloudmodel of een optionele lokale coördinator. Leg de betrokken runtime en dependencies vast; noteer bij lokale modellen ook hardware, GGUF-herkomst, revisie en hash. Begin met een korte dialoog, gestructureerde toolresultaten en stopgedrag; voeg geen finetuning toe.
+
+Voeg een beeldleesadapter toe voor een lokale OCR-/handschriftworker of een geschikte gekoppelde beeldroute. Registreer mogelijkheden per schrift/taak, beschikbaarheid, versie, budget en annulering. Een gewone tekstmodelroute wordt niet automatisch beeldgeschikt en een ontbrekende lokale leesworker veroorzaakt geen cloudfallback.
 
 **Test scenarios:** (1) NL-vraag geeft geldige leesbare uitvoer. (2) Ontbrekend model laat bibliotheek/shell werken. (3) Te groot verzoek leidt tot zichtbare beperking. (4) Stop en annulering beeindigen taak. (5) Workercrash laat geen onterecht gereed model achter.
 
@@ -318,11 +337,13 @@ Bijwerken bewaart de vorige werkende configuratie; databaseschemawijzigingen kri
 
 **Goal:** Controleerbare, volledige gekozen edities met aparte lagen voor vertaling en annotatie.
 
-**Requirements:** R7-R10, R14, R21-R22. **Dependencies:** U1.
+**Requirements:** R7-R10, R14, R21-R22, R27-R28. **Dependencies:** U1.
 
-**Files:** `app/backend/religion_app/corpus/`, `app/backend/religion_app/storage/`, `app/config/sources.yaml`, `app/tests/unit/test_source_admission.py`, `app/tests/integration/test_corpus_import.py`, `app/tests/fixtures/corpus/`.
+**Files:** `app/backend/religion_app/corpus/`, `app/backend/religion_app/storage/`, `app/backend/religion_app/transcriptions/`, `app/config/sources.yaml`, `app/tests/unit/test_source_admission.py`, `app/tests/integration/test_corpus_import.py`, `app/tests/integration/test_image_transcription.py`, `app/tests/fixtures/corpus/`.
 
 **Approach:** KTD2, KTD7 en Source Packs. Stel de exact benoemde JPS- en Koranvertaling vast; leg gebruiksstatussen vast zonder publieke/trainingsrechten te verzinnen. Controleer boeklijsten, versdekking, dubbele ID's en tekstvarianten voor activatie.
+
+Implementeer eigen beeldimport en transcriptieopslag in `app/backend/religion_app/transcriptions/`. Valideer invoertype/omvang, bewaar originele bytes/hash en herkomst, en registreer uitsneden en leesrevisies apart. Een tijdelijke Chat-upload krijgt private tijdelijke opslag met opruiming; alleen bewust dossierbewaren maakt haar duurzaam. Een onbekende objectherkomst blokkeert persoonlijk beeldonderzoek niet, maar wordt geen bevestigde authenticiteit.
 
 **Test scenarios:** (1) Herimport verandert geen identieke data. (2) Unicode/diakritische brontekst blijft exact. (3) Een bekende beperking blokkeert alleen de betrokken handeling; onbekende publicatie-/trainingsrechten blokkeren persoonlijk raadplegen niet. (4) Afgebroken import laat vorig pakket intact. (5) Covers AE4: gedeelde passage met meerdere lidmaatschappen. (6) Verschillende versindeling of MorphGNT-versie wordt expliciet gealigneerd of niet gekoppeld.
 
@@ -332,11 +353,13 @@ Bijwerken bewaart de vorige werkende configuratie; databaseschemawijzigingen kri
 
 **Goal:** Bruikbaar lezen, selecteren en vergelijken met exacte bronweergave.
 
-**Requirements:** R1, R7-R8, R17-R18, R20-R23. **Dependencies:** U2.
+**Requirements:** R1, R7-R8, R17-R18, R20-R23, R28. **Dependencies:** U2.
 
-**Files:** `app/frontend/src/features/library/`, `app/frontend/src/features/reader/`, `app/backend/religion_app/passages/`, `app/tests/e2e/reader.spec.ts`, `app/tests/integration/test_passage_api.py`.
+**Files:** `app/frontend/src/features/library/`, `app/frontend/src/features/reader/`, `app/frontend/src/features/transcription/`, `app/backend/religion_app/passages/`, `app/tests/e2e/reader.spec.ts`, `app/tests/e2e/image-reading.spec.ts`, `app/tests/integration/test_passage_api.py`.
 
 **Approach:** Gedeelde selectiestate voor collectie/werk/vers/edities en beide weergaven. Bouw EN/NL/AR/FR/DE-catalogi, Engelse eerste start, RTL per interface/tekstblok en Euraika-kleurtokens. RTL, diakritiek, aanpasbare panelen en toetsenbordnavigatie horen bij de eerste leesroute. Passagekoppelingen gebruiken editievaste IDs. Voeg `app/frontend/src/locales/` en locale-/weergavestate toe aan de filescope.
+
+Voeg beeldimport, pagina-/regioselectie en een transcriptie-editor naast de foto toe. Toon automatische lezing, onzekere delen, eigen correcties en beschikbare gepubliceerde transcriptie als afzonderlijke lagen; vertaling krijgt een eigen paneel. Bewaar een correctie als nieuwe revisie en bied opnieuw lezen zonder die te overschrijven. Zonder echte coördinaten wordt geen precies woordoverlay getoond. AE9 wordt een echte UI-proef met een bewaarde foto.
 
 **Test scenarios:** (1) Arabisch/Hebreeuws met EN/NL naast elkaar. (2) Citaat opent juiste editie en tekstbereik. (3) Ontbrekende vertaling verschijnt als ontbrekend. (4) Een-op-veelalignering wordt leesbaar weergegeven. (5) Selectie blijft behouden bij wissel van persona/paneel. (6) Modelvertaling krijgt nooit het label bestaande editie.
 
@@ -346,7 +369,7 @@ Bijwerken bewaart de vorige werkende configuratie; databaseschemawijzigingen kri
 
 **Goal:** Relevante context en tegenbewijs per gevraagde collectie vinden, met traceerbare selectie en zichtbare gaten.
 
-**Requirements:** R2, R5, R7, R9-R10, R13, R15, R19, R21-R23. **Dependencies:** U2.
+**Requirements:** R2, R5, R7, R9-R10, R13, R15, R19, R21-R23, R28. **Dependencies:** U2.
 
 **Files:** `app/backend/religion_app/retrieval/`, `app/backend/religion_app/evidence/`, `app/tests/fixtures/research_questions/`, `app/tests/integration/test_retrieval.py`.
 
@@ -358,11 +381,13 @@ Voeg `app/backend/religion_app/web_sources/` en webfixture-/integratietests toe.
 
 **Verification:** Voor de gebruikte proefvragen zijn gevonden bronnen, gemiste context en doublures inspecteerbaar. Voeg een gevonden fout als herhaalbaar voorbeeld toe. Alleen een werkelijk uitgevoerde zoekactie mag als gecontroleerde dekking worden getoond.
 
+Onderzoek vanuit een transcriptie gebruikt een expliciet gekozen leesrevisie met bronstatus. Gevonden edities zijn vergelijkingskandidaten en geen bewijs dat de foto die tekst werkelijk bevat. Afgeleide zoektekst wijzigt nooit de originele foto of letterlijke leeslaag.
+
 ### U5. Persona's en brongetrouwe onderzoeksworkflow
 
 **Goal:** Alle vijf persona's geven bruikbare gesprekken en vergelijkingen onder dezelfde inhoudelijke normen.
 
-**Requirements:** R2-R6, R8-R9, R12, R15-R19, R22-R25. **Dependencies:** U1, U3, U4.
+**Requirements:** R2-R6, R8-R9, R12, R15-R19, R22-R25, R28. **Dependencies:** U1, U3, U4.
 
 **Files:** `app/config/personas/`, `app/config/policy/`, `app/backend/religion_app/research/`, `app/backend/religion_app/validation/`, `app/frontend/src/features/chat/`, `app/tests/integration/test_persona_policy.py`, `app/tests/e2e/research.spec.ts`.
 
@@ -378,11 +403,13 @@ Bouw de normale Chat met uitklapbare bronnen en de gedeelde Chat/Research-overga
 
 **Goal:** Vertaalkeuzes onderzoeken en het resultaat controleerbaar bewaren.
 
-**Requirements:** R1, R7-R8, R10, R12-R14, R18-R25. **Dependencies:** U3, U5.
+**Requirements:** R1, R7-R8, R10, R12-R14, R18-R25, R27-R28. **Dependencies:** U3, U5.
 
 **Files:** `app/backend/religion_app/language_tools/`, `app/backend/religion_app/dossiers/`, `app/frontend/src/features/dossiers/`, `app/tests/integration/test_translation_contract.py`, `app/tests/integration/test_dossier_versions.py`.
 
 **Approach:** OPUS eerst, MADLAD optioneel; morfologie rechtstreeks uit toegelaten data. Elke taalrichting krijgt afzonderlijke capability-status. Bewaar originele antwoord/snapshots; heranalyse als nieuwe versie. Export gebruikt R10-gebruiksstatus.
+
+Vertaling van beeldtekst verwijst naar de gekozen transcriptierevisie en bewaart leesonzekerheid. Dossier en gekozen export nemen oorspronkelijke foto, afleidingen, automatische lezing en eigen correcties met hun relaties mee; tijdelijke privéuploads worden niet ongevraagd opgenomen. Een wijziging aan de lezing maakt een nieuwe vertaling/analyse mogelijk en overschrijft de oude niet.
 
 **Test scenarios:** (1) NL/EN-prefix correct per vertaler. (2) Ontbrekende morfologie krijgt geen verzonnen invulling. (3) Negatie, namen en meerduidige termen blijven gecontroleerd. (4) Falende specialist levert zichtbaar onvolledige analyse. (5) Heranalyse overschrijft origineel niet. (6) Dossierexport blokkeert niet-toegestane brontekst en kan in plaats daarvan verwijzingen exporteren. (7) Geen gegevens lekken van tijdelijk gesprek naar een nieuw gesprek.
 
@@ -392,7 +419,7 @@ Bouw de normale Chat met uitklapbare bronnen en de gedeelde Chat/Research-overga
 
 **Goal:** Concrete bron-, interpretatie- en gebruiksfouten vinden en herstellen tijdens het bouwen en persoonlijk gebruiken.
 
-**Requirements:** R4-R6, R8-R10, R15-R27. **Dependencies:** Voorbeelden ontstaan vanaf U2-U3 en groeien met U4-U6; controles lopen mee met de bouw.
+**Requirements:** R4-R6, R8-R10, R15-R28. **Dependencies:** Voorbeelden ontstaan vanaf U2-U3 en groeien met U4-U6; controles lopen mee met de bouw.
 
 **Files:** `app/tests/fixtures/research_questions/`, relevante bestaande integratie-/UI-tests en `docs/quality-notes.md` zodra er werkelijke observaties zijn.
 
@@ -501,6 +528,8 @@ Een gesprekstaal kan persoonlijk gebruikt worden zonder formele taalvrijgave; to
 
 Probeer de volledige route van een onderzoeksvraag naar een echte onlinebron en, waar relevant, een onderbouwd folio. De aanbieder mag een instelling, auteur, eigenaar, project of andere verifieerbare bron zijn. Controleer herkomst en de betrokken gebruiksvorm; authenticiteit van het document bewijst niet de waarheid van alle claims erin. Een onzeker beeld blijft kandidaat, een gegenereerd beeld wordt geen historisch bewijs.
 
+Voer F9/AE9 uit met een duidelijke foto, een gedraaide of wazige opname en een fragment met onleesbare tekens. Bekijk gebruikte schriften, RTL/diakritiek, pagina-/regioselectie, eigen correctie en de afzonderlijke vertaling. De automatische lezing blijft een voorstel; een bekende passage mag geen ontbrekende letters invullen. Controleer dat werkelijke coördinaten naar de juiste beeldregio wijzen en dat ontbrekende coördinaten geen verzonnen precisie opleveren. Test annulering, een ongeschikte leesroute en lokale modus zonder cloudbeeldcalls.
+
 Houd materiaal-/afschriftdatering, historische hypothese en interpretatie onderscheiden. Zoek context en tegenbewijs. De specifieke hadithafspraken blijven van kracht; toegeschreven commentaar krijgt geen automatische uitlegautoriteit. De gebruiker kan een religieuze lezing en een kritische lezing onderzoeken zonder dat de app zelf een geloofsuitkomst vastlegt.
 
 Test Roundtable met enkele gekozen deelnemers: de gebruiker vraagt beurten en synthese aan, iedereen gebruikt herkenbare bewijsversies en een synthese bewaart echte geschillen. Controleer modeluitval, annulering, budget en de vastgezette-rolregel ook met een beschikbare alternatieve route. Een meerderheid van modellen is geen waarheidscriterium.
@@ -509,15 +538,17 @@ Test Roundtable met enkele gekozen deelnemers: de gebruiker vraagt beurten en sy
 
 Begin met één echt dossier met notities en een bronbestand. Heropen het na herstart, gebruik hetzelfde bestand in een tweede dossier zonder onnodige kopie, en controleer dat een gewijzigde bron een nieuwe revisie krijgt. Een blijvend geciteerd bestand overleeft tijdelijke cacheopruiming. Een niet-bewaarde remote bron krijgt geen offline-label.
 
+Voeg een eigen foto met automatische transcriptie, correctierevisie en vertaling toe. Herstart en export/import behouden bronhash, regio/transformaties en de onderscheiden lagen. Een tijdelijke Chat-foto verdwijnt met haar tijdelijke verwerking en verschijnt niet in een ander gesprek of openbare broncache. Bewust dossierbewaren behoudt de geselecteerde foto en leesrevisies.
+
 Controleer daarna de relevante foutpaden uit [technology.md](../../technology.md): volle schijf, afgebroken download/autosave, crash tussen blobplaatsing en DB-commit en herstel vanuit een consistente DB-plus-bestandenbackup. Doe een export/import van een gekozen dossier zonder secrets, ongevraagde chatgeschiedenis of bronbestanden die niet mogen worden doorgegeven. Een bronlink blijft beschikbaar waar een bestand niet mee kan. Een later toegevoegde deeldienst krijgt eigen toegangs-/intrekkingscontroles.
 
-U1 bezit datalaag en jobs; U2 bronherkomst en beperkingen; U3 de viewer; U5 herstelbare runs; U6 dossiers en pakketten; U7 de praktische kwaliteitsnotities; U8 lifecycle en herstelproeven. Dit houdt R26-R27 onderdeel van de werkende flow.
+U1 bezit datalaag, jobs en beeldleesadapters; U2 bronimport en transcriptierevisies; U3 de viewer/editor; U5 herstelbare runs; U6 dossiers en pakketten; U7 de praktische kwaliteitsnotities; U8 lifecycle en herstelproeven. Dit houdt R26-R28 onderdeel van de werkende flow.
 
 ---
 
 ## Definition of Done
 
-De persoonlijke versie is bruikbaar wanneer de geleverde functies met echte modellen en bronnen werken: lezen en vergelijken, onderzoek met aanklikbare onderbouwing, Chat voor levensvragen, eigen bronnen toevoegen en dossiers heropenen. Chat/Research, talen/RTL, manuscripten en Roundtable worden met hun betrokken scenario's gecontroleerd zodra ze worden aangesloten. Onvoltooide functies en ontbrekende dekking blijven herkenbaar.
+De persoonlijke versie is bruikbaar wanneer de geleverde functies met echte modellen en bronnen werken: lezen en vergelijken, onderzoek met aanklikbare onderbouwing, Chat voor levensvragen, eigen foto's/bronbeelden transcriberen en controleren, eigen bronnen toevoegen en dossiers heropenen. Chat/Research, talen/RTL, manuscripten, beeldlezen en Roundtable worden met hun betrokken scenario's gecontroleerd zodra ze worden aangesloten. Onvoltooide functies en ontbrekende dekking blijven herkenbaar.
 
 De gebruiker kan gegevens, interpretaties, aannames en onzekerheid onderscheiden en teruggaan naar de bron. Niemand hoeft een theologische conclusie goed te keuren voordat zij onderzocht kan worden. Praktische technische en broncontroles vervangen het eerdere zware evaluatieprogramma.
 
@@ -528,7 +559,7 @@ Pinokio install/start/stop/update/reset werken voor de geleverde functies en bew
 | Mijlpaal | Eenheden | Gebruikersresultaat |
 | --- | --- | --- |
 | A. Technische basis | U1 en vroege launcher | App openen, één gekozen modelroute gebruiken, stoppen en herstarten |
-| B. Controleerbare bibliotheek | U2-U3 | Gekozen teksten en eigen authentieke bronnen openen en vergelijken |
+| B. Controleerbare bibliotheek | U2-U3 | Teksten en eigen foto's/scans openen, beeldtekst controleren en leeslagen vergelijken |
 | C. Onderzoek en gesprek | U4-U5 | Research en gewone Chat gebruiken met persona's, context, tegenbewijs en zichtbare bronnen |
 | D. Taal en dossiers | U6 | Vertaalkeuzes onderzoeken, bewaren, heropenen en een dossierpakket uitwisselen |
 | E. Persoonlijke werkbank | U7-U8, controles doorlopend | De gebruikte functies werken in de gewone Pinokio-flow; bekende beperkingen zijn zichtbaar |

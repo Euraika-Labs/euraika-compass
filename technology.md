@@ -25,6 +25,7 @@ Dit voegt een te beheren databaseproces toe. U1 moet op Windows de vertrouwde Po
 | Grote bestanden | Immutable bestanden met SHA-256-identiteit, via een BlobStore-interface | Geraadpleegde toegelaten scans, bronbestanden, toegelaten snapshots en afgeleide afbeeldingen. Metadata en verwijzingen staan in de DB; geen base64-afbeeldingen in berichten of JSON-velden. |
 | Zoeken | PostgreSQL full-text search met GIN, pgvector plus lokale embedding-/rerankworkers | Corpus, embeddingruimte en indexrevisie blijven gekoppeld. Begin met exacte vectorvergelijking; HNSW pas na meting van snelheid, recall en geheugen. |
 | Manuscriptviewer | [OpenSeadragon](https://openseadragon.github.io/) met IIIF waar ondersteund | Inzoomen en overlays; manifest/folio-/canvasnavigatie wordt door de app gekoppeld. Herkomst, concrete gebruiksbeperkingen en werkende toegang worden per bron vastgelegd. |
+| Tekst uit foto's/scans | Backendadapter voor lokale OCR/HTR-worker of een ingestelde beeldgeschikte modelroute | Gedrukte tekst en handschrift worden ondersteund waar de gekozen uitvoerder dit kan. Geen engine of cloudprovider is al gekozen; onzekere lezingen en correcties blijven aparte revisies. |
 | Langdurige taken | Persistente job-/runregistratie en begrensde workers | Onderzoek, downloads en indexering mogen geen vluchtige achtergrondcallbacks zijn. Herstart markeert onderbroken werk en herneemt alleen veilige, idempotente stappen. |
 | Centrale deeldienst, later | Dezelfde PostgreSQL-datalaag, private objectopslag met S3-achtige interface, authenticatie en resource-ACL's | Publiceert uitsluitend gekozen dossiermomentopnamen. Geen automatische upload van de lokale DB of gelijktijdige toegang tot haar bestanden. |
 
@@ -70,12 +71,15 @@ Gebruik voor runtimegegevens een door de app beheerde lokale datamap buiten Git,
 | --- | --- |
 | Bronnen | Source, SourceRevision, Edition, Passage, Manuscript, Canvas/Folio, Alignment |
 | Bestanden en rechten | Blob, AssetOrigin, AssetUsageRights, AssetReference, RetentionPin |
+| Beeldtekst | TranscriptionJob, TranscriptionRevision en regio-/afleidingsmetadata; engine/model, taal/schrift en een eigen correctie met ouderrevisie |
 | Onderzoek | Dossier, DossierDraft, DossierRevision, ResearchRun, EvidenceItem, Claim, Citation, Interpretation |
 | Gesprek | Conversation, Message, Participant, RoleAssignment, Round, RunEvent |
 | Uitvoering | Job, ModelRevision, ProviderRoute, UsageRecord; secrets afzonderlijk buiten de DB-export |
 | Delen | ExportManifest, ExportItem; later PublishedSnapshot en AccessGrant in de centrale dienst |
 
 Exacte bron- en dossiermomentopnamen zijn immutable. Werknotities/drafts mogen gecontroleerd worden bijgewerkt; inhoudelijke analyses krijgen nieuwe revisies. Vermijd een volledige kopie van een bron in ieder bericht. Gebruik relaties tussen bewijs, bronrevisie en dossier. Een blobhash groepeert dezelfde bytes, maar vervangt nooit bronherkomst of gebruiksrechten: die kunnen per herkomst verschillen.
+
+Een transcriptierevisie verwijst naar de exacte beeldbytes en pagina/uitsnede. Regioselectoren noemen hun coördinatenstelsel en eventuele transformatie naar het oorspronkelijke beeld. De tekst, onzekere segmenten en door de uitvoerder werkelijk geleverde regelregio's staan bij die revisie; vertalingen en interpretaties verwijzen naar de gebruikte lezing. Eigen correcties overschrijven de oorspronkelijke machinelezing niet. Een eventuele aangeleverde wetenschappelijke transcriptie blijft een afzonderlijke bronlaag.
 
 Geef persoonlijke onderzoeksobjecten vanaf het begin een workspace-/eigenaarscope; de lokale installatie heeft aanvankelijk één workspace. De centrale dienst koppelt dit aan echte gebruikers en toegangsrechten via expliciete migraties. Queries, zoeken en bestandslevering moeten dezelfde resourcegrenzen toepassen. Dezelfde database-engine voorkomt een enginewissel, maar maakt accounts, autorisatie en conflictafhandeling niet automatisch gereed. Deduplicatie mag geen omweg worden om het bestaan of de inhoud van andermans private objecten te achterhalen.
 
@@ -116,6 +120,20 @@ De assetpipeline doet het volgende:
 De app houdt persoonlijk raadplegen en bewaren gescheiden van verspreiding van bronbestanden. Zij toont de gevonden gebruiksinformatie en gebruikt een bronlink wanneer een bestand niet kan worden opgenomen. De opensourcerepository bevat appcode en documentatie; persoonlijke bronkopieën worden niet automatisch meegepubliceerd. Cloudverwerking en training zijn evenmin een automatisch gevolg van beschikbaarheid op internet.
 
 Stel een zichtbare opslaglimiet in. Tijdelijke niet-vastgezette previews mogen volgens recent gebruik verlopen; geciteerde toegelaten bronobjecten en dossierinhoud worden niet stilzwijgend opgeruimd. Bij een volle schijf pauzeert bewaring/download en blijft zichtbaar welk onderzoek nog niet volledig is opgeslagen. Een noodzakelijke rechtenbeperking krijgt een expliciete beschikbaarheidsmelding en behoud van toegestane verwijzingen. Gebruik geen generieke bestandsexpiratie op de duurzame onderzoeksobjecten.
+
+## Foto's en scans laten lezen
+
+OCR/HTR en beeldgestuurde transcriptie zijn onderdeel van de persoonlijke onderzoeksflow. De eerste werkende route gebruikt een passende lokale worker of een door de gebruiker gekozen gekoppeld visionmodel; de concrete engine en ondersteunde talen/schriften worden met echte beelden gekozen. Beschikbaarheid van een algemene chatroute bewijst geen handschrift- of beeldleesondersteuning. Hebreeuws/Aramees, Grieks en Koranisch Arabisch zijn relevante onderzoeksschriften, zonder belofte dat ieder handschrift betrouwbaar kan worden gelezen.
+
+De backend neemt een eigen foto of geraadpleegde scan op met bron-/uploadscope en inhoudshash. Het originele bestand blijft intact. Rotatie, uitsnede en contrastaanpassing leveren een afgeleide met reproduceerbare bewerkingsgegevens op. De uitvoerder krijgt alleen het gekozen beeldbereik en de noodzakelijke instructie; de taak heeft begrensde beeld-/pixelomvang, tijd en kosten en kan worden geannuleerd. De bestaande jobrunner beheert dit werk; er is geen afzonderlijk platform nodig.
+
+Het resultaat is een voorstel voor transcriptie met taal/schrift, engine-/modelrevisie en herkenbare onzekere of onleesbare delen. Een model mag geen ontbrekende letters uit een bekende editie invullen als gelezen beeldtekst. Een gereconstrueerde lezing, indien gevraagd, blijft afzonderlijk gelabeld. Echte enginecoördinaten of handmatige regioselecties kunnen tekst aan het beeld koppelen; zonder die gegevens volgt geen verzonnen woordoverlay. Een enginevertrouwensscore is geen bewijs van tekstgetrouwheid.
+
+Eigen verbeteringen maken een nieuwe transcriptierevisie. Vertalen, woordonderzoek en zoeken volgen de geselecteerde lezing en bewaren haar onzekerheden. Een machinelezing wordt niet automatisch een gecontroleerd citaat of een toegelaten editie. Door de gebruiker nagekeken tekst vermeldt het nagekeken bereik; de bronfoto blijft daarnaast beschikbaar. Herkenning van letters stelt geen authenticiteit, ouderdom of auteurschap van het object vast.
+
+Tijdelijke Chat-bijlagen gebruiken private, begrensde staging en sessiegebonden resultaten die worden opgeruimd; zij worden niet automatisch een duurzaam of openbaar bronobject. Na bewust bewaren in een dossier blijven het gekozen origineel, relevante afgeleiden en transcriptie-/correctierevisies gekoppeld voor hergebruik en backup. Lokale modus verstuurt geen beelden naar cloudmodellen. Bij gekozen externe beeldverwerking toont de app route en volledig beeld of uitsnede; tekst en beeld hebben niet automatisch dezelfde benodigde modelmogelijkheden of gegevenskeuze.
+
+Probeer enkele scherpe en onscherpe foto's, een gedraaid of deels afgedekt beeld, een handgeschreven fragment en gemengde RTL/LTR-tekst. Controleer dat onleesbaarheid zichtbaar blijft, een eigen correctie heropenbaar is, regio's naar de juiste beeldversie verwijzen en annulering of ontbrekende ondersteuning geen verzonnen resultaat oplevert. Deze praktische proeven bepalen de bruikbaarheid van de gekozen route zonder een vast evaluatievolume.
 
 ## Onderzoek bewaren en delen
 

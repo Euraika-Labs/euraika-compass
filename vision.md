@@ -8,6 +8,8 @@ Euraika Compass is een neutrale theologische onderzoekstool voor persoonlijk geb
 
 De gebruiker moet kunnen volgen hoe een antwoord ontstaat: vanuit een benoemde tekst, in samenhang met andere passages, met historische en taalkundige onderbouwing en ruimte voor verschillende lezingen. Het uitgangspunt is een bruikbare onderzoekswerkbank met praktische kwaliteitscontroles. Een geloofspositie of een theologische uitkomst wordt niet vooraf ingebouwd.
 
+De werkbank moet ook tekst uit foto's en scans kunnen helpen lezen. De gebruiker kan een eigen opname of een gevonden manuscriptbeeld openen, een gebied selecteren, een voorgestelde transcriptie naast het beeld controleren en corrigeren, en daarna vertalen of verder onderzoeken. Beeldlezen hoort bij de kern; onleesbare tekens en onzekere lezingen blijven zichtbaar.
+
 Diezelfde omgeving biedt plaats aan een persoonlijke vraag over verlies, verantwoordelijkheid, vergeving of zingeving. De gebruiker kiest hoe diep het gesprek gaat en kan vanuit een eenvoudige reflectie doorstappen naar de teksten, manuscripten en argumenten erachter.
 
 ## Missie
@@ -40,6 +42,8 @@ Euraika Compass brengt die behoeften bij elkaar met twee verbonden ervaringen: e
 Een gebruiker moet kunnen teruggaan naar de benoemde teksteditie, het echte manuscript of de oorspronkelijke onlinepublicatie. Alle authentieke en herleidbare onlinebronnen kunnen voor persoonlijk onderzoek worden gebruikt: bibliotheekcollecties, wetenschappelijke publicaties, auteurspagina's, projectrepositories en andere identificeerbare publicaties. Institutionele en wetenschappelijke bronnen zijn belangrijke referenties, zonder een exclusieve toegangspoort te vormen.
 
 Scan, transcriptie, reconstructie, vertaling en interpretatie blijven herkenbaar. Authenticiteit betekent dat duidelijk is wat het materiaal is en waar het vandaan komt; zij bewijst niet dat iedere bewering of interpretatie erin waar is. Herkomst, methode en beperkingen bepalen welk gewicht een bron in het argument krijgt.
+
+Een eigen foto kan persoonlijk worden onderzocht wanneer de objectherkomst nog onbekend is. De app bewaart dat onderscheid: tekstherkenning bewijst geen ouderdom, authenticiteit of auteurschap. Het oorspronkelijke beeld, automatische lezing en eigen correctie blijven afzonderlijk terug te vinden; ontbrekende tekst wordt niet stilzwijgend uit een bekende schriftpassage aangevuld.
 
 ### 2. Dezelfde zorgvuldigheid voor iedere collectie
 
@@ -89,11 +93,12 @@ We willen groeien naar een meertalige onderzoeksomgeving waarin teksten, manuscr
 
 Die groei gebeurt door authentieke bronnen toe te voegen en nieuwe model-/taalmogelijkheden praktisch uit te proberen. De app registreert herkomst, geconstateerde beperkingen en relevante gebruiksvoorwaarden. Samenwerking aan opensourcecode, broncorrecties en voorbeelden kan het product beter controleerbaar maken.
 
-Voor de eerste bruikbare persoonlijke versie hebben de bestaande Chat/Research-scope, manuscriptweergave, bewijs- en interpretatieonderzoek en gemodereerde Roundtable prioriteit. We controleren echte bronnen en gebruikersflows met een kleine gevarieerde verzameling proefvragen. Er is geen verplicht grootschalig benchmarkprogramma of minimumaantal deskundigenbeoordelingen. Verdere uitbreidingen zoals audio, meerdere menselijke accounts en eigen handschriftherkenning vragen afzonderlijke beslissingen en tests.
+Voor de eerste bruikbare persoonlijke versie hebben de bestaande Chat/Research-scope, manuscriptweergave, tekstlezen uit foto's/scans, bewijs- en interpretatieonderzoek en gemodereerde Roundtable prioriteit. We controleren echte bronnen en gebruikersflows met een kleine gevarieerde verzameling proefvragen. Er is geen verplicht grootschalig benchmarkprogramma of minimumaantal deskundigenbeoordelingen. Verdere uitbreidingen zoals audio en meerdere menselijke accounts vragen afzonderlijke beslissingen en tests. De bruikbaarheid van een beeldlezer verschilt per schrift, handschrift en beeldkwaliteit en wordt met echte voorbeelden nagegaan.
 
 ## Waaraan we succes herkennen
 
 - Een gebruiker kan de tekst en bron achter een inhoudelijke uitspraak terugvinden en controleren.
+- Een gebruiker kan tekst uit een foto naast het oorspronkelijke beeld controleren, corrigeren en verder onderzoeken, met behouden onzekere tekens en bronherkomst.
 - Een vergelijking verklaart verschillen met argumenten en houdt relevante onzekerheid zichtbaar.
 - Een persoonlijke reflectie wordt als behulpzaam en respectvol beoordeeld, zonder druk of ongegronde zekerheid.
 - Een moderator kan een AI-discussie volgen, onderbreken en op bewijs laten terugkomen.

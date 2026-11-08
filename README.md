@@ -30,6 +30,7 @@ The Research workspace is central. A connected Chat view also supports conversat
 - Open the exact edition and passage behind an answer's citation.
 - Inspect translation alternatives and available linguistic annotations.
 - View genuine historical manuscript scans, including Quran manuscripts, with traceable provenance and separate transcription/translation layers. Original collection catalogs are useful anchors; verified authentic copies from other online hosts are also usable.
+- Import a photo/scan or select a consulted source image, choose a page or region, and read its text with an OCR, handwriting or image-capable model route. Inspect uncertain characters beside the image, correct the reading, compare available transcriptions, and translate or research the selected reading separately. This is a core planned feature.
 - Compare interpretations through primary-text context, historical/linguistic evidence, counterevidence, and explicit limits, using the same method for all three collections.
 - Moderate a **Roundtable** of AI personas and analytical perspectives, with a shared evidence dossier and control over speaking turns and synthesis.
 - Save research dossiers with source, model, and policy versions.
@@ -41,6 +42,12 @@ English is the default interface language. The initial localization target inclu
 Local-only operation remains available. Cloud reasoning is explicitly configured and sends the selected conversation context and permitted evidence to the selected provider. Web research and remote manuscript viewing have separate controls. Search uses minimized topic terms rather than forwarding whole personal conversations; this differs from context sent to a configured conversation model. Search results supplement admitted editions. See the [interaction/language specification](docs/design/interaction-and-localization.md) and [evidence method, hybrid models, and moderated discussion](docs/plans/research-method-and-model-architecture.md).
 
 Hadith is excluded from default Quran retrieval and interpretive authority. No hadith pack is admitted; the narrow possible exception requires individually established direct provenance and permits context only. Later commentary does not automatically override primary text in any collection. Explaining an attributed interpretation differs from adopting its authority. Genuine manuscript candidates and image-rights limitations are documented in the [source register](docs/sources/manuscript-register.md).
+
+### Reading text from photos and scans
+
+The original image stays unchanged. Automatic transcription, your corrections, reconstruction and translation are separate versions linked to the chosen page/region and the engine/model used. Unreadable text remains uncertain; a known scripture passage must not silently replace what can actually be seen. A machine reading does not establish the object's authenticity or age, and successful recognition does not make it a verified quotation. Photos with unknown provenance can still be examined with that limitation visible.
+
+Use a suitable local reader or an explicitly selected, configured image-capable route. No particular engine has been chosen and support for every ancient script is not assumed. Local-only mode prevents cloud image calls; the interface shows whether a full image or crop will be sent. Temporary Chat uploads stay private and are cleaned up; saving a research dossier retains the selected original, regions and reading revisions for later reference.
 
 ## Five personas, one impartiality policy
 
@@ -108,6 +115,7 @@ The plan excludes HY-MT1.5 from the standard Belgian/EU deployment because its p
 - Repeat a question with another persona or source order when investigating possible religious preference.
 - Try missing or unreachable sources, failed model calls, network-off settings and the pinned-role rule.
 - Compare a few model translations with published translations and available language evidence; keep untested quality visible.
+- Try clear, rotated, blurred and partially unreadable photos. Check image regions, manual correction, separate translation and reopening of the saved original; verify that a missing local reader cannot silently upload to a cloud route.
 - Follow a real question through Research, the source/manuscript viewer, a saved dossier, restart and reopening. Check the used languages, RTL and keyboard controls.
 - Record concrete problems and repeat affected examples after a fix. A second model or specialist can help, but no panel approval is required to use the tool.
 

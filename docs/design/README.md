@@ -4,6 +4,8 @@ The central interface and interaction specification is [design.md](../../design.
 
 These images were generated with the built-in image generation tool as design explorations. They are not screenshots of a running application. Example source links, text, translations, and language-analysis labels illustrate the proposed interface and have not been validated as application results. No religious preference is implied by the selected sample passages.
 
+The core scope now also includes reading text from user photographs and consulted scans (R28): image/region selection, an uncertain automatic transcription beside the image, user corrections and subsequent translation or research. This flow is specified in [functional.md](../../functional.md) and the [interaction specification](interaction-and-localization.md). The existing concepts do not yet depict the photo-import/transcription workspace and do not establish OCR or handwriting-reading quality.
+
 The current direction combines the **version 4 base views** and **version 5 theological research, Roundtable, and routing explorations**: two connected views, **Chat** and **Research**, with English as the default UI language and the Euraika blue/gold palette. A language selector illustrates English, Dutch, Arabic, French, and German. The [interaction, language, and web research specification](interaction-and-localization.md) defines intended behavior, including RTL and optional internet research. Screens illustrate different web-control states; first launch will keep web access disabled until configured and enabled. They do not show a real running session.
 
 The first direction used warm ivory, forest green, and sage. Version 2 introduced petrol/turquoise and amber. Its files are retained below as earlier explorations, not the chosen visual direction. Version 3 explored compact research panels and an ordinary chat; version 4 applies the English-first multilingual requirement and verified Euraika brand palette to those layouts.
@@ -29,6 +31,7 @@ The first direction used warm ivory, forest green, and sage. Version 2 introduce
 - Euraika navy `#001C3A`, supporting blue `#003369`, gold `#F4A616`, and charcoal `#1E2D39` were checked against the [Euraika website](https://www.euraika.net/) on 8 November 2026. Use dark text/icons on gold and verify actual contrast in implementation.
 - Source collections have equal visual weight; color is not a ranking of religions.
 - Published translations and generated paraphrases must be identified explicitly in the implemented app.
+- Original photographs, automatic transcriptions, checked ranges, user corrections, reconstructions and translations remain separate. Unreadable text stays visible; generated text is not silently substituted for what the image shows.
 - Real linguistic annotations will need their own named annotation source; the mockup label is illustrative.
 - Typography, contrast, right-to-left text, keyboard navigation, and responsive layouts still need implementation and live testing.
 

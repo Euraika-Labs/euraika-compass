@@ -11,7 +11,7 @@ Status: architectuur voor een persoonlijke, neutrale theologische onderzoekstool
 | [technology.md](technology.md) | Stack, databasekeuze, opslag, onderhoud en technische randvoorwaarden |
 | `architecture.md` | Samenhang, grenzen, contracten en uitvoering van het systeem |
 | [design.md](design.md) | Schermen, interacties, vormgeving en toegankelijkheid |
-| [Implementatieplan](docs/plans/2026-11-08-1552-feat-religion-research-app-plan.md) | Bouwvolgorde, requirements R1-R27 en verificatie V1-V9 |
+| [Implementatieplan](docs/plans/2026-11-08-1552-feat-religion-research-app-plan.md) | Bouwvolgorde, requirements R1-R28 en verificatie V1-V9 |
 
 Technische uitwerking mag het functionele contract niet stilzwijgend wijzigen. Dependencyversies, migraties en endpointschema's worden tijdens de betrokken bouwstap gekozen en met de werkende interactie gecontroleerd. De endpointnamen hieronder zijn bouwvoorstellen, geen bestaande API of vooraf volledig vast te leggen protocol.
 
@@ -31,6 +31,9 @@ flowchart TB
     API --> STORE[Immutable bronobjecten]
     API --> JOBS[Jobrunner met herstelstatus]
     JOBS --> FLOW[Onderzoeksworkflow]
+    JOBS --> TRANS[Beeldtekst en transcriptierevisies]
+    TRANS --> STORE
+    TRANS --> ROUTES
     FLOW --> POLICY
     FLOW --> TOOLS[Bronnen zoeken lezen en valideren]
     FLOW --> ROUTES[Modeladapters]
@@ -56,6 +59,7 @@ De lokale installatie voor persoonlijk onderzoek is de eerste uitvoeringsvorm. E
 | Dossierservice | Onderzoek, drafts, revisies, notities en bewuste opslag van gesprekken | Tijdelijke persoonlijke gesprekken stilzwijgend duurzaam bewaren |
 | Bronservice | Herleidbare bronnen, edities, bronrevisies, authenticiteitsinformatie, bekende gebruiksbeperkingen en passagecontext | Authenticiteit van een document gelijkstellen aan waarheid of uitlegautoriteit van zijn beweringen |
 | Assetservice | Download, hash, herkomst, afgeleiden, retentie en beschikbaarheid | Bewaarrecht gelijkstellen aan deel- of cloudverwerkingsrecht |
+| Beeld-/transcriptieservice | Foto-/scanimport, regioselectie, OCR/HTR- of visionopdracht en gescheiden transcriptie-/correctierevisies | Ontbrekende letters aanvullen als waargenomen tekst, OCR als bronauthenticatie behandelen of een beeld stilzwijgend naar een cloudroute sturen |
 | Retrievalservice | Collectiescope, tekst-/vectorzoeken, kandidaten, deduplicatie en zoekdekking | Ontbrekend corpus vervangen door ongemarkeerd modelgeheugen |
 | Bewijsservice | Versievaste bewijsbundels, claims, verwijzingen en interpretatierelaties | Modelovereenstemming als bronbewijs tellen |
 | Onderzoeksworkflow | Begrensde stappen, toolplanning, verificatie en terminale toestanden | Beleid of moderatorregie laten overschrijven door broninhoud |
@@ -75,6 +79,7 @@ Persoonlijke onderzoeksobjecten hebben een workspace-/eigenaarscope. De lokale v
 | Teksten | Work → Edition → SourceRevision → Passage; CollectionMembership en Alignment bewaren scope en referentiesystemen |
 | Manuscripten | Manuscript → Folio/Canvas → AssetOrigin; een passagekoppeling heeft een aantoonbare mapping en onzekerheidsstatus |
 | Bronbestanden | Blob identificeert bytes; AssetOrigin koppelt die aan een bron, rechten en herkomst; afgeleiden verwijzen naar hun ouder |
+| Beeldtekst | TranscriptionJob gebruikt een beeldrevisie en optionele regio; TranscriptionRevision bewaart uitvoerder, taal/schrift, tekst, onzekere delen en beschikbare regios; een eigen correctie verwijst naar de vorige revisie |
 | Onderzoek | Dossier → Draft en DossierRevision; ResearchRun gebruikt een EvidenceBundleRevision en levert claims/interpretaties/resultaten |
 | Bewijs | EvidenceItem verwijst naar een exacte bronrevisie/locatie; Citation koppelt een claim aan dat bewijs; steun en tegenbewijs zijn afzonderlijk zichtbaar |
 | Discussie | Participant, RoleAssignment, Round, Turn en Message verwijzen naar modelroute en gebruikte bewijsversie |
@@ -91,6 +96,7 @@ Een gedeelde blobhash betekent dezelfde bytes, niet dezelfde licentie, wetenscha
 | Toestand | Inhoudelijke bewaring | Herstel |
 | --- | --- | --- |
 | Tijdelijke Chat | Gespreksinhoud en inhoudelijke events blijven in de actieve sessie; geen automatische DB-dossieropslag | Herverbinding zolang de sessie leeft; geen belofte van herstel na appherstart |
+| Tijdelijke beeldbijlage | Foto en gegenereerde transcriptie horen bij de sessie; begrensde private tijdelijke staging kan nodig zijn voor verwerking | Opruimen na sessie/taak volgens zichtbaar tijdelijk beleid; geen opname in de gedeelde bronnenbank |
 | Alleen Research-weergave openen | Behoudt de opslagstatus van het bestaande gesprek | Een layoutwissel maakt geen dossier of nieuwe modelrun |
 | `New research` of `Save as dossier` | Expliciete dossieraanmaak; daarna automatische draft-/resultaatbewaring | Onderbroken runs en bevestigde drafts blijven heropenbaar |
 | Openbare toegelaten bronobjecten | Rechtenbewust herbruikbaar, los van persoonlijke promptinhoud | Alleen lokaal aanwezige bytes krijgen een offlineclaim |
@@ -99,6 +105,8 @@ Een gedeelde blobhash betekent dezelfde bytes, niet dezelfde licentie, wetenscha
 Technische gebruiksregistratie mag status, foutcode, route-ID en kosten bevatten, maar geen ongevraagde persoonlijke vraagtekst. Een taakrecord voor tijdelijke Chat is geen achterdeur om die inhoud of een volledige eventstream te bewaren. Persoonlijke context wordt alleen aan een expliciet gekozen cloudroute geleverd. Zoekproviders krijgen geminimaliseerde onderwerptermen; dit is een andere gegevensstroom dan cloudgesprekscontext.
 
 Lokale modelmodus, webonderzoek en remote manuscripttoegang hebben onafhankelijke schakelaars. De backend controleert deze voor iedere uitgaande opdracht. Secrets worden via backendinstellingen opgeslagen en nooit teruggeleverd in statusresponses, prompts, dossierpakketten of diagnostiek.
+
+Een eigen foto blijft een persoonlijke upload, ook als dezelfde bytes elders bestaan. Een hash maakt haar geen openbaar bronobject. Bij expliciet bewaren als onderzoek worden gekozen originele bytes, afgeleiden en transcriptierevisies aan het dossier gekoppeld. Een layoutwissel of geslaagde OCR-opdracht verandert de bewaarkeuze niet. Beeldverwerking via een gekozen cloudroute toont of het hele beeld of een uitsnede wordt verzonden; lokale modus staat geen stille cloudfallback toe.
 
 ## 6. Onderzoeksworkflow en bewijscontrole
 
@@ -114,6 +122,16 @@ Lokale modelmodus, webonderzoek en remote manuscripttoegang hebben onafhankelijk
 Dezelfde bronregels gelden voor alle persona's en collecties. Hadith is standaard uitgesloten en geen uitlegautoriteit; de beperkte mogelijke contextuele uitzondering vereist afzonderlijke toelating volgens [functional.md](functional.md). Een website of deelnemer kan die grens niet omzeilen. Latere interpretaties kunnen onderwerp van vergelijking zijn zonder daarmee gezag over de primaire tekst te krijgen.
 
 Een providerstream is conceptuitvoer. Status en een passende niet-inhoudelijke erkenning kunnen direct verschijnen; substantieve schriftclaims worden pas na broncontrole weergegeven. De UI ontvangt gevalideerde inhoudsblokken en bronrelaties, geen ongemarkeerde ruwe modelclaims of verzonnen verborgen redeneertranscripten.
+
+### Van foto of scan naar onderzochte tekst
+
+Beeldtekst lezen is een kernroute onder R28. De gebruiker importeert een foto of kiest een reeds geraadpleegde scan, selecteert een pagina of regio en start een afzonderlijke transcriptieopdracht. De assetservice bewaart de oorspronkelijke bytes met hash en opgegeven herkomst. Rotatie, uitsnede of contrastbewerking zijn afgeleiden met hun bewerkingsgegevens en coördinaattransformatie naar het origineel; zij vervangen dat origineel niet.
+
+De backend kiest een beschikbare lokale beeldtekstworker of een door de gebruiker ingestelde, ingeschakelde route met de benodigde beeld-/schriftmogelijkheden, binnen gegevenskeuze en budget. Een gewoon tekstmodel wordt geen beeldlezer omdat een prompt dat vraagt. De bestaande pinregel geldt voor een vastgezette route. Als de gebruikte schrijfwijze, taal of beeldkwaliteit niet wordt ondersteund, volgt een concrete beperking en eventueel een handmatige transcriptieroute; geen verborgen provideractivering.
+
+De TranscriptionRevision bevat beeldhash/revisie, pagina/regio, verwerkingsinstellingen, engine-/modelversie, gekozen of voorgestelde taal/schrift en gegenereerde tekst. Onzekere of onleesbare delen blijven herkenbaar. Regio-/regelcoördinaten worden alleen bewaard als de uitvoerder of gebruiker ze werkelijk levert; ontbrekende mapping of zekerheid wordt niet verzonnen. Uitvoerderscores worden hoogstens als hun eigen schatting getoond, niet als gemeten historische juistheid. Handmatige correcties maken nieuwe revisies met behoud van de oorspronkelijke uitvoer.
+
+Beeld, automatische transcriptie, eigen correctie, aangeleverde wetenschappelijke transcriptie, vertaling en eventuele reconstructie blijven aparte lagen. Bekende schriftteksten mogen als vergelijking worden opgehaald, maar vullen geen onleesbare letters stilzwijgend aan. Vertaling en interpretatie verwijzen naar de gebruikte transcriptierevisie; een onzekere lezing blijft ook downstream onzeker. Een machinelezing is geen gecontroleerd letterlijk citaat uit een gepubliceerde editie. Een expliciete gebruikerscontrole geldt alleen voor het nagekeken tekstbereik; zij bewijst geen authenticiteit, ouderdom of auteurschap van het gefotografeerde object.
 
 ## 7. Orchestrator en Roundtable
 
@@ -175,6 +193,9 @@ Voorgestelde routes onder `/api/v1`; werkende OpenAPI-contracten en de bijbehore
 | `POST /roundtables/{id}/commands` | Begrensde moderatoractie met verwachte discussie-/bewijsversie |
 | `GET /sources/{id}` en `GET /passages/{id}` | Exacte revisie, bronlocatie, dekking, rechten en toegelaten inhoud |
 | `GET /assets/{origin_id}` | Bestandslevering via bevoegde bronherkomst met juiste representatie/attributie |
+| `POST /image-imports` | Begrensde foto-/scanbijlage in sessie- of dossierscope; oorspronkelijke bytes, herkomst en tijdelijke of duurzame bewaarkeuze |
+| `POST /transcription-jobs` | Beeldrevisie, pagina/regio, taal/schrift en gekozen geschikte route; retourneert job-ID voor voortgang/annulering |
+| `POST /transcriptions/{id}/revisions` | Eigen correctie met verwachte revisie en expliciet gecontroleerd bereik; oude machinelezing blijft behouden |
 | `POST /dossiers/{id}/exports` | Een gekozen revisie en expliciete inhoudsselectie naar exportjob |
 | `POST /imports` | Begrensd pakket controleren en als afzonderlijke herkomst importeren |
 
@@ -196,6 +217,8 @@ Gebruikte toegelaten duurzame objecten krijgen een RetentionPin voor relevante d
 
 Browser, broninhoud, provideruitvoer en importpakketten zijn externe invoer. De backend valideert schemas, IDs, omvang, referenties en werkspacescope. Broninstructies veranderen geen policy, persona, budget of toegelaten endpoint. Webextractie voert geen willekeurige paginascripts uit; URL-/redirectcontrole blokkeert onveilige lokale/private doelen en ongeoorloofde schema's.
 
+Foto-import valideert werkelijk bestandstype en begrenst bestandsomvang, gedecodeerde pixels en pagina-aantal voordat beeldverwerking begint. Een corrupte of te grote afbeelding krijgt een herstelmelding. Herkende tekst blijft broninhoud: ook instructies die zichtbaar in een foto staan kunnen geen tools, modelroutes of bronbeleid wijzigen.
+
 De lokale API luistert standaard op loopback. De applicatie moet onverwachte browser-originrequests en onbevoegde beheeracties afwijzen; localhost is geen autorisatiemodel. API-keys/databasecredentials staan in backendsecretopslag. Het UI kan een key bij setup eenmalig invoeren, maar bewaart die niet in browserstorage, bundel, URL, logs of dossier.
 
 Model-, web- en scanverbindingen zijn afzonderlijke grants. Provider-/modelmetadata is geen bewijs dat een account die route mag gebruiken. Uitvoerings- en exportbeleid controleert per asset bekijken, bewaren, afleiden, extern verwerken, delen en training afzonderlijk. Hadith-/commentaarregels blijven ook op via web verkregen bewijs van toepassing.
@@ -214,10 +237,11 @@ Pinokio beheert bij een lokale installatie eerst PostgreSQL-readiness, daarna AP
 
 | Grens | Vereist bewijs |
 | --- | --- |
-| Dossier versus tijdelijke Chat | Herstart herstelt opgeslagen onderzoek; tijdelijke inhoud is niet ongevraagd op schijf terechtgekomen |
+| Dossier versus tijdelijke Chat | Herstart herstelt opgeslagen onderzoek; geen ongevraagde duurzame kopie van tijdelijke inhoud en tijdelijke beeldstaging wordt opgeruimd |
 | Workflow en routes | Idempotentie, leaseconflict, annulering, budget en inactieve routes; echte uitval met en zonder pin, inclusief geblokkeerde automatische vervanging bij een pin ondanks toegestaan fallbackbeleid |
 | Bronnen en argumenten | Exacte verwijzingen/citaten, tegenbewijs, scopegaten, modelvertalinglabel en geen verboden secundaire bronlekkage |
 | Assets | Deduplicatie met afzonderlijke rechten, crashherstel, retentie bij cacheopruiming en eerlijke offlinebeschikbaarheid |
+| Beeldtekst | Scherpe en moeilijke beelden, rotatie/uitsnede en gemengd RTL/LTR; onzekerheid, correctierevisies, werkelijke regiokoppeling en geen cloudcall in lokale modus |
 | DB en lifecycle | Korte transacties, begrensde pools, migratie/backup/restore en gewone Pinokio-start/stop |
 | Externe grenzen | Geweigerde broninjectie, onveilige fetching, ongeldige imports en geen secrets in uitvoer/export |
 | Centrale deelroute | Afzonderlijke autorisatie-/intrekkingstests vóór die functie wordt vrijgegeven |
