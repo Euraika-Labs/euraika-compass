@@ -4,7 +4,7 @@ Status: functionele baseline van 8 november 2026. Dit is het centrale functionel
 
 [vision.md](vision.md) beschrijft het doel, de doelgroep en de richting van het product. Dit document vertaalt die visie naar functioneel gedrag; de technische plannen werken de bouw en verificatie uit.
 
-Dit document is leidend voor functioneel gedrag. Het [implementatieplan R1-R25](docs/plans/2026-11-08-1552-feat-religion-research-app-plan.md), de [interactie- en taalspecificatie](docs/design/interaction-and-localization.md), [bewijsmethode en modelarchitectuur](docs/plans/research-method-and-model-architecture.md) en het [manuscriptregister](docs/sources/manuscript-register.md) werken dit uit. Technische keuzes mogen deze functionele regels niet stilzwijgend veranderen. Nieuwe gebruikersbeslissingen worden hier verwerkt en in de relevante uitwerking doorgevoerd.
+Dit document is leidend voor functioneel gedrag. Het [implementatieplan R1-R27](docs/plans/2026-11-08-1552-feat-religion-research-app-plan.md), [technology.md](technology.md), de [interactie- en taalspecificatie](docs/design/interaction-and-localization.md), [bewijsmethode en modelarchitectuur](docs/plans/research-method-and-model-architecture.md) en het [manuscriptregister](docs/sources/manuscript-register.md) werken dit uit. Technische keuzes mogen deze functionele regels niet stilzwijgend veranderen. Nieuwe gebruikersbeslissingen worden hier verwerkt en in de relevante uitwerking doorgevoerd.
 
 ## Doel en uitgangspunten
 
@@ -33,6 +33,8 @@ Thora, Bijbel en Koran behouden hun eigen corpus-, editie- en interpretatieconte
 | Roundtable | Expliciet meerdere AI-deelnemers in één chat; gedeeld bewijsdossier; gebruiker bepaalt sprekers, rondes, pauze, bronvragen en samenvatting; geen winnaar op basis van stemmen of modelaantal | R25 |
 | Meertaligheid | Engels bij eerste start, EN/NL/AR/FR/DE als eerste UI-talen en uitbreidbare catalogi; UI-, gesprek- en brontaal onafhankelijk; Arabische UI RTL, tekstblokken met eigen richting | R18 |
 | Dossiers | Tijdelijke gesprekken alleen bewust opslaan; antwoord, bewijs, notities, bron/model/policyversies en discussie kunnen heropenen; heranalyse bewaart oude versie; export volgt bronrechten | R13-R14 |
+| Onderzoeksbewaring en delen | Gestarte onderzoeksdossiers automatisch bewaren en herstellen; gekozen revisies als dossierpakket exporteren/importeren; een latere optionele deeldienst publiceert alleen gekozen momentopnamen | R14, R26 |
+| Herbruikbare bronbeelden | Toegelaten geraadpleegde beelden automatisch duurzaam bewaren en eenmaal opslaan; citaties verwijzen naar dezelfde bytes/revisie; duurzame bronkopieën blijven buiten tijdelijke cacheopruiming | R10, R21, R27 |
 | Verbindingen en kosten | Cloudmodellen, web en remote scans afzonderlijk herkenbaar; keys alleen lokaal/backend; geen stille activering of ongeautoriseerde fallback; budgetten, annulering en gedeeltelijke resultaten zichtbaar | R11-R13, R19, R24-R25 |
 | Installatie en beheer | Pinokio Install / Start / Stop / Open Web UI, model-/bronbeheer, update/herstel met behoud van data; geen ongevraagde zware downloads | R11-R12, R14-R15 |
 | Vormgeving | Euraika-blauw/goudgeel, gelijke visuele behandeling van collecties, toetsenbordbediening, leesbaar contrast en bruikbare smalle schermen | R17-R18, R20 |
@@ -70,6 +72,10 @@ Voor manuscripten gebruikt de app een gecontroleerd register van officiële bibl
 De viewer biedt zoom, folio-/paginanavigatie en recto/verso waar relevant, met beschikbare transcriptie/vertaling naast de scan. Datering heeft een bron, methode en onzekerheid; datum van materiaal, afschrift en veronderstelde compositie worden niet gelijkgesteld. Een handschrift is niet automatisch het auteursexemplaar. Ontbrekende bladen, onzekere letters en reconstructies blijven zichtbaar. Geen verzonnen vers-folio-/woordkoppelingen en geen gegenereerde manuscriptbeelden als historische bron.
 
 Beeldtoegang, lokaal bewaren, indexeren, extern modelgebruik, export en training hebben afzonderlijke rechten. Bij beperkte toegang blijft een catalogusrecord met officiële viewerlink beschikbaar. De app omzeilt geen blokkades. Manuscripten zijn niet automatisch offline beschikbaar omdat de tekstbibliotheek lokaal staat.
+
+Een daadwerkelijk geraadpleegd en toegelaten bronbeeld wordt tijdens onderzoek automatisch lokaal bewaard voor hergebruik, wanneer duurzame lokale bewaring is toegestaan en voldoende opslag beschikbaar is. Een zoekhit veroorzaakt geen volledige manuscriptdownload. Bron, folio/canvas, kwaliteit/resolutie, raadpleegtijd, attributie, rechten en inhoudshash blijven gekoppeld. Dossiers verwijzen naar hetzelfde opgeslagen object; gewijzigde bytes krijgen een nieuwe revisie. Thumbnails, crops en bekeken tegels worden niet als volledig origineel beschreven.
+
+Een geciteerd duurzaam bronobject wordt vastgehouden zolang dat is toegestaan; tijdelijke cacheopruiming verwijdert het niet. Onbekende/restrictieve rechten, een volle schijf of een mislukte download leveren een concrete bewaartoestand op. De UI onderscheidt een blijvende lokale kopie, tijdelijke cache en uitsluitend remote verwijzing. Geen claim dat offline raadplegen mogelijk is op basis van alleen een URL of hash. Een bewaarkopie krijgt niet automatisch toestemming om mee te worden gedeeld.
 
 Voor inhoudelijke uitleg volgt het systeem dezelfde methode bij alle collecties:
 
@@ -123,7 +129,15 @@ De UI start in het Engels. Eerste lokalisatiedoelen zijn Engels, Nederlands, Ara
 
 Arabische UI gebruikt RTL. Arabische/Hebreeuwse passages en LTR-vertalingen behouden hun eigen richting in ieder scherm. Gemengde referenties, cijfers, URL's, diakritiek, selectie en kopiëren worden getest. Een vertaald menu is geen bewijs van antwoord- of vertaalkwaliteit in die taal; capability-/evaluatiebeperkingen blijven zichtbaar.
 
-Gewone gesprekken zijn tijdelijk. Bewust bewaren maakt een dossier met antwoord/discussie, eigen notities, bewijsitems, bronverwijzingen en relevante bron-, model-, policy- en zoekversies. Geschiedenis toont bewust bewaarde gesprekken. Geen impliciet achtergrondgeheugen tussen gesprekken en geen automatische inzet van persoonlijke vragen als trainings- of testdata. Heranalyse maakt een nieuwe gekoppelde versie. Export bewaart bronrechten en kan verwijzingen tonen wanneer volledige tekst/beeld niet geëxporteerd mag worden.
+Gewone gesprekken zijn tijdelijk. Bewust bewaren maakt een dossier met antwoord/discussie, eigen notities, bewijsitems, bronverwijzingen en relevante bron-, model-, policy- en zoekversies. Wie `New research` start of een chat bewust omzet, maakt expliciet een onderzoeksdossier; vanaf dat moment bewaart de app drafts, afgeronde resultaten en herstelstatus automatisch, met zichtbare bevestiging of fout. Heranalyse maakt een nieuwe gekoppelde versie. Geschiedenis toont bewust bewaarde gesprekken en aangemaakte onderzoeksdossiers. Geen impliciet achtergrondgeheugen tussen gesprekken en geen automatische inzet van persoonlijke vragen als trainings- of testdata.
+
+De eerste deelroute is export/import van een gekozen dossierrevisie: leesbaar rapport, versieerbaar manifest, relevante argumenten, notities, bron-/modelverwijzingen, hashes en uitsluitend toegelaten bestanden. De gebruiker selecteert persoonlijke notities/discussie bewust en ziet vooraf wat wordt opgenomen of weggelaten. Geen API-keys, ruwe appdatabase of ongevraagd volledige persoonlijke geschiedenis. Import controleert inhoud en maakt een afzonderlijk dossier/revisie zonder lokaal werk te overschrijven. Ontbrekende of niet-deelbare scans behouden een toegestane officiële verwijzing en beschikbaarheidsmelding.
+
+Een latere optionele deeldienst biedt leestoegang tot expliciet gepubliceerde momentopnamen met eigen authenticatie/toegangsbeheer. Intrekken blokkeert toekomstig ophalen via die route, niet reeds gedownloade kopieën. De lokale database wordt niet als bestand op een netwerkshare of via bestandssynchronisatie gedeeld. Realtime gezamenlijk bewerken en meerdere menselijke accounts vragen afzonderlijke uitwerking; een dossier als bestand delen vereist dit niet.
+
+Back-ups omvatten een consistente DB-snapshot en de bijbehorende niet-herbouwbare bestanden. Herstel controleert integriteit, objecthashes en dossierheropening. Een zoekindex kan opnieuw worden gemaakt; een gebruikte scan of eigen notitie kan niet worden hersteld uit alleen een hash. Databases, tijdelijke cache en duurzame bronobjecten hebben afzonderlijke bewaarbeheerregels volgens [technology.md](technology.md).
+
+De gekozen technische basis is PostgreSQL voor lokaal en centraal gebruik, met grote bronobjecten buiten de database. De Pinokio-flow moet het databaseproces en de modelworkers gezamenlijk kunnen installeren, starten, op gereedheid controleren en stoppen; bestaande data blijft bij herstel/update behouden. Dossierexport is afzonderlijk van databaseback-up en bevat geen databasecredentials.
 
 Pinokio verzorgt installeren, starten, stoppen en Open Web UI. De gebruiker beheert bronnen/modellen/providerkoppelingen met zichtbare voorwaarden, omvang en status. Geen stilzwijgende omvangrijke downloads. Stop en annulering beëindigen betrokken taken; update/herstel bewaren bronnen, modellen, dossiers en instellingen. Lezen van reeds aanwezige toegelaten teksten vereist geen cloudkey.
 
@@ -132,10 +146,11 @@ De server luistert standaard alleen lokaal. Geen ongevraagde LAN-toegang, prompt
 ## Kernroutes
 
 1. **Levensvraag:** Chat → persona → gesprek → optioneel bronnen openen → eventueel verder in Research → alleen op verzoek bewaren.
-2. **Theologische kwestie:** vraag en scope → passages/context en verwante passages/tegenbewijs → historische/taalkundige bewijsitems → alternatieve interpretaties → argument en beperkingen → dossier.
+2. **Theologische kwestie:** onderzoeksdossier starten → automatische draftbewaring → vraag en scope → passages/context en verwante passages/tegenbewijs → historische/taalkundige bewijsitems → alternatieve interpretaties → nieuwe resultaatrevisie.
 3. **Manuscript:** toegelaten catalogusrecord → scan/folio met herkomst en rechten → beschikbare transcriptie/vertaling → alleen onderbouwde passagekoppeling; beperkingen geven een expliciete melding of officiële link.
 4. **Roundtable:** deelnemers/perspectieven kiezen → orchestrator filtert geschikte ingeschakelde koppelingen → toewijzingen inspecteren/pinnen → moderator vraagt beurt/ronde → bronnen en bezwaren delen → moderator vraagt synthese of stopt.
 5. **Beheer:** bron/model/provider en taal instellen → rechten, mogelijkheden en omvang controleren → expliciet downloaden/activeren → gewone start; geen key nodig om beschikbare lokale teksten te lezen.
+6. **Delen:** dossierrevisie kiezen → persoonlijke inhoud en toegelaten bestanden selecteren → exportoverzicht controleren → pakket maken → op andere installatie importeren met behoud van herkomst en zichtbare ontbrekende bronnen.
 
 ## Fouten en beperkingen zijn functioneel gedrag
 
@@ -146,12 +161,14 @@ De server luistert standaard alleen lokaal. Geen ongevraagde LAN-toegang, prompt
 - Tegenstrijdig of onvoldoende bewijs: verschillen tonen, zekerheid begrenzen en geen consensus fabriceren.
 - Tijdslimiet, kostenlimiet, annulering of providerfout: beëindigde/gedeeltelijke toestand met bruikbare afgeronde resultaten; geen eindeloze herhaling.
 - Gewijzigd model, bron, policy of route: eerdere relevante evaluatieclaim vervalt totdat opnieuw getoetst is.
+- Schijf vol of onvolledige bronbewaring: geen vals opgeslagen/offline-label; concrete fout en herstelactie, zonder geciteerd materiaal stilzwijgend op te ruimen.
+- Niet-deelbaar object of ontbrekend bestand: export meldt de beperking en gebruikt waar toegestaan een verwijzing; import claimt geen volledige offline reproduceerbaarheid.
 
 ## Beschreven versus nog te valideren
 
 De functionele baseline is beschreven. Uitwerking van concrete componenten, API-/datacontracten en foutcodes gebeurt per implementatie-eenheid vóór de betreffende bouwstap. Nog vast te stellen door toelating en tests: beste model per rol/taal, exact beschikbare account-/regioroutes, definitieve bron-/beeldrechten, passage-foliomappings, kwaliteit van lokale historische vertalingen, gemeten prestaties en kosten, en menselijke evaluatiedekking. Dit zijn geen al bewezen eigenschappen van het ontwerp.
 
-De tests en gates van het hoofdplan V1-V8 en de aanvullende specificaties bepalen vrijgave. De ontwerpbeelden bewijzen geen werkende interface, wetenschappelijke juistheid, bronbeschikbaarheid of modelkwaliteit. Lokalisatie is een afzonderlijke claim van antwoordkwaliteit in die taal. Een technische preview kan eerder, met open beperkingen zichtbaar.
+De tests en gates van het hoofdplan V1-V9 en de aanvullende specificaties bepalen vrijgave. De ontwerpbeelden bewijzen geen werkende interface, wetenschappelijke juistheid, bronbeschikbaarheid of modelkwaliteit. Lokalisatie is een afzonderlijke claim van antwoordkwaliteit in die taal. Een technische preview kan eerder, met open beperkingen zichtbaar.
 
 ## Ontwerpbeelden
 

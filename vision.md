@@ -93,5 +93,6 @@ Voor de eerste persoonlijke beta hebben de bestaande Chat/Research-scope, manusc
 - Een moderator kan een AI-discussie volgen, onderbreken en op bewijs laten terugkomen.
 - Dezelfde toetsing vindt fouten en ongelijke behandeling over collecties, persona's en talen heen, met zichtbare correcties en beperkingen.
 - Een dossier maakt duidelijk wat destijds is onderzocht, welke bronnen en modellen werden gebruikt en wat bij heranalyse verandert.
+- Onderzoek kan met behoud van herkomst en bronrechten worden heropend of bewust gedeeld; een toegelaten gebruikte bronkopie blijft beschikbaar voor latere controle.
 
 Deze uitkomsten worden met gebruikersproeven, bronkundige beoordeling en de evaluatiecontracten uit de functionele en technische documenten onderzocht. Populariteit, vloeiende antwoorden en overeenstemming tussen modellen vervangen dat bewijs niet.

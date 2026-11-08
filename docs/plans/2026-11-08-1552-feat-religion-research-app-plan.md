@@ -84,6 +84,8 @@ Een algemene chatbot kan religieuze kennis, interpretaties en eigen adviezen ver
 - R23. De app verklaart interpretatieverschillen via taal, tekstvarianten, vertaling, genre, historische context en aannames, met steun- en tegenbewijs per lezing. Zij kan een beter onderbouwde lezing voor de gestelde vraag aangeven zonder absolute zekerheid, valse consensus of eigen geloofswaarheid. Een collectie wordt geen impliciete scheidsrechter over de andere; verschillen en overeenkomsten blijven toegeschreven.
 - R24. Het algemene model is verwisselbaar tussen toegelaten lokale en cloudroutes. Kandidaatproviders zijn Mistral, Alibaba/Qwen/GLM, OpenAI, Anthropic, MiniMax en optioneel OpenRouter als gateway. Hoofdmodel en optionele kritische reviewer delen dezelfde bewijsbundel; lokale vertaalworkers krijgen afzonderlijke toelating. Keys blijven backend-only buiten Git. Provider/model/versie/regio, verzonden context, budget en fallbackbeleid zijn zichtbaar en geëvalueerd; geen stille cloudroute of modelmeerderheid als waarheid.
 - R25. Chat biedt naast één-op-één expliciet een Roundtable met gelabelde AI-deelnemers. Persona, analytisch perspectief en model zijn afzonderlijke keuzes. De gebruiker modereert deelnemers, spreekbeurten, pauze, bronvragen en synthese. Een gedeeld dossier met vaste bewijsversies, begrensde rondes/kosten, bronregels en zichtbare geschillen voorkomen eindeloze autonome discussie of een stilzwijgend uitgeroepen winnaar.
+- R26. Expliciet gestarte onderzoeksdossiers krijgen automatische draftbewaring en herstelbare runstatus. Gekozen revisies kunnen via een manifest-/rapport-/bestandenpakket worden gedeeld en apart geïmporteerd, met zichtbare rechten- en beschikbaarheidsbeperkingen. Geen ruwe appdatabase, secrets of ongevraagde persoonlijke geschiedenis. Een latere centrale deeldienst publiceert uitsluitend gekozen momentopnamen met eigen toegangscontrole.
+- R27. Toegelaten daadwerkelijk geraadpleegde bronbeelden worden automatisch lokaal bewaard als de voorwaarden duurzame bewaring toestaan. Bytes worden eenmaal opgeslagen en via bron-/asset-/dossierrevisies hergebruikt, met herkomst, kwaliteit, hash en rechten. Geciteerde duurzame objecten worden niet stilzwijgend als tijdelijke cache verwijderd. Onbekende rechten, mislukking en volle opslag hebben een zichtbare toestand; lokale bewaartoestemming is geen deeltoestemming.
 
 ### Personas
 
@@ -125,6 +127,8 @@ Persoonlijke beta omvat alle persona's, beide werkmodi, vijf initiële UI-lokali
 
 **Deferred for later:** Finetuning, stem/audio, meerdere menselijke accounts, LAN-toegang, eigen OCR/HTR, een omvangrijke commentarenbibliotheek en publieke of commerciele distributie. Manuscriptweergave, optionele cloudmodellen en door één gebruiker gemodereerde AI-discussie vallen na de gebruikersaanvullingen wel binnen de geplande scope, onder R21-R25 en de aanvullende specificatie. Deze functies worden niet stilzwijgend geactiveerd.
 
+Dossierexport/import en automatisch rechtenbewust bewaren van gebruikte bronbeelden vallen onder R26-R27 binnen de persoonlijke scope. Een online deeldienst en realtime gezamenlijk bewerken vragen afzonderlijke implementatie/vrijgave. De publieke documentatierepository blijft onderscheiden van het publiceren van persoonlijke dossiers of derdepartijbeelden.
+
 **Outside this product's identity:** Eigen openbaringen, nabootsen van God/profeten of een overleden familielid, bekeringsoptimalisatie, religies rangschikken op intrinsieke superioriteit, of een certificaat dat alle bias verdwenen is.
 
 ---
@@ -143,7 +147,9 @@ Persoonlijke beta omvat alle persona's, beide werkmodi, vijf initiële UI-lokali
 ### Key Technical Decisions
 
 - KTD1. **React/TypeScript + FastAPI, als zelfstandige app onder Pinokio.** Chat en Research delen gesprek-/selectiestate; Research biedt aanpasbare panelen. UI-berichtcatalogi, opgeslagen taalvoorkeur en logische start/eind-layout ondersteunen EN/NL/AR/FR/DE. Een Python-backend past bij tekstimport en modelworkers. De productie-UI wordt statisch gebouwd en door dezelfde lokale backend aangeboden. Geen verplichte Docker- of WSL-laag voor inference. Governs R1-R3, R11-R14, R17-R18, R20.
-- KTD2. **SQLite + FTS5 + lokale vectorbestanden.** SQLite bewaart bronmetadata, alignering en dossiers; FTS5 levert woord/frasezoeken. Voor de beperkte schriftcollecties starten we met exacte vectorvergelijking in NumPy in plaats van een aparte databaseserver. Embeddings zijn herbouwbaar en verwijzen naar bronrevisies. Meet bij uitbreiding naar veel commentaren opnieuw. Governs R7-R10, R14. [SQLite FTS5](https://www.sqlite.org/fts5.html).
+- KTD2. **PostgreSQL + full-text search + pgvector.** PostgreSQL bewaart teksten, bronmetadata, alignering, dossiers en taakstatus. Full-text search gebruikt getoetste zoekrepresentaties en GIN; pgvector bewaart versievaste embeddingruimten, eerst met exact zoeken en pas na recall-/snelheidsmeting een approximate index. Grote scans/bronbestanden staan apart in immutable objectopslag. Lokaal en centraal gebruiken dezelfde primaire database-engine. De keuze is bijgesteld voor duurzaam en deelbaar onderzoek; U1 moet Windows/Pinokio-installatie en lifecycle bewijzen. Governs R7-R15, R21, R24-R27. [PostgreSQL text search](https://www.postgresql.org/docs/current/textsearch-indexes.html), [pgvector](https://github.com/pgvector/pgvector).
+
+De actuele uitwerking van KTD1/KTD2 staat in [technology.md](../../technology.md): FastAPI met SQLAlchemy/psycopg/Alembic, PostgreSQL/pgvector als primaire engine, immutable bronobjecten buiten de DB, korte transacties, begrensde pools en persistente taken. Dossierpakketten zijn het eerste deelmechanisme; een latere centrale dienst hergebruikt schema-/repositorycode met eigen authenticatie en private objectopslag. R26-R27 vereisen een consistente DB-/assetbackup, rechtenbewuste assetpins en zichtbare autosave-/schijf-voltoestanden.
 - KTD3. **RAG en gecontroleerde bronnen voor kennis; persona-configuratie voor gespreksgedrag.** Geen finetuning in de eerste versie. Dat maakt broncorrecties en policytests mogelijk zonder hertraining. Een Base-model is niet automatisch neutraler dan een instructmodel. Governs R2-R10, R15.
 - KTD4. **Twee workerfamilies achter vaste modeladapters.** Een gepinde CUDA-build van llama.cpp voor het algemene GGUF-model, en afzonderlijke Python-workers voor embeddings/Marian/T5. Exacte Qwen3.5 chattemplate, gestructureerde uitvoer en afbreekgedrag moeten eerst worden bewezen. Python-dependencies van oude taalmodellen kunnen apart worden gelockt. Geen willekeurige remote modelcode uitvoeren. Governs R11-R12. [llama.cpp](https://github.com/ggml-org/llama.cpp).
 - KTD5. **Gedeelde policy en een begrensde onderzoeksworkflow.** De backend beheert scope, tooltoegang, budget en bronselectie; een persona kan die niet overschrijven. De coordinator krijgt kleine leeshulpmiddelen voor zoeken, passagecontext, morfologie en vertaling. UI en assistent gebruiken dezelfde domeinservices en bron-ID's. Import, verwijderen, modelinstallatie en dossierexport zijn expliciete gebruikersacties. Governs R3-R5, R9-R14.
@@ -202,9 +208,10 @@ Een minimale rechte-/editiekeuze is niet automatisch representatief. Start comme
 flowchart TB
   P[Pinokio launcher] --> UI[React tekstwerkbank en gesprek]
   UI --> API[FastAPI domeinservices]
-  API --> DB[SQLite bronnen dossiers alignering]
-  API --> R[FTS5 en semantische retrieval]
-  R --> V[Versievaste vectorindex]
+  API --> DB[PostgreSQL bronnen dossiers alignering]
+  API --> R[PostgreSQL tekstzoeken en semantische retrieval]
+  R --> V[Versievaste pgvector-index]
+  API --> AS[Immutable bronobjecten buiten de database]
   API --> O[Begrensde onderzoeksworkflow en gedeelde policy]
   O --> W[Optionele webzoek- en extractieadapter]
   W --> E[Webbewijs met herkomst en gebruiksstatus]
@@ -279,7 +286,7 @@ Bijwerken bewaart de vorige werkende configuratie; databaseschemawijzigingen kri
 - Modeluitvoer, vertalingen en beoordelingen kunnen dezelfde culturele bias delen. Beperk met aparte retrievaltests, een tweede modelfamilie en menselijke beoordeling; overeenstemming blijft onvoldoende bewijs.
 - Toegankelijke vertalingen kunnen oud, confessioneel of beperkt zijn. Benoem editie en representativiteit, en toets dekking per traditie voordat brede claims worden vrijgegeven.
 - Importteksten en commentaren zijn onbetrouwbare instructiebronnen. De server bepaalt tools en beleid; bronmateriaal is uitsluitend bewijs. Test broninjectie en verborgen instructies.
-- Persoonlijke gesprekken over verlies kunnen gevoelige gegevens bevatten. Geen volledige promptlogging of cloud-egress; opgeslagen dossiers hebben een zichtbare lokale opslaglocatie en verwijderactie. Diagnostiek bevat standaard alleen technische metadata.
+- Persoonlijke gesprekken over verlies kunnen gevoelige gegevens bevatten. Geen volledige promptlogging of ongeautoriseerde cloud-egress; een expliciet gekozen cloudmodel krijgt de geselecteerde context volgens R13/R24. Opgeslagen dossiers hebben een zichtbare lokale opslaglocatie en verwijderactie. Diagnostiek bevat standaard alleen technische metadata. Delen selecteert persoonlijke inhoud expliciet en exporteert geen secrets.
 - GPU/RAM-contextgedrag is nog niet gemeten. Maak kwaliteits- en geheugentoelating vroeg; verminder context/concurrency zonder citaten of bronpassages stilzwijgend af te kappen.
 - Een actueel professioneel advies kan niet uit deze corpusbank worden bewezen. Behoud onderscheid volgens R16, en maak ernstige noodsignalen een afzonderlijk, gelijk toegepast ondersteuningspad zonder religieuze druk.
 
@@ -288,6 +295,8 @@ Bijwerken bewaart de vorige werkende configuratie; databaseschemawijzigingen kri
 ## Implementation Units
 
 ### U1. Projectbasis en modeltoelating
+
+**Aanvullende data-infrastructuur:** Beheer PostgreSQL/pgvector als onderdeel van de Pinokio-lifecycle. Bewijs vertrouwde installatie op Windows, eigen blijvende datadirectory, lokale toegang met passende credentials, schema-/extensionmigraties, readiness, gecontroleerde Stop, herstart en backup/restore. Geen geïmproviseerde stille SQLite-fallback bij installatiefout. Geen nieuwe database of externe provider is in deze planningsronde aangemaakt.
 
 **Goal:** Werkende lokale app-shell en bewezen algemene modelroute als basis voor beide werkmodi.
 
@@ -391,6 +400,8 @@ Bouw de normale Chat met uitklapbare bronnen en de gedeelde Chat/Research-overga
 
 ### U8. Pinokio-lifecycle en persoonlijke beta
 
+De lifecyclecontrole omvat na de bijgestelde stack ook PostgreSQL: gereed voordat backendvragen slagen, lokaal begrensd, zonder dubbele instanties of dataverlies na herstart/update/reset, en samen met backend/modelworkers correct gestopt. Het stoppen van de app mag een eventueel expliciet gekozen extern beheerde PostgreSQL-server niet afsluiten.
+
 **Goal:** Normaal installeren/starten/gebruiken/herstellen zonder terminal en zonder dataverlies.
 
 **Requirements:** R11-R15, R18-R19, R24-R25. **Dependencies:** U1-U7 voor beta; launcher kan na U1 al als preview ontwikkeld worden.
@@ -492,6 +503,10 @@ De aantallen uit V1-V3 betreffen de bestaande EN/NL-opzet; zij bewijzen geen AR/
 Toets R21-R25 volgens de [aanvullende specificatie](research-method-and-model-architecture.md), die uitvoering verdeelt over U1-U8. Vereist: echte bron-/folioverificatie en rechten; onderscheid tussen materiaal-/compositiedatum, feit/hypothese en interpretatie; context én tegenbewijs; geen verboden hadith/commentaarlekkage als uitlegautoriteit; en geen theologische harmonisatie als bewezen neutraliteit.
 
 Beoordeel lokale vertaalworkers afzonderlijk van hoofdmodel/reviewer en providerroute. Test gedeeld bewijs, versie-/providerdrift, lokale-modus-egress, budget, fouten en annulering. Roundtable vereist echte UI/modelproeven voor moderatorcontrole, begrensde beurten, gedeelde evidenceversies en synthese met behouden geschillen. Meerdere modellen of een meerderheid vervangen geen bronbewijs. Extra combinaties/talen/mensenreview worden vooraf afzonderlijk begroot; V1-V3 dekken die niet impliciet.
+
+### V9. Research Persistence, Asset Retention and Sharing
+
+Voer de acceptatieproeven uit [technology.md](../../technology.md) uit: automatische onderzoeksbewaring en herstel, korte DB-transacties zonder wachten op modellen, query-/lockmetingen, dezelfde scan in meerdere dossiers zonder onnodige kopieën, bronwijziging als nieuwe revisie, rechten per gebruik, assetpins die cacheopruiming overleven, schijf-vol, crash tussen blobplaatsing en DB-commit, zoekindexherbouw en complete backup/restore. Export/import bewaart herkomst, blokkeert niet-toegestane bestanden en lekt geen keys of ongevraagde persoonlijke inhoud. Een online deelroute krijgt afzonderlijk autorisatie-/intrekkingsbewijs. U1 bezit datalaag/migraties en jobs; U2 assetherkomst/rechten; U3 assetviewerstatus; U5 herstelbare runs; U6 autosave, dossierpakket en backupmanifest; U7 inhouds-/export-/integriteitstests; U8 lifecycle en echte opslag/herstelproeven. Alle relevante scopes en vrijgavecriteria omvatten R26-R27.
 
 ---
 

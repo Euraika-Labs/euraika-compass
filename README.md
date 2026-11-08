@@ -12,6 +12,7 @@ Euraika Compass is an open-source project for a locally hosted research and life
 | --- | --- |
 | [vision.md](vision.md) | Product purpose, intended users, principles, priorities, and long-term direction |
 | [functional.md](functional.md) | Central functional specification: features, user flows, source rules, orchestration, and failure behavior |
+| [technology.md](technology.md) | Recommended stack, local/server database choices, durable source assets, autosave, sharing, maintenance, and backup |
 | [Implementation plan](docs/plans/2026-11-08-1552-feat-religion-research-app-plan.md) | Technical approach, implementation units, evaluation, and release gates |
 | [Design concepts](docs/design/README.md) | UI explorations, saved images, prompts, and their limitations |
 
@@ -27,6 +28,7 @@ Euraika Compass is an open-source project for a locally hosted research and life
 - Compare interpretations through primary-text context, historical/linguistic evidence, counterevidence, and explicit limits, using the same method for all three collections.
 - Moderate a **Roundtable** of AI personas and analytical perspectives, with a shared evidence dossier and control over speaking turns and synthesis.
 - Save research dossiers with source, model, and policy versions.
+- Autosave explicitly started research dossiers; retain consulted source images locally when permitted, with deduplication and provenance. Export/import selected dossier revisions with rights-aware inclusion of source files.
 - Install and run locally through Pinokio once the application is implemented.
 
 English is the default interface language. The initial localization target includes English, Dutch, Arabic, French, and German, with an extensible language catalog. Interface language, conversation language, and source/translation language are independent settings. Arabic includes right-to-left interface behavior; original Hebrew and Arabic passages retain their own reading direction in every interface language. Language support and model quality require separate validation.
@@ -79,7 +81,9 @@ Start with [functional.md](functional.md), the central functional specification 
 
 The [detailed implementation plan](docs/plans/2026-11-08-1552-feat-religion-research-app-plan.md) is written in Dutch. It defines product requirements, candidate models, source packs, eight implementation units, evaluation datasets, and proposed release gates.
 
-The planned stack is React/TypeScript, FastAPI, SQLite/FTS5, a local semantic index, managed local workers, and backend cloud-provider adapters. The candidate pool includes Mistral, Alibaba Cloud/Qwen/GLM, OpenAI, Anthropic, MiniMax, and optionally OpenRouter as a gateway. Local Qwen3.5 remains a coordinator option; local embedding, reranking, and historical-language translation candidates are evaluated separately. No provider/model has been selected as a validated winner. API keys belong in backend-only local configuration, never this repository.
+The planned stack is React/TypeScript with Vite, Python/FastAPI, SQLAlchemy/Alembic, PostgreSQL full-text search and pgvector, managed local model workers, and backend cloud-provider adapters. PostgreSQL is the primary database for both local and future server deployments. The candidate model pool includes Mistral, Alibaba Cloud/Qwen/GLM, OpenAI, Anthropic, MiniMax, and optionally OpenRouter as a gateway. Local Qwen3.5 remains a coordinator option; embedding, reranking, and historical-language translation candidates are evaluated separately. No provider/model has been selected as a validated winner. API keys belong in backend-only local configuration, never this repository.
+
+The [storage architecture](technology.md) keeps large source objects outside the PostgreSQL database and retains permitted cited objects across cache cleanup. A later opt-in sharing service reuses the PostgreSQL data layer with private object storage. Dossier export/import is the first sharing path, with no public service or cloud upload required. PostgreSQL and pgvector installation/lifecycle on Windows must be proven as part of Pinokio admission; there is no working installation yet. Neither cache permission nor private-study access automatically permits redistribution.
 
 ## Sources and licensing boundaries
 
