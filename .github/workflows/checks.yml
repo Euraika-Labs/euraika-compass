@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   backend:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     services:
       postgres:
         image: pgvector/pgvector:pg16
@@ -29,8 +29,8 @@ jobs:
       run:
         working-directory: app/backend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.1.0
         with:
           python-version: "3.12"
           cache: pip
@@ -41,13 +41,13 @@ jobs:
       - run: pytest
 
   frontend:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: app/frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version: "22"
           cache: npm
