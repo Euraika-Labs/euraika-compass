@@ -17,6 +17,7 @@ Euraika Compass is an open-source project for a locally hosted research and life
 | [design.md](design.md) | Interface structure, Euraika design tokens, Chat/Research/Roundtable interactions, source states, localization, and accessibility |
 | [Implementation plan](docs/plans/2026-11-08-1552-feat-religion-research-app-plan.md) | Technical approach, implementation units, evaluation, and release gates |
 | [Design concepts](docs/design/README.md) | UI explorations, saved images, prompts, and their limitations |
+| [Full-plan review — 8 November 2026](docs/reviews/2026-11-08-full-plan-review.md) | Review coverage, one corrected inconsistency, one proposed routing clarification, and outstanding admission work |
 
 ## Planned experience
 

@@ -99,7 +99,7 @@ Een algemene chatbot kan religieuze kennis, interpretaties en eigen adviezen ver
 | Vergelijkende geleerde | Thema's en interpretaties vergelijken | Scope, perspectieven, overeenkomsten, verschillen en dekking | Geen valse consensus of onterechte generalisatie over een hele religie |
 | Kritische gesprekspartner | Argumenten en aannames onderzoeken | Stelling, onderbouwing, bezwaren, alternatieven | Symmetrische zorgvuldigheid bij lof en kritiek; respectvolle tegenspraak |
 
-De persona is een begrensd configuratieprofiel op hetzelfde model. Zij krijgt geen vrije wijzigingsmacht over R4-R10. Diepgang is een afzonderlijke instelling: kort gesprek of uitgebreid onderzoek. De gebruiker kan tijdens een gesprek bronteksten openen zonder persona of gesprek te verlaten.
+De persona is een begrensd configuratieprofiel voor gespreksstijl en methode, onafhankelijk van de gekozen modelroute; meerdere persona's mogen hetzelfde model gebruiken. Zij krijgt geen vrije wijzigingsmacht over R4-R10. Diepgang is een afzonderlijke instelling: kort gesprek of uitgebreid onderzoek. De gebruiker kan tijdens een gesprek bronteksten openen zonder persona of gesprek te verlaten.
 
 ### Key Flows
 
