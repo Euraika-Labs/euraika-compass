@@ -18,6 +18,7 @@ The Research workspace is central. A connected Chat view also supports conversat
 | [architecture.md](architecture.md) | Component boundaries, data model, research execution, model routing, jobs/events, API contracts, trust boundaries, and deployment |
 | [design.md](design.md) | Interface structure, Euraika design tokens, Chat/Research/Roundtable interactions, source states, localization, and accessibility |
 | [Implementation plan](docs/plans/2026-11-08-1552-feat-religion-research-app-plan.md) | Technical approach, implementation units, and practical checks for personal use |
+| [OCR/HTR and vision model research](docs/research/2026-11-08-ocr-htr-model-selection.md) | Local-first reading candidates for historical Hebrew, Greek and Arabic, optional cloud routes, and practical hardware/domain limits |
 | [Design concepts](docs/design/README.md) | UI explorations, saved images, prompts, and their limitations |
 | [Full-plan review — 8 November 2026](docs/reviews/2026-11-08-full-plan-review.md) | Historical review and two resolved inconsistencies; its former evaluation assumptions are superseded by the personal-use scope |
 
@@ -47,7 +48,9 @@ Hadith is excluded from default Quran retrieval and interpretive authority. No h
 
 The original image stays unchanged. Automatic transcription, your corrections, reconstruction and translation are separate versions linked to the chosen page/region and the engine/model used. Unreadable text remains uncertain; a known scripture passage must not silently replace what can actually be seen. A machine reading does not establish the object's authenticity or age, and successful recognition does not make it a verified quotation. Photos with unknown provenance can still be examined with that limitation visible.
 
-Use a suitable local reader or an explicitly selected, configured image-capable route. No particular engine has been chosen and support for every ancient script is not assumed. Local-only mode prevents cloud image calls; the interface shows whether a full image or crop will be sent. Temporary Chat uploads stay private and are cleaned up; saving a research dossier retains the selected original, regions and reading revisions for later reference.
+Use a suitable local reader or an explicitly selected, configured image-capable route. The initial candidates below still need a real runtime and photo trial; support for every ancient script is not assumed. Local-only mode prevents cloud image calls; the interface shows whether a full image or crop will be sent. Temporary Chat uploads stay private and are cleaned up; saving a research dossier retains the selected original, regions and reading revisions for later reference.
+
+The [8 November model research](docs/research/2026-11-08-ocr-htr-model-selection.md) recommends starting with local Kraken 7.1 / historical PP-OCRv6 medium and matching script profiles, with local Qwen3.8-27B as a second image reader. Mistral OCR 4.1 and selected configured vision APIs are optional comparisons. These are sourced starting choices; no reading accuracy or runtime on our own photos has been measured yet.
 
 ## Five personas, one impartiality policy
 
