@@ -1,0 +1,3 @@
+# Optional Linux/WSL worker environment, not installed by the base app.
+kraken>=7.1,<7.2
+# Install app/backend in the same environment for the shared adapter and API dependencies.

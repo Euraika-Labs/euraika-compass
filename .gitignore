@@ -22,6 +22,13 @@ build/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+app/runtime/
+app/backend/*.egg-info/
+app/frontend/coverage/
+app/frontend/test-results/
+app/frontend/playwright-report/
+.coverage
+ENVIRONMENT
 
 # Model weights and checkpoints
 *.gguf

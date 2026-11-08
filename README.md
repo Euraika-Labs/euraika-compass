@@ -6,7 +6,39 @@ Euraika Compass is an open-source, locally hosted tool for **personal, neutral t
 
 The Research workspace is central. A connected Chat view also supports conversations about meaning, choices, grief, forgiveness, and other life questions. Optional cloud reasoning models work alongside local source, retrieval, and translation services. Authentic, traceable material available online can be used for personal research; institutional publication is not an exclusive admission rule. Practical source and usability checks guide development.
 
-**Project stage: planning and UI concepts. There is no runnable application or Pinokio installer yet.** The screenshots below are AI-generated design mockups, not captures of working software. Their example content and analysis labels are illustrative, not validated research results.
+**Project stage: runnable skeleton.** The repository includes the React/TypeScript workbench, FastAPI backend, PostgreSQL/pgvector schema and migrations, private image storage, manual transcript revisions, model registry and transcription-job plumbing. The full research and conversation features below remain the product target; the skeleton does not generate invented answers for unfinished capabilities. No actual model inference or historical-script accuracy has been verified yet.
+
+The screenshots in **Design concepts** remain AI-generated explorations. Their example content and analysis labels are illustrative, not validated research results. A capture of the running skeleton appears below.
+
+## Quick start with Pinokio
+
+1. Download/import `https://github.com/Euraika-Labs/euraika-compass` as a Pinokio app.
+2. Choose **Install**. The launcher installs Python 3.12, compatible PostgreSQL 16.15/pgvector 0.8.6 binaries, locked backend dependencies and the frontend build. It does not download model weights or configure API keys.
+3. Choose **Start**, then **Open Web UI** when the local server is ready.
+4. Create a research dossier, attach your own photo and enter a manual reading. Saving a correction creates a new revision while preserving the original image and earlier text.
+5. Use Pinokio's normal **Stop** control when finished. **Reset dependencies** targets generated environments/build files and preserves the separate personal data directory.
+
+The default data directory is per-user local application data, outside the checkout and OneDrive. An external PostgreSQL database can be configured explicitly. See [the development and API guide](docs/development/README.md) for configuration, local commands and model-worker setup. Pinokio Install, Start, Stop, dependency Reset and reinstall were exercised on Windows, including retained dossiers, readings and identical original image bytes. See the [verification record](docs/development/2026-11-08-skeleton-verification.md) for scope and limits.
+
+## Current implementation
+
+| Capability | Skeleton status |
+| --- | --- |
+| Dossiers and original images | PostgreSQL CRUD, conflict detection, validated private image imports and immutable byte storage are implemented |
+| Manual readings and corrections | Implemented as separate transcript revisions; no automatic authenticity or canonical-verification label |
+| Model catalog and jobs | Configurable Kraken profiles, local Qwen and Mistral OCR adapters; honest unavailable-route status, job polling/SSE and cancellation |
+| Model execution | Requires separately installed/configured readers or endpoints; no model inference has been verified in this work |
+| Workbench interface | Research/Chat/Connections scaffolding, localization and RTL; implemented functions are separated from unfinished actions |
+| Corpus import, retrieval and grounded chat | Planned; generation endpoints return an explicit unavailable/not-implemented response |
+| Autonomous web research and AI Roundtable turns | Planned; no fabricated search results or model discussions |
+| Dossier export/import and complete backup UI | Planned; durable storage and migration foundations are present |
+| Temporary Chat image attachments | Planned; initial image uploads deliberately require a saved research dossier |
+
+This is the running skeleton with a neutral image-upload fixture and an explicitly manual test reading. It is not manuscript evidence or model output.
+
+![Running Research workspace with a saved manual test reading](docs/development/images/skeleton-research.png)
+
+[Arabic RTL capture](docs/development/images/skeleton-arabic.png)
 
 ## Project documents
 
@@ -18,6 +50,7 @@ The Research workspace is central. A connected Chat view also supports conversat
 | [architecture.md](architecture.md) | Component boundaries, data model, research execution, model routing, jobs/events, API contracts, trust boundaries, and deployment |
 | [design.md](design.md) | Interface structure, Euraika design tokens, Chat/Research/Roundtable interactions, source states, localization, and accessibility |
 | [Implementation plan](docs/plans/2026-11-08-1552-feat-religion-research-app-plan.md) | Technical approach, implementation units, and practical checks for personal use |
+| [Development and API guide](docs/development/README.md) | Running the skeleton, private configuration, tests, API examples and remaining implementation |
 | [OCR/HTR and vision model research](docs/research/2026-11-08-ocr-htr-model-selection.md) | Local-first reading candidates for historical Hebrew, Greek and Arabic, optional cloud routes, and practical hardware/domain limits |
 | [Design concepts](docs/design/README.md) | UI explorations, saved images, prompts, and their limitations |
 | [Full-plan review — 8 November 2026](docs/reviews/2026-11-08-full-plan-review.md) | Historical review and two resolved inconsistencies; its former evaluation assumptions are superseded by the personal-use scope |
@@ -36,7 +69,7 @@ The Research workspace is central. A connected Chat view also supports conversat
 - Moderate a **Roundtable** of AI personas and analytical perspectives, with a shared evidence dossier and control over speaking turns and synthesis.
 - Save research dossiers with source, model, and policy versions.
 - Autosave explicitly started research dossiers; retain consulted source images locally when permitted, with deduplication and provenance. Export/import selected dossier revisions with rights-aware inclusion of source files.
-- Install and run locally through Pinokio once the application is implemented.
+- Install and run locally through Pinokio; the skeleton is available while the complete experience is built in working slices.
 
 English is the default interface language. The initial localization target includes English, Dutch, Arabic, French, and German, with an extensible language catalog. Interface language, conversation language, and source/translation language are independent settings. Arabic includes right-to-left interface behavior; original Hebrew and Arabic passages retain their own reading direction in every interface language. Practical examples check each used language; untested output and translation limits remain visible.
 
@@ -48,7 +81,7 @@ Hadith is excluded from default Quran retrieval and interpretive authority. No h
 
 The original image stays unchanged. Automatic transcription, your corrections, reconstruction and translation are separate versions linked to the chosen page/region and the engine/model used. Unreadable text remains uncertain; a known scripture passage must not silently replace what can actually be seen. A machine reading does not establish the object's authenticity or age, and successful recognition does not make it a verified quotation. Photos with unknown provenance can still be examined with that limitation visible.
 
-Use a suitable local reader or an explicitly selected, configured image-capable route. The initial candidates below still need a real runtime and photo trial; support for every ancient script is not assumed. Local-only mode prevents cloud image calls; the interface shows whether a full image or crop will be sent. Temporary Chat uploads stay private and are cleaned up; saving a research dossier retains the selected original, regions and reading revisions for later reference.
+Use a suitable local reader or an explicitly selected, configured image-capable route. The adapters and job flow are present, but the initial candidates below still need a real runtime and photo trial; support for every ancient script is not assumed. Local-only mode prevents cloud image calls. In the skeleton, initial uploads belong to an explicitly saved dossier; temporary Chat uploads are planned separately. The complete image-reading flow retains the selected original, regions and reading revisions for later reference.
 
 The [8 November model research](docs/research/2026-11-08-ocr-htr-model-selection.md) recommends starting with local Kraken 7.1 / historical PP-OCRv6 medium and matching script profiles, with local Qwen3.8-27B as a second image reader. Mistral OCR 4.1 and selected configured vision APIs are optional comparisons. These are sourced starting choices; no reading accuracy or runtime on our own photos has been measured yet.
 
@@ -96,13 +129,13 @@ Start with [functional.md](functional.md), the central specification for persona
 
 The [detailed implementation plan](docs/plans/2026-11-08-1552-feat-religion-research-app-plan.md) is written in Dutch. It defines product requirements, candidate models, starter sources, eight implementation units, and practical source, interpretation, UI and persistence checks. There is no fixed test volume, required expert panel or statistical certification program for personal use.
 
-The planned stack is React/TypeScript with Vite, Python/FastAPI, SQLAlchemy/Alembic, PostgreSQL full-text search and pgvector, managed local model workers, and backend cloud-provider adapters. PostgreSQL is the primary database for both local and future server deployments. The candidate model pool includes Mistral, Alibaba Cloud/Qwen/GLM, OpenAI, Anthropic, MiniMax, and optionally OpenRouter as a gateway. Local Qwen3.5 remains a coordinator option; embedding, reranking, and historical-language translation candidates are evaluated separately. No provider/model has been selected as a validated winner. API keys belong in backend-only local configuration, never this repository.
+The implemented stack foundation is React/TypeScript with Vite, Python/FastAPI, SQLAlchemy/Alembic and PostgreSQL with full-text/pgvector schema support. End-to-end corpus retrieval and local model installation remain unfinished. PostgreSQL is the primary database for both local and future server deployments. The wider candidate model pool includes Mistral, Alibaba Cloud/Qwen/GLM, OpenAI, Anthropic, MiniMax, and optionally OpenRouter as a gateway; catalog presence does not mean every inference adapter is implemented. Local Qwen remains a coordinator/vision option; embedding, reranking, and historical-language translation candidates are tried separately. No provider/model has been selected as a validated reading winner. API keys belong in backend-only local configuration, never this repository.
 
-The [storage architecture](technology.md) keeps large source objects outside the PostgreSQL database and retains permitted cited objects across cache cleanup. A later opt-in sharing service reuses the PostgreSQL data layer with private object storage. Dossier export/import is the first sharing path, with no public service or cloud upload required. PostgreSQL and pgvector installation/lifecycle on Windows must be proven as part of Pinokio admission; there is no working installation yet. Neither cache permission nor private-study access automatically permits redistribution.
+The [storage architecture](technology.md) keeps large source objects outside PostgreSQL. The skeleton stores original dossier images once by hash and preserves transcript revisions. Broader source-retention, export/import and complete backup/restore flows remain planned; a later opt-in sharing service is separate. Native Windows PostgreSQL 16.15 with pgvector 0.8.6 and the Pinokio install/start/stop/reset lifecycle have been exercised. Neither cache permission nor private-study access automatically permits redistribution.
 
 ## Sources and licensing boundaries
 
-The repository contains documentation and generated UI concepts. It does not include model weights, scripture corpora, third-party translations, or linguistic datasets. Open-source code and documentation do not make your personal dossiers or downloaded research material public.
+The repository contains application source, configuration metadata, documentation and generated UI concepts. It does not include model weights, scripture corpora, third-party translations, or linguistic datasets. Open-source code and documentation do not make your personal dossiers or downloaded research material public.
 
 Online sources may include primary texts, manuscript scans, articles, author archives, project repositories and documented interpretations. Record identity, origin, edition and source type. Institutional and academic catalogs are preferred provenance references where available, not the only permitted hosts. Authenticity means the material is genuine and traceable; it does not establish the truth of every claim or give an interpretation automatic authority.
 

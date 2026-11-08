@@ -1,6 +1,6 @@
 # Euraika Compass — Systeemarchitectuur
 
-Status: architectuur voor een persoonlijke, neutrale theologische onderzoekstool, bijgewerkt op 8 november 2026. Er is nog geen werkende app of database. Dit document bepaalt componentgrenzen, gegevensstromen en uitvoeringscontracten voor de afgesproken scope. Praktische bron-, functie- en herstelcontroles begeleiden de bouw; de app is geen systeem voor geloofscertificering of een industrieel evaluatieprogramma.
+Status: architectuur voor een persoonlijke, neutrale theologische onderzoekstool, bijgewerkt op 8 november 2026. De eerste uitvoerbare skeleton bevat de webinterface, FastAPI, PostgreSQL-migraties, dossier-/beeldbewaring, handmatige leesrevisies en model-/jobgrenzen. Native Windows PostgreSQL 16.15 met pgvector 0.8.6 is beproefd. De overige beschreven componenten vormen de verdere bouwrichting; modelinferentie, corpusgestuurde generatie, webonderzoek, AI-Roundtable en dossierexport zijn nog niet volledig aangesloten. Praktische controles begeleiden de bouw. Zie de [actuele implementatiegrenzen](docs/development/README.md).
 
 ## 1. Plaats van dit document
 
@@ -13,7 +13,7 @@ Status: architectuur voor een persoonlijke, neutrale theologische onderzoekstool
 | [design.md](design.md) | Schermen, interacties, vormgeving en toegankelijkheid |
 | [Implementatieplan](docs/plans/2026-11-08-1552-feat-religion-research-app-plan.md) | Bouwvolgorde, requirements R1-R28 en verificatie V1-V9 |
 
-Technische uitwerking mag het functionele contract niet stilzwijgend wijzigen. Dependencyversies, migraties en endpointschema's worden tijdens de betrokken bouwstap gekozen en met de werkende interactie gecontroleerd. De endpointnamen hieronder zijn bouwvoorstellen, geen bestaande API of vooraf volledig vast te leggen protocol.
+Technische uitwerking mag het functionele contract niet stilzwijgend wijzigen. De skeleton bevat gelockte dependencies, een eerste migratie en werkende dossier-/beeld-/transcriptiecontracten. De overige endpointnamen hieronder blijven bouwvoorstellen; de actuele OpenAPI op `/openapi.json` en de [ontwikkelhandleiding](docs/development/README.md) tonen wat al is aangesloten en wat expliciet niet geïmplementeerd is.
 
 ## 2. Architectuurkeuze
 

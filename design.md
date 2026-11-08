@@ -1,6 +1,6 @@
 # Euraika Compass — Interface- en interactieontwerp
 
-Status: ontwerpbaseline, 8 november 2026. Dit document beschrijft de beoogde ervaring. De bestaande beelden zijn gegenereerde concepten; er is nog geen werkende interface, toegankelijke componentbibliotheek of geteste modelconfiguratie.
+Status: ontwerpbaseline, 8 november 2026, met een eerste React/TypeScript-skeleton voor dossiers, eigen foto's, handmatige leesrevisies en verbindingen. Dit document beschrijft de volledige beoogde ervaring; generatie, webonderzoek, AI-Roundtable en export blijven onvoltooide functies. De ontwerpbeelden zijn gegenereerde concepten. De [verificatie met werkelijke screenshots](docs/development/2026-11-08-skeleton-verification.md) omvat de dossier-/beeld-/leesflow en Arabische RTL; volledige toegankelijkheid en modelinferentie zijn nog niet beproefd. Zie de [actuele implementatiegrenzen](docs/development/README.md).
 
 [vision.md](vision.md) geeft de richting; [functional.md](functional.md) bepaalt het gedrag. [architecture.md](architecture.md) beschrijft de systeemgrenzen en [technology.md](technology.md) de stack. Dit ontwerp concretiseert die afspraken zonder nieuwe bronrechten of bewezen modelkwaliteit te veronderstellen.
 
@@ -49,7 +49,7 @@ Start met een rustige sans-serif voor bediening en lopende UI-tekst, circa 16 px
 
 Gebruik een consistente 4/8-px-ruimteschaal, dunne scheidingen, beperkte schaduw en herkenbare kleine lijniconen. Geneste kaarten worden beperkt waar doorlopende tekst of een eenvoudige tabel duidelijker is. Belangrijke acties hebben een tekstlabel; destructieve of onomkeerbare acties krijgen een passende bevestiging, gewone paneel-/persona-/taalwissels niet.
 
-Gedeelde componenten: AppShell, ModeSwitch, ConnectionSummary, LanguagePicker, DossierStatus, PersonaSelector, ChatComposer, ConversationMessage, SourceReference, SourceInspector, EvidenceTable, InterpretationComparison, ManuscriptViewer, ImageImport, TranscriptionEditor, ParticipantList, ModeratorConsole, RoleAssignmentTable en ExportReview. Naamgeving is een bouwvoorstel, geen reeds aanwezige code.
+Gedeelde ontwerpcomponenten: AppShell, ModeSwitch, ConnectionSummary, LanguagePicker, DossierStatus, PersonaSelector, ChatComposer, ConversationMessage, SourceReference, SourceInspector, EvidenceTable, InterpretationComparison, ManuscriptViewer, ImageImport, TranscriptionEditor, ParticipantList, ModeratorConsole, RoleAssignmentTable en ExportReview. De skeleton implementeert de eerste shell-/dossier-/beeld-/revisie-interacties. De volledige lijst en naamgeving blijven ontwerprichting, geen verklaring dat ieder onderdeel al bestaat.
 
 ## 4. Chat voor levensvragen
 

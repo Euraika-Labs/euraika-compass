@@ -1,6 +1,6 @@
 # Euraika Compass — Functionele specificatie
 
-Status: functionele baseline van 8 november 2026. Dit is het centrale functionele document voor Euraika Compass. Het beschrijft wat gebruikers kunnen doen en welk waarneembaar gedrag de app moet leveren. De software is nog niet gebouwd; providerkoppelingen, modelkwaliteit en wetenschappelijke resultaten zijn niet door dit document bewezen.
+Status: functionele baseline van 8 november 2026, met een eerste uitvoerbare skeleton. Dossiers in PostgreSQL, eigen beeldimport, handmatige transcriptie-/correctierevisies, modelregistratie en transcriptiejobs zijn geïmplementeerd. Dit document blijft het volledige beoogde gedrag beschrijven: corpusgestuurde generatie, webonderzoek, AI-Roundtable en dossierexport zijn nog te bouwen. Geen echte modelinferentie of historische leeskwaliteit is in deze stap bewezen. De actuele gebruiksgrenzen staan in de [ontwikkelhandleiding](docs/development/README.md).
 
 [vision.md](vision.md) beschrijft het doel, de doelgroep en de richting van het product. Dit document vertaalt die visie naar functioneel gedrag; de technische plannen werken de bouw en verificatie uit.
 
@@ -198,7 +198,7 @@ De persoonlijke app wordt bruikbaar gemaakt met gerichte controles op echte bron
 
 De gebruiker kan een fout markeren, een bron of argument corrigeren en het onderzoek opnieuw uitvoeren met behoud van de oude revisie. Deskundige hulp is nuttig voor moeilijke taal- of historische vragen, zonder iedere uitkomst van de tool vooraf te hoeven certificeren.
 
-De functionele baseline is beschreven. Concrete componenten, API-/datacontracten en foutcodes worden per bouwstap uitgewerkt. Beschikbare account-/regioroutes, bronbestanden, passage-foliomappings, vertaalgedrag, prestaties en kosten moeten nog met echte gegevens worden geprobeerd. De ontwerpbeelden bewijzen geen werkende interface of onderzoeksresultaat. Bekende beperkingen blijven zichtbaar terwijl de persoonlijke tool stapsgewijs bruikbaar wordt.
+De functionele baseline is beschreven en de eerste skeleton implementeert dossier-/beeldbewaring, handmatige revisies, routeconfiguratie en jobafhandeling. De werkende API heeft OpenAPI-documentatie; overige contracten groeien per bouwstap mee. Beschikbare account-/regioroutes, bronbestanden, passage-foliomappings, modellezing, vertaalgedrag, prestaties en kosten moeten nog met echte gegevens worden geprobeerd. De ontwerpbeelden bewijzen geen werkende interface of onderzoeksresultaat. Bekende beperkingen blijven zichtbaar terwijl de persoonlijke tool stapsgewijs bruikbaar wordt.
 
 ## Ontwerpbeelden
 

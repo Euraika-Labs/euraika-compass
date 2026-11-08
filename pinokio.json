@@ -1,0 +1,6 @@
+{
+  "title": "Euraika Compass",
+  "description": "A personal, neutral theological research workbench with source images and transcript revisions.",
+  "icon": "icon.svg",
+  "links": [{ "title": "GitHub", "value": "https://github.com/Euraika-Labs/euraika-compass" }]
+}

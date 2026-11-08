@@ -1,6 +1,6 @@
 # Euraika Compass — Technologie en opslagarchitectuur
 
-Status: technische basis voor een persoonlijke, neutrale theologische onderzoekstool, bijgewerkt op 8 november 2026. Er is nog geen backend geïnstalleerd, database aangemaakt of prestatietest uitgevoerd. [functional.md](functional.md) blijft leidend voor gedrag; dit document concretiseert de stack, bewaring en deelbaarheid.
+Status: technische basis voor een persoonlijke, neutrale theologische onderzoekstool, bijgewerkt op 8 november 2026. FastAPI/SQLAlchemy/Alembic en de React/TypeScript-skeleton zijn geïmplementeerd. Native Windows PostgreSQL 16.15 en pgvector 0.8.6 zijn geïnstalleerd en beproefd met migratie-/bewaarcontroles. Pinokio Install/Start/Stop, dependency-reset/herinstallatie en de browserflow zijn geverifieerd; modelinferentie en historische leeskwaliteit zijn nog niet gemeten. [functional.md](functional.md) blijft leidend; de [ontwikkelhandleiding](docs/development/README.md) beschrijft de huidige uitvoering en resterende functies.
 
 De componentgrenzen en uitvoeringscontracten staan in [architecture.md](architecture.md); schermen en interacties in [design.md](design.md). Dit document blijft de uitwerking van technologiekeuze, opslag en onderhoud.
 
@@ -8,9 +8,9 @@ De componentgrenzen en uitvoeringscontracten staan in [architecture.md](architec
 
 De persoonlijke Pinokio-app gebruikt React/TypeScript en FastAPI, met PostgreSQL voor gestructureerde gegevens, PostgreSQL full-text search en pgvector voor semantisch zoeken. Grote bronobjecten staan in een afzonderlijke lokale bestandsopslag. Opgeslagen dossiers kunnen als gekozen pakket worden geëxporteerd en geïmporteerd. Een centrale deeldienst is een eventuele latere uitbreiding met eigen authenticatie en toegangscontrole; zij is geen voorwaarde voor persoonlijk gebruik. Databasedirectories worden nooit via bestandssynchronisatie gedeeld.
 
-De keuze is bijgesteld na de uitbreiding naar duurzaam en deelbaar onderzoek. PostgreSQL past bij gelijktijdige onderzoekstaken, rijke bronrelaties en een pad naar samenwerking. Zijn MVCC-concurrency is gedocumenteerd; deze productkeuze is geen gemeten performanceclaim. [PostgreSQL concurrency](https://www.postgresql.org/docs/current/mvcc-intro.html). SQLite blijft technisch bruikbaar voor een kleinere persoonlijke variant, maar is geen tweede verplichte backend of stilzwijgende fallback: één primaire engine houdt schema-, migratie- en zoekgedrag consistent. Er bestaat nog geen appdatabase die moet worden gemigreerd.
+De keuze is bijgesteld na de uitbreiding naar duurzaam en deelbaar onderzoek. PostgreSQL past bij gelijktijdige onderzoekstaken, rijke bronrelaties en een pad naar samenwerking. Zijn MVCC-concurrency is gedocumenteerd; deze productkeuze is geen gemeten performanceclaim. [PostgreSQL concurrency](https://www.postgresql.org/docs/current/mvcc-intro.html). De skeleton gebruikt PostgreSQL als enige duurzame engine, zonder stilzwijgende SQLite-fallback, en bevat de eerste Alembic-schemamigratie.
 
-Dit voegt een te beheren databaseproces toe. U1 moet op Windows de vertrouwde PostgreSQL-distributie, pgvector-build/compatibiliteit, rechten, opslagpad, init/start/readiness/stop/backup en updates aantoonbaar maken. De pgvector-documentatie beschrijft afzonderlijke Windows-buildstappen; beschikbaarheid wordt niet aangenomen. Native of een expliciet gekozen containerinstallatie wordt pas na die proef vastgelegd. Geen verborgen vereiste dat de gebruiker zelf een service of Docker beheert. [pgvector-installatie](https://github.com/pgvector/pgvector), [PostgreSQL initdb](https://www.postgresql.org/docs/current/app-initdb.html).
+Dit voegt een te beheren databaseproces toe. De skeleton levert een native Windows-route met compatibele conda-forge-binaries PostgreSQL 16.15/pgvector 0.8.6. Init/start, de extension, migraties, echte bewaartests en het stoppen van het eigen proces zijn beproefd, ook na dependency-reset en herinstallatie via Pinokio. Updates en backup/restore blijven afzonderlijk te controleren. Een expliciete externe database wordt niet door Compass gestopt. De launcher vraagt geen handmatig beheerde service of Docker. [pgvector-installatie](https://github.com/pgvector/pgvector), [PostgreSQL initdb](https://www.postgresql.org/docs/current/app-initdb.html).
 
 ## Stack
 
@@ -29,7 +29,7 @@ Dit voegt een te beheren databaseproces toe. U1 moet op Windows de vertrouwde Po
 | Langdurige taken | Persistente job-/runregistratie en begrensde workers | Onderzoek, downloads en indexering mogen geen vluchtige achtergrondcallbacks zijn. Herstart markeert onderbroken werk en herneemt alleen veilige, idempotente stappen. |
 | Centrale deeldienst, later | Dezelfde PostgreSQL-datalaag, private objectopslag met S3-achtige interface, authenticatie en resource-ACL's | Publiceert uitsluitend gekozen dossiermomentopnamen. Geen automatische upload van de lokale DB of gelijktijdige toegang tot haar bestanden. |
 
-Exacte versies en locks worden tijdens de betreffende bouwstap gekozen en met een werkende proef gecontroleerd. De relevante runtime, native libraries, licenties en beveiligingsupdates worden vastgelegd. Er worden nu geen libraries geïnstalleerd. Redis, Celery, een externe vectordatabase en een microserviceplatform zijn geen verplichte onderdelen van de eerste lokale versie.
+De skeleton bevat gelockte backend- en frontenddependencies. Nieuwe modelruntimes en hun native afhankelijkheden worden apart aangesloten en met echte beelden geprobeerd; grote modelgewichten en API-keys zijn niet geïnstalleerd. Redis, Celery, een externe vectordatabase en een microserviceplatform zijn geen verplichte onderdelen van de persoonlijke versie.
 
 ## TypeScript en proportionele kwaliteitscontroles
 
@@ -41,7 +41,7 @@ Gebruikersbeslissing: React + TypeScript behouden met eenvoudige types en een be
 - Echte type- en gedragsfouten worden opgelost. Geen algemene `any`-casts, globale uitschakeling van checks of onbeoordeelde suppressies om controles groen te maken. Een noodzakelijke externe integratiegrens wordt expliciet gevalideerd en afgebakend.
 - Nieuwe regels krijgen een concrete aanleiding en een passende scope. Gegenereerde code, buildoutput en derdepartijbestanden vallen buiten de eigen lintscope. Compatibele toolversies worden gelockt; wijzigingen aan de controles zijn zichtbaar en toetsbaar.
 
-Er is momenteel nog geen frontend of lintconfiguratie aangemaakt. U1 implementeert en controleert deze aanpak bij het opzetten van de werkelijke app.
+De eerste frontend bevat afzonderlijke typecheck-, lint-, test- en buildcommando's met een beperkte lintconfiguratie. Deze controles vervangen geen werkelijke bron-/UI-proef of modelkwaliteitsmeting.
 
 ## Drie opslaglagen
 

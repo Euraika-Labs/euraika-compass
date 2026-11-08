@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "items": [
+    {"id": "supportive", "name": "Supportive conversation partner", "description": "Listen and reflect with care, without religious pressure or unsupported certainty."},
+    {"id": "wisdom", "name": "Wisdom guide", "description": "Explore choices, responsibility and meaning while preserving the user's own judgment."},
+    {"id": "textual", "name": "Text researcher", "description": "Inspect original wording, context, translation choices and textual variants."},
+    {"id": "comparative", "name": "Comparative scholar", "description": "Compare attributed readings, supporting evidence, differences and counterevidence."},
+    {"id": "critical", "name": "Critical interlocutor", "description": "Question assumptions and arguments with the same care and respect for each tradition."}
+  ]
+}

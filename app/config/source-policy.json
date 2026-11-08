@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "purpose": "Personal, neutral theological research",
+  "collections": ["torah", "bible", "quran"],
+  "source_admission": {
+    "basis": "Authentic, traceable online material and clearly identified personal uploads",
+    "institutional_host_required": false,
+    "unknown_provenance": "May be examined as unknown; never silently upgraded to authenticated evidence",
+    "authenticity_is_truth": false,
+    "personal_reading_distinct_from": ["permanent_copying", "external_processing", "redistribution", "training"],
+    "bypass_access_controls": false
+  },
+  "interpretation": {
+    "same_evidence_rules_for_all_collections": true,
+    "inspect_context_and_counterevidence": true,
+    "attribute_readings_and_assumptions": true,
+    "force_consensus": false,
+    "model_majority_is_evidence": false,
+    "commentary_has_automatic_authority": false
+  },
+  "hadith": {
+    "default_included": false,
+    "interpretive_authority": false,
+    "possible_exception": "Individually established direct provenance, context only; no pack admitted"
+  },
+  "image_reading": {
+    "layers": ["original_image", "automatic_transcription", "user_correction", "published_transcription", "reconstruction", "translation"],
+    "fill_gaps_from_scripture_memory": false,
+    "automatic_output_verified": false,
+    "coordinates": "Only actual reader-supplied or explicit user-selected regions",
+    "temporary_chat_uploads_durable_by_default": false,
+    "save_dossier_retains_selected_originals_and_revisions": true
+  },
+  "models": {
+    "configured_enabled_capable_only": true,
+    "local_only_default": true,
+    "pinned_failure": "Pause until explicit unpin or reassignment; no automatic replacement",
+    "automatic_provider_activation": false
+  }
+}
