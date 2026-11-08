@@ -1,0 +1,38 @@
+# Personal and generated runtime data
+data/
+models/
+logs/
+outputs/
+.env
+.env.*
+!.env.example
+*.sqlite
+*.sqlite3
+*.db
+
+# Python and Node environments
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+node_modules/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Model weights and checkpoints
+*.gguf
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+
+# Local tooling and OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
