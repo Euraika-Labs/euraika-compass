@@ -3,12 +3,16 @@ import type { FormEvent, ReactNode } from 'react';
 import { api, ApiError, originalImageUrl } from './api';
 import { direction, locales, savedLocale, translate } from './i18n';
 import type { MessageKey } from './i18n';
-import type { Dossier, Health, ImageAsset, Job, Locale, ModelRoute, Participant, Persona, Region, Transcription, View } from './types';
+import type { ChatSettings, Connection, CorpusSource, CorpusStarter, Dossier, Health, ImageAsset, Job, Locale, ModelRoute, Persona, Region, Transcription, View } from './types';
 import { jobFinished, validRegion } from './workspace';
+import { ChatPanel } from './ChatPanel';
+import { ConnectionsPanel } from './ConnectionsPanel';
+import { SourcesPanel } from './SourcesPanel';
+import { chatTranslate } from './chat-i18n';
+import { RequestError } from './research-chat';
 
 type List<T> = { items: T[] };
 type Translator = (key: MessageKey) => string;
-const personaIds = ['supportive', 'wisdom', 'textual', 'comparative', 'critical'] as const;
 
 function CompassMark() {
   return <svg viewBox="0 0 40 40" width="34" height="34" aria-hidden="true"><circle cx="20" cy="20" r="16.5" fill="none" stroke="currentColor" strokeWidth="1.5" /><path d="m25.8 10.4-3.2 12.2-8.4 7 3.2-12.2z" fill="#f4a616" /><circle cx="20" cy="20" r="2" fill="currentColor" /></svg>;
@@ -27,11 +31,6 @@ function errorMessage(error: unknown, t: Translator): string {
   return t('errorGeneric');
 }
 
-function personaName(id: string, personas: Persona[], t: Translator) {
-  const known = personaIds.find(persona => persona === id);
-  return known ? t(known) : (personas.find(persona => persona.id === id)?.name ?? id);
-}
-
 function JobState({ job, t }: { job: Job; t: Translator }) {
   const key: MessageKey = job.status === 'queued' ? 'queued'
     : ['running', 'verifying'].includes(job.status) ? 'running'
@@ -43,6 +42,7 @@ function JobState({ job, t }: { job: Job; t: Translator }) {
 export default function App() {
   const [locale, setLocale] = useState<Locale>(savedLocale);
   const t: Translator = key => translate(locale, key);
+  const c = (key: Parameters<typeof chatTranslate>[1]) => chatTranslate(locale, key);
   const [view, setView] = useState<View>('research');
   const [health, setHealth] = useState<Health | null>(null);
   const [routes, setRoutes] = useState<ModelRoute[]>([]);
@@ -69,13 +69,11 @@ export default function App() {
   const [error, setError] = useState<unknown>(null);
   const [notice, setNotice] = useState<MessageKey | null>(null);
   const [chatDraft, setChatDraft] = useState('');
-  const [personaId, setPersonaId] = useState('supportive');
-  const [chatMode, setChatMode] = useState<'one' | 'roundtable'>('one');
-  const [participants, setParticipants] = useState<Participant[]>([
-    { id: 1, persona: 'textual', perspective: '', routeId: '', pinned: false },
-    { id: 2, persona: 'critical', perspective: '', routeId: '', pinned: false },
-  ]);
-  const nextParticipant = useRef(3);
+  const [connections, setConnections] = useState<Connection[]>([]);
+  const [chatSettings, setChatSettings] = useState<ChatSettings | null>(null);
+  const [sources, setSources] = useState<CorpusSource[]>([]);
+  const [starters, setStarters] = useState<CorpusStarter[]>([]);
+  const [setupError, setSetupError] = useState<unknown>(null);
   const selectedDossier = useRef('');
   const selectedImage = useRef('');
   const readingEditor = useRef('');
@@ -107,6 +105,21 @@ export default function App() {
     if (results[1].status === 'fulfilled') setRoutes(results[1].value.items);
     if (results[2].status === 'fulfilled') setPersonas(results[2].value.items);
     if (results[3].status === 'fulfilled') setDossiers(results[3].value.items);
+    await refreshSetup();
+  }
+
+  async function refreshSetup() {
+    setSetupError(null);
+    const results = await Promise.allSettled([
+      api<List<Connection>>('/connections'), api<ChatSettings>('/chat-settings'),
+      api<List<CorpusSource>>('/corpus'), api<List<CorpusStarter>>('/corpus/starters'),
+    ]);
+    if (results[0].status === 'fulfilled') setConnections(results[0].value.items);
+    if (results[1].status === 'fulfilled') setChatSettings(results[1].value);
+    if (results[2].status === 'fulfilled') setSources(results[2].value.items);
+    if (results[3].status === 'fulfilled') setStarters(results[3].value.items);
+    const failed = results.find(item => item.status === 'rejected');
+    if (failed?.status === 'rejected') setSetupError(failed.reason);
   }
 
   useEffect(() => { void refreshConnection(); }, []);
@@ -280,12 +293,6 @@ export default function App() {
     setReadingId(id); updateReadingText(reading?.text ?? ''); setNotice(null);
   }
 
-  function updateParticipant(id: number, patch: Partial<Participant>) {
-    setParticipants(items => items.map(item => item.id === id ? { ...item, ...patch } : item));
-  }
-
-  const personaOptions = personas.length ? personas.map(item => item.id) : [...personaIds];
-
   return <div className="app-shell">
     <a className="skip-link" href="#workspace">{t('research')}</a>
     <header className="topbar">
@@ -294,7 +301,7 @@ export default function App() {
         <button className={view === 'research' ? 'active' : ''} aria-current={view === 'research' ? 'page' : undefined} onClick={() => setView('research')}>{t('research')}</button>
         <button className={view === 'chat' ? 'active' : ''} aria-current={view === 'chat' ? 'page' : undefined} onClick={() => setView('chat')}>{t('chat')}</button>
       </nav>
-      <div className="topbar-tools"><span className="build-label">{t('skeleton')}</span><label className="locale-picker"><span className="sr-only">{t('language')}</span><select value={locale} onChange={event => setLocale(event.target.value as Locale)}>{locales.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label></div>
+      <div className="topbar-tools"><span className="build-label">{t('personal')}</span><label className="locale-picker"><span className="sr-only">{t('language')}</span><select value={locale} onChange={event => setLocale(event.target.value as Locale)}>{locales.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label></div>
     </header>
     <div className="workspace-shell">
       <aside className="sidebar">
@@ -305,25 +312,20 @@ export default function App() {
           <div className="button-row"><button className="button primary" disabled={!!busy || !newTitle.trim()}>{busy === 'create' ? t('working') : t('create')}</button><button className="button quiet" type="button" onClick={() => setCreateOpen(false)}>{t('cancel')}</button></div>
         </form>}
         <div className="dossier-list">{dossiers.length ? dossiers.map(item => <button key={item.id} className={`dossier-item ${dossier?.id === item.id ? 'selected' : ''}`} onClick={() => void openDossier(item.id)} disabled={!dbReady || !!busy}><span className="dossier-symbol" aria-hidden="true">▤</span><span><strong dir="auto">{item.title}</strong><small>{new Date(item.updated_at).toLocaleDateString(locale)}</small></span></button>) : <p className="muted empty-small">{t('noDossiers')}</p>}</div>
-        <div className="sidebar-bottom"><button className={`sidebar-link ${view === 'models' ? 'selected' : ''}`} aria-current={view === 'models' ? 'page' : undefined} onClick={() => setView('models')}><span aria-hidden="true">⚙</span>{t('models')}</button><div className="connection-note"><span className={`status-dot ${health ? 'online' : ''}`} />{health ? t('online') : t('offline')}</div><div className="connection-note"><span className={`status-dot ${dbReady ? 'online' : ''}`} />{dbReady ? t('dbReady') : t('dbUnavailable')}</div><button className="text-button" onClick={() => void refreshConnection()}>{t('retry')}</button></div>
+        <div className="sidebar-bottom"><button className={`sidebar-link ${view === 'sources' ? 'selected' : ''}`} aria-current={view === 'sources' ? 'page' : undefined} onClick={() => setView('sources')}><span aria-hidden="true">▤</span>{c('sources')}</button><button className={`sidebar-link ${view === 'models' ? 'selected' : ''}`} aria-current={view === 'models' ? 'page' : undefined} onClick={() => setView('models')}><span aria-hidden="true">⚙</span>{t('models')}</button><div className="connection-note"><span className={`status-dot ${health ? 'online' : ''}`} />{health ? t('online') : t('offline')}</div><div className="connection-note"><span className={`status-dot ${dbReady ? 'online' : ''}`} />{dbReady ? t('dbReady') : t('dbUnavailable')}</div><button className="text-button" onClick={() => void refreshConnection()}>{t('retry')}</button></div>
       </aside>
       <main id="workspace" className="main-workspace" tabIndex={-1}>
         {!!error && <Notice tone="warning"><span>{errorMessage(error, t)}</span>{error instanceof ApiError && <code>{error.code}</code>}</Notice>}
         {notice && <Notice tone="success">{t(notice)}</Notice>}
         {!dbReady && view !== 'models' && <Notice tone="warning">{t('errorDb')}</Notice>}
 
-        {view === 'models' ? <section className="models-view">
+        {view !== 'research' && <RequestError error={setupError} locale={locale} />}
+        <div hidden={view !== 'chat'}><ChatPanel locale={locale} connections={connections} settings={chatSettings} sources={sources} personas={personas} ready={dbReady} draft={chatDraft} setDraft={setChatDraft} openConnections={() => setView('models')} openSources={() => setView('sources')} openResearch={() => setView('research')} /></div>
+        {view === 'chat' ? null : view === 'sources' ? <SourcesPanel locale={locale} sources={sources} starters={starters} ready={dbReady} refresh={refreshSetup} /> : view === 'models' ? <section className="models-view">
+          <ConnectionsPanel locale={locale} connections={connections} settings={chatSettings} ready={dbReady} refresh={refreshSetup} />
           <div className="section-heading"><div><p className="eyebrow">Euraika Compass</p><h1>{t('connectedModels')}</h1></div><button className="button secondary" onClick={() => void refreshConnection()}>{t('retry')}</button></div>
           <p className="lead">{t('modelIntro')}</p><Notice>{t('configurationHint')}</Notice><p className="helper">{t('connectionNotProbed')}</p>
           <div className="model-grid">{routes.map(route => <article className="model-card" key={route.id}><div className="model-card-heading"><span className="model-type">{route.kind.toUpperCase()}</span><span className={`pill ${route.available ? 'ready' : ''}`}>{route.available ? t('available') : !route.enabled ? t('disabled') : !route.configured ? t('notConfigured') : t('unavailable')}</span></div><h2>{route.title}</h2><code className="model-id" dir="ltr">{route.model_id}</code><p className="muted">{route.provider}</p><div className="model-card-footer"><span>{route.enabled ? t('enabled') : t('disabled')} · {route.configured ? t('configured') : t('notConfigured')}</span><button className="button secondary" disabled={!!busy || !health} onClick={() => void toggleRoute(route)}>{busy === route.id ? t('working') : route.enabled ? t('disable') : t('enable')}</button></div></article>)}</div>
-        </section> : view === 'chat' ? <section className="chat-view">
-          <div className="section-heading"><div><p className="eyebrow">{t('temporaryChat')}</p><h1>{t('chat')}</h1></div><div className="segmented-control"><button className={chatMode === 'one' ? 'active' : ''} onClick={() => setChatMode('one')}>{t('oneToOne')}</button><button className={chatMode === 'roundtable' ? 'active' : ''} onClick={() => setChatMode('roundtable')}>{t('roundtable')}</button></div></div>
-          <label className="persona-field">{t('persona')}<select value={personaId} onChange={event => setPersonaId(event.target.value)}>{personaOptions.map(id => <option key={id} value={id}>{personaName(id, personas, t)}</option>)}</select></label>
-          <Notice>{chatMode === 'roundtable' ? t('roundtablePending') : t('chatPending')}</Notice>
-          {chatMode === 'roundtable' && <div className="roundtable-setup"><div className="panel-heading"><h2>{t('participants')}</h2><button className="button secondary" disabled={participants.length >= 4} onClick={() => setParticipants(items => [...items, { id: nextParticipant.current++, persona: 'comparative', perspective: '', routeId: '', pinned: false }])}>{t('addParticipant')}</button></div>{participants.map((participant, index) => {
-            const route = routes.find(item => item.id === participant.routeId);
-            return <article className="participant-card" key={participant.id}><div className="participant-number" aria-hidden="true">{index + 1}</div><div className="participant-fields"><label>{t('persona')}<select value={participant.persona} onChange={event => updateParticipant(participant.id, { persona: event.target.value })}>{personaOptions.map(id => <option key={id} value={id}>{personaName(id, personas, t)}</option>)}</select></label><label>{t('perspective')}<input value={participant.perspective} placeholder={t('perspectivePlaceholder')} onChange={event => updateParticipant(participant.id, { perspective: event.target.value })} /></label><label>{t('model')}<select value={participant.routeId} onChange={event => updateParticipant(participant.id, { routeId: event.target.value })}><option value="">{t('chooseRoute')}</option>{routes.filter(item => item.kind === 'chat' || item.kind === 'vision').map(item => <option key={item.id} value={item.id} disabled={!item.available}>{item.title}{!item.available ? ` — ${t('unavailable')}` : ''}</option>)}</select></label><label className="checkbox-label"><input type="checkbox" checked={participant.pinned} onChange={event => updateParticipant(participant.id, { pinned: event.target.checked })} />{t('pin')}</label>{participant.pinned && participant.routeId && !route?.available && <p className="inline-warning">{t('pinnedUnavailable')}</p>}</div><button className="text-button" onClick={() => setParticipants(items => items.filter(item => item.id !== participant.id))}>{t('remove')}</button></article>})}<button className="button primary" disabled title={t('roundtablePending')}>{t('askRound')}</button></div>}
-          <div className="chat-composer"><label htmlFor="chat-draft" className="sr-only">{t('question')}</label><textarea id="chat-draft" value={chatDraft} onChange={event => setChatDraft(event.target.value)} placeholder={t('chatPlaceholder')} dir="auto" rows={5} /><div className="composer-footer"><span className="muted">{t('temporaryChat')}</span><button className="button secondary" onClick={() => setView('research')}>{t('openResearch')} <span aria-hidden="true">↗</span></button></div></div>
         </section> : <section className="research-view">
           <div className="section-heading"><div><p className="eyebrow">{t('research')}</p><h1 dir="auto">{dossier?.title ?? t('selectDossier')}</h1></div>{dossier && <div className="save-actions"><span className={`save-indicator ${unsaved ? 'dirty' : ''}`}>{unsaved ? t('unsaved') : t('saved')} · {t('revision')} {dossier.revision}</span><button className="button primary" disabled={!dbReady || !!busy || !unsaved || !formTitle.trim()} onClick={() => void saveDossier()}>{busy === 'save' ? t('working') : t('save')}</button></div>}</div>
           {!dossier ? <div className="empty-workspace"><div className="empty-compass"><CompassMark /></div><h2>{t('selectDossier')}</h2><p>{t('createIntro')}</p><button className="button primary" disabled={!dbReady} onClick={() => setCreateOpen(true)}>＋ {t('newDossier')}</button></div> : <>
@@ -337,7 +339,7 @@ export default function App() {
                 <label className="reading-editor-label"><span className="sr-only">{t('transcription')}</span><textarea className="reading-editor" value={readingText} onChange={event => { updateReadingText(event.target.value); setNotice(null); }} disabled={!image || !dbReady} placeholder={t('readingPlaceholder')} dir="auto" spellCheck={false} rows={11} /></label><div className="reading-footer"><span className="muted">{t('notReviewed')}</span><button className="button secondary" disabled={!image || !dbReady || !!busy || !readingText.trim() || readingText === currentReading?.text} onClick={() => void saveReading()}>{busy === 'reading-save' ? t('working') : currentReading ? t('saveCorrection') : t('saveReading')}</button></div>{currentReading && <p className="engine-note"><code dir="ltr">{currentReading.engine} · {currentReading.model_id}</code></p>}<p className="helper">{t('uncertaintyNote')}</p><div className="translation-placeholder"><h3>{t('translation')}</h3><p>{t('translationPending')}</p></div>
               </section></div>
           </>}
-          <div className="source-scope"><strong>{t('sourceScope')}</strong><span>{t('scopeHint')}</span></div>
+          <div className="source-scope"><strong>{t('sourceScope')}</strong><span>{sources.length ? `${sources.length} · ${c('editions')}` : c('noSources')}</span><button className="text-button" onClick={() => setView('sources')}>{c('sources')}</button></div>
         </section>}
       </main>
     </div>

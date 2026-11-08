@@ -1,5 +1,5 @@
 export type Mode = 'research' | 'chat';
-export type View = Mode | 'models';
+export type View = Mode | 'models' | 'sources';
 export type Locale = 'en' | 'nl' | 'ar' | 'fr' | 'de';
 
 export interface Health {
@@ -71,4 +71,38 @@ export interface Participant {
   perspective: string;
   routeId: string;
   pinned: boolean;
+}
+
+export type Provider = 'local' | 'mistral' | 'openrouter' | 'alibaba' | 'anthropic' | 'openai' | 'minimax';
+export interface Connection {
+  id: string; title: string; provider: Provider; model_id: string; base_url: string | null;
+  enabled: boolean; configured: boolean; local: boolean; api_key_set: boolean;
+}
+export interface ChatSettings { local_only: boolean }
+export type Collection = 'torah' | 'bible' | 'quran';
+export interface CorpusEdition {
+  id: string; title: string; language: string; revision: string;
+  collection_memberships: Collection[]; passage_count: number;
+}
+export interface CorpusSource {
+  id: string; title: string; url: string | null; source_type: string;
+  provenance: unknown; use_limits: { external_processing: boolean; rights_note?: string };
+  editions: CorpusEdition[];
+}
+export interface CorpusStarter {
+  id: string; title: string; language: string; collections: Collection[]; description?: string;
+}
+export interface Citation {
+  id: string; passage_id: string; source_id: string; source_title: string; edition_title: string;
+  reference: string; quote: string; url: string | null; collection_memberships: Collection[];
+  language: string; revision: string; content_sha256: string;
+}
+export interface ChatResponse {
+  answer: string; citations: Citation[]; warnings: string[]; connection_id: string; model_id: string;
+  grounding: { mode: string; retrieved_count: number; collections: Collection[] }; turn_id?: string; session_id?: string;
+}
+export interface ChatTurn extends ChatResponse { question: string; id: string }
+export interface ConversationSummary { id: string; title: string; dossier_id: string | null; created_at: string }
+export interface ConversationRecord extends ConversationSummary {
+  turns: { id: string; question: string; answer: string; citations: Citation[]; warnings: string[]; connection_id: string; model_id: string; created_at: string }[];
 }

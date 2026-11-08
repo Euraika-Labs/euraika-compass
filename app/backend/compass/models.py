@@ -104,3 +104,29 @@ class Passage(Base):
         Index("ix_passages_edition_reference", "edition_id", "reference", unique=True),
         Index("ix_passages_search", "search_vector", postgresql_using="gin"),
     )
+
+
+class Conversation(Base):
+    __tablename__ = "conversations"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title: Mapped[str] = mapped_column(String(200))
+    dossier_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("dossiers.id", ondelete="RESTRICT"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class ChatTurn(Base):
+    __tablename__ = "chat_turns"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    conversation_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("conversations.id", ondelete="RESTRICT"))
+    question: Mapped[str] = mapped_column(Text)
+    answer: Mapped[str] = mapped_column(Text)
+    citations: Mapped[list] = mapped_column(JSONB, default=list)
+    warnings: Mapped[list] = mapped_column(JSONB, default=list)
+    grounding: Mapped[dict] = mapped_column(JSONB, default=dict)
+    connection_id: Mapped[str] = mapped_column(String(100))
+    model_id: Mapped[str] = mapped_column(String(200))
+    persona_id: Mapped[str] = mapped_column(String(50))
+    language: Mapped[str] = mapped_column(String(40))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    __table_args__ = (Index("ix_chat_turns_conversation_created", "conversation_id", "created_at"),)

@@ -12,7 +12,12 @@ from fastapi.staticfiles import StaticFiles
 from compass import __version__
 from compass.adapters.registry import ModelRegistry
 from compass.api import router
+from compass.chat import ChatService
+from compass.chat import router as chat_router
 from compass.config import Settings
+from compass.connections import ConnectionStore
+from compass.connections import router as connections_router
+from compass.corpus import router as corpus_router
 from compass.db import Database
 from compass.errors import error_response, install_error_handlers
 from compass.jobs import JobService
@@ -48,13 +53,18 @@ def create_app(settings: Settings | None = None, registry=None) -> FastAPI:
     settings = settings or Settings()
     database = Database(settings.database_url)
     blobs = BlobStore(settings.data_dir, settings.max_upload_bytes, settings.max_image_pixels)
+    connections = ConnectionStore(
+        settings.data_dir, environ={**os.environ, "COMPASS_LOCAL_ONLY": str(settings.local_only).lower()}
+    )
+    owns_registry = registry is None
     if registry is None:
         registry = ModelRegistry(
             settings.config_dir / "models.json",
             settings.data_dir / "routes.json",
-            environ={**os.environ, "COMPASS_LOCAL_ONLY": str(settings.local_only).lower()},
+            environ={**os.environ, **connections.reader_environ()},
         )
     jobs = JobService(database, registry, blobs)
+    chat_service = ChatService(database, connections)
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI):
@@ -78,6 +88,19 @@ def create_app(settings: Settings | None = None, registry=None) -> FastAPI:
     application.state.blobs = blobs
     application.state.registry = registry
     application.state.jobs = jobs
+    application.state.connections = connections
+    application.state.chat = chat_service
+
+    def refresh_readers():
+        if owns_registry:
+            updated = ModelRegistry(
+                settings.config_dir / "models.json", settings.data_dir / "routes.json",
+                environ={**os.environ, **connections.reader_environ()},
+            )
+            application.state.registry = updated
+            jobs.registry = updated
+
+    application.state.refresh_readers = refresh_readers
     install_error_handlers(application)
     application.add_middleware(
         CORSMiddleware,
@@ -104,6 +127,9 @@ def create_app(settings: Settings | None = None, registry=None) -> FastAPI:
         return response
 
     application.include_router(router)
+    application.include_router(connections_router)
+    application.include_router(corpus_router)
+    application.include_router(chat_router)
     frontend = settings.frontend_dir
     if (frontend / "assets").is_dir():
         application.mount("/assets", StaticFiles(directory=frontend / "assets"), name="static-assets")

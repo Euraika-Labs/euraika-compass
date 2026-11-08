@@ -57,7 +57,7 @@ def health(request: Request):
             "image_import": ready,
             "manual_transcription": ready,
             "configured_model_adapters": True,
-            "grounded_chat": False,
+            "grounded_chat": ready,
             "web_research": False,
             "roundtable_generation": False,
         },
@@ -319,7 +319,6 @@ def sources(session: Session = Depends(session_dependency)):
     }
 
 
-@router.post("/chat")
 @router.post("/research-runs")
 @router.post("/roundtables/{roundtable_id}/commands")
 def generation_not_implemented():
