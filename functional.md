@@ -1,6 +1,6 @@
 # Euraika Compass — Functionele specificatie
 
-Status: functionele baseline van 8 november 2026, met een eerste uitvoerbare skeleton. Dossiers in PostgreSQL, eigen beeldimport, handmatige transcriptie-/correctierevisies, modelregistratie en transcriptiejobs zijn geïmplementeerd. Dit document blijft het volledige beoogde gedrag beschrijven: corpusgestuurde generatie, webonderzoek, AI-Roundtable en dossierexport zijn nog te bouwen. Geen echte modelinferentie of historische leeskwaliteit is in deze stap bewezen. De actuele gebruiksgrenzen staan in de [ontwikkelhandleiding](docs/development/README.md).
+Status: functionele baseline van 8 november 2026, met een werkende eerste onderzoeks- en chatflow. Naast dossiers, beelden en transcriptierevisies zijn privémodelverbindingen, tekstedities importeren, passagezoeking, relevantieselectie, chat met controleerbare verwijzingen en expliciet bewaarde gesprekken geïmplementeerd. De Mistral Large 4.0-koppeling is daadwerkelijk gebruikt. Webonderzoek, gegenereerde AI-Roundtable, dossierexport en de volledige beoogde ervaring blijven verdere bouwstappen. Historische OCR/HTR-kwaliteit is nog niet beproefd. Zie de [chatgids](docs/development/grounded-chat.md) en [ontwikkelhandleiding](docs/development/README.md).
 
 [vision.md](vision.md) beschrijft het doel, de doelgroep en de richting van het product. Dit document vertaalt die visie naar functioneel gedrag; de technische plannen werken de bouw en verificatie uit.
 

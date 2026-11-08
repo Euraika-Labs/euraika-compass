@@ -381,7 +381,8 @@ class ChatService:
                      "retrieved_collections": covered, "cited_collections": cited}
         turn = {"question": body.message, "answer": answer, "citations": citations, "warnings": warnings,
                 "connection_id": body.connection_id, "model_id": completion["model_id"], "persona_id": body.persona_id,
-                "language": response_language, "grounding": grounding}
+                "language": response_language, "grounding": grounding,
+                "created_at": datetime.now(timezone.utc)}
         turn_id = None
         if body.conversation_id:
             with self.database.sessions() as session:

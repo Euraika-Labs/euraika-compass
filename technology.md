@@ -1,6 +1,6 @@
 # Euraika Compass — Technologie en opslagarchitectuur
 
-Status: technische basis voor een persoonlijke, neutrale theologische onderzoekstool, bijgewerkt op 8 november 2026. FastAPI/SQLAlchemy/Alembic en de React/TypeScript-skeleton zijn geïmplementeerd. Native Windows PostgreSQL 16.15 en pgvector 0.8.6 zijn geïnstalleerd en beproefd met migratie-/bewaarcontroles. Pinokio Install/Start/Stop, dependency-reset/herinstallatie en de browserflow zijn geverifieerd; modelinferentie en historische leeskwaliteit zijn nog niet gemeten. [functional.md](functional.md) blijft leidend; de [ontwikkelhandleiding](docs/development/README.md) beschrijft de huidige uitvoering en resterende functies.
+Status: technische basis voor een persoonlijke, neutrale theologische onderzoekstool, bijgewerkt op 8 november 2026. De FastAPI/PostgreSQL- en React/TypeScript-basis ondersteunt nu ook bronimport, lexicale zoeking met modelgestuurde relevantieselectie en echte chat via privéproviderkoppelingen. Mistral Large 4.0 is gebruikt; historische OCR/HTR-kwaliteit blijft onbeproefd. Native PostgreSQL 16.15/pgvector 0.8.6 en de Pinokio-lifecycle zijn geverifieerd. [functional.md](functional.md) blijft leidend; de [chatgids](docs/development/grounded-chat.md) en [ontwikkelhandleiding](docs/development/README.md) beschrijven de huidige uitvoering en resterende functies.
 
 De componentgrenzen en uitvoeringscontracten staan in [architecture.md](architecture.md); schermen en interacties in [design.md](design.md). Dit document blijft de uitwerking van technologiekeuze, opslag en onderhoud.
 

@@ -24,7 +24,7 @@ The default data directory is per-user local application data, outside the check
 
 ## Current implementation
 
-| Capability | Skeleton status |
+| Capability | Implementation status |
 | --- | --- |
 | Dossiers and original images | PostgreSQL CRUD, conflict detection, validated private image imports and immutable byte storage are implemented |
 | Manual readings and corrections | Implemented as separate transcript revisions; no automatic authenticity or canonical-verification label |
@@ -33,12 +33,16 @@ The default data directory is per-user local application data, outside the check
 | Image-model execution | Requires separately installed/configured readers or endpoints; historical-script inference and accuracy remain unverified |
 | Workbench interface | Research, Sources, Chat and Connections workflows, five interface languages and RTL; AI-generated design concepts remain illustrative |
 | Corpus import and retrieval | Traceable JPS Torah, KJV Bible and Pickthall Quran translation starters, manual JSON import, immutable snapshots, PostgreSQL lexical search and nearby passage context |
-| Source-grounded chat | Model-assisted multilingual query rewriting, passage citations, practical output checks, five personas, temporary sessions and explicit saving/reopening; see the guide for current limits |
+| Source-grounded chat | Multilingual query planning, relevance selection within each collection, verified reference lookups, nearby context, passage citations, five personas and explicit saving/reopening |
 | Autonomous web research and AI Roundtable turns | Planned; no fabricated search results or model discussions |
 | Dossier export/import and complete backup UI | Planned; durable storage and migration foundations are present |
 | Temporary Chat image attachments | Planned; initial image uploads deliberately require a saved research dossier |
 
-This is the running skeleton with a neutral image-upload fixture and an explicitly manual test reading. It is not manuscript evidence or model output.
+This is the actual source-grounded Chat view, using Mistral Large 4.0 and the imported electronic editions. The generic QA answer is a model draft; opening a reference shows the stored passage, not a certified interpretation. See the [live verification record](docs/development/2026-11-08-grounded-chat-verification.md) for evidence and limits.
+
+![Actual Chat view with a stored source passage beside the answer](docs/development/images/grounded-chat.png)
+
+The earlier Research capture uses a neutral image-upload fixture and an explicitly manual test reading. It is not manuscript evidence or model output.
 
 ![Running Research workspace with a saved manual test reading](docs/development/images/skeleton-research.png)
 
@@ -135,7 +139,7 @@ Start with [functional.md](functional.md), the central specification for persona
 
 The [detailed implementation plan](docs/plans/2026-11-08-1552-feat-religion-research-app-plan.md) is written in Dutch. It defines product requirements, candidate models, starter sources, eight implementation units, and practical source, interpretation, UI and persistence checks. There is no fixed test volume, required expert panel or statistical certification program for personal use.
 
-The implemented stack uses React/TypeScript with Vite, Python/FastAPI, SQLAlchemy/Alembic and PostgreSQL with full-text/pgvector schema support. The first corpus import, lexical retrieval and grounded-chat path is implemented; semantic embeddings/reranking and local model installation remain unfinished. PostgreSQL is the primary database for local and future server deployments. Chat connections support Mistral, Alibaba Cloud, OpenAI, Anthropic, MiniMax, OpenRouter and compatible local endpoints; actual account access depends on the supplied credentials and selected model. Mistral Large 4 is the recommended general chat model, with low reasoning effort for query planning and high effort for final answers. Local Qwen remains a coordinator/vision option; historical-language translation candidates are tried separately. No provider/model has been selected as a validated historical-image reading winner. API keys belong in backend-only local configuration, never this repository.
+The implemented stack uses React/TypeScript with Vite, Python/FastAPI, SQLAlchemy/Alembic and PostgreSQL with full-text/pgvector schema support. Corpus import, lexical retrieval, model-assisted relevance selection and grounded chat are implemented. Vector embeddings, dedicated local reranker workers and local model installation remain unfinished. PostgreSQL is the primary database for local and future server deployments. Chat connections support Mistral, Alibaba Cloud, OpenAI, Anthropic, MiniMax, OpenRouter and compatible local endpoints; actual account access depends on the supplied credentials and selected model. Mistral Large 4 is the recommended general chat model, with low reasoning effort for query planning/selection and high effort for final answers. Local Qwen remains a coordinator/vision option; historical-language translation candidates are tried separately. No provider/model has been selected as a validated historical-image reading winner. API keys belong in backend-only local configuration, never this repository.
 
 The [storage architecture](technology.md) keeps large source objects outside PostgreSQL. The skeleton stores original dossier images once by hash and preserves transcript revisions. Broader source-retention, export/import and complete backup/restore flows remain planned; a later opt-in sharing service is separate. Native Windows PostgreSQL 16.15 with pgvector 0.8.6 and the Pinokio install/start/stop/reset lifecycle have been exercised. Neither cache permission nor private-study access automatically permits redistribution.
 

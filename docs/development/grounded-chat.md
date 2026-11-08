@@ -34,11 +34,13 @@ account model IDs. Failed requests never silently select another model.
 
 The backend freezes the selected configuration for a turn. Changes to its
 provider, model, endpoint, enabled state, credential or cloud policy invalidate
-the turn before its next model request. Planning, answering and any format repair
+the turn before its next model request. Planning, relevance selection, answering and any format repair
 use the same selected model.
 
 Mistral Large 4 planning uses `reasoning_effort="low"` and at most 2,048 completion
-tokens; answering uses `"high"` and at most 8,192. One format/citation repair may
+tokens. Relevance selection also uses low effort, with an 8,192-token ceiling so
+reasoning about many candidates does not consume the entire response budget.
+Answering uses `"high"` and at most 8,192 tokens. One format/citation repair may
 use the same answer budget. A connection test uses low effort and at most 512
 tokens. These are ceilings, not promised usage or answer lengths. Explicit tests
 and chats can incur provider charges. The recommendation follows the official
@@ -46,24 +48,36 @@ and chats can incur provider charges. The recommendation follows the official
 [reasoning guide](https://docs.mistral.ai/inference/conversations/reasoning);
 it is not a theological benchmark or neutrality guarantee.
 
-Current retrieval combines **lexical PostgreSQL full-text search** and an LLM
-rewrite into short search queries. The rewrite can bridge a Dutch, Arabic or
-French question to English starter texts. Exact passage references also work.
+Current retrieval combines **lexical PostgreSQL full-text search**, a model-assisted
+multilingual query plan, and a bounded model selection from actual candidate passages.
+The planner can bridge a Dutch, Arabic or French question to English starter texts
+and propose verse references as lookup hints. A hint contributes evidence only if
+the selected edition actually contains it and its source passes the same filters.
+Up to 60 real candidates are considered. Relevance is assessed separately within
+each selected collection, rather than displacing one collection with another in
+a single global top list. The model may select up to nine existing candidate IDs
+in total or return no relevant evidence for a collection. Rejected matches are not
+reintroduced to fill a quota. Final `[S1]` labels are assigned after this selection.
 The model receives selected stored passages, provenance and permitted recent
 conversation context. It must cite supplied `[S1]` identifiers and state limits.
-Missing or unknown source references and unmatched long explicit quotations are
-rejected. After at most one repair, an invalid answer fails without saving a turn.
+The model is asked to paraphrase and reflect; the citation panel supplies literal
+wording directly from the stored edition. Missing or unknown source references
+and unmatched long explicit quotations are rejected. Visible ellipses may omit
+existing words in order, but cannot introduce new ones. After at most one repair,
+an invalid answer fails without saving a turn.
 
 Chat expands up to nine selected search passages with their immediate neighboring
 verses, within the same edition and chapter. It sends existing text only, capped
 at 27 passage items and 28,000 source-text characters. Citation inspection can also
 fetch context with `GET /api/v1/passages/{id}/context?radius=1` (radius zero to two).
-Nearby context is not whole-book interpretation. Lexical matching, query rewriting
-and edition coverage can miss relevant passages; absence from retrieval does not
-establish agreement or disagreement.
+Nearby context is not whole-book interpretation. Lexical matching, query rewriting,
+model selection and edition coverage can miss relevant passages; absence from
+retrieval does not establish agreement or disagreement. Response metadata keeps
+retrieved collections separate from collections actually cited in the answer.
 
-There is **no semantic embedding/reranking pipeline yet**, despite the pgvector
-schema foundations. Chat does not autonomously search the web, discover or
+There is **no vector-embedding retrieval or dedicated local reranker worker yet**,
+despite the pgvector foundations. The current relevance selector is the selected
+chat model. Chat does not autonomously search the web, discover or
 download manuscripts, or generate Roundtable discussions. Starter imports are
 explicit catalog downloads. Broader web research and Roundtable generation remain
 future work.
@@ -110,7 +124,9 @@ curl -X POST http://127.0.0.1:8000/api/v1/corpus/starters/jps-1917-torah/import
 ```
 
 Replace `CONNECTION_ID` with the returned ID. The next request performs real
-inference: normally planning and answering, with one possible format/citation repair.
+inference: normally planning, relevance selection and answering, with one possible
+format/citation repair. High-effort Mistral requests have a bounded 240-second
+deadline rather than the shorter default for lightweight calls.
 
 ```bash
 curl -X POST http://127.0.0.1:8000/api/v1/chat \
@@ -135,3 +151,14 @@ Schemas are at `/docs` and `/openapi.json`. Focused checks from `app/backend`:
 PostgreSQL cases require the dedicated test database described in the
 [development guide](README.md). Automated provider tests use boundary doubles
 and do not make paid inference calls.
+
+An opt-in Chrome check exercises a real configured Mistral Large 4.0 connection,
+the three imported starters, source inspection, explicit saving and reloading.
+It is skipped unless `COMPASS_LIVE_CHAT=1` is deliberately set:
+
+```powershell
+$env:COMPASS_BASE_URL = "http://127.0.0.1:<port-shown-by-Pinokio>"
+$env:COMPASS_LIVE_CHAT = "1"
+# From app/frontend; this makes real provider calls.
+npx playwright test e2e/live-chat.spec.ts
+```

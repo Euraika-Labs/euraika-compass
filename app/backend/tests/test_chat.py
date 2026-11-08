@@ -139,14 +139,16 @@ def test_grounded_chat_stays_temporary_until_explicit_save_and_reopens(postgres_
     assert turn["citations"][0]["quote"] == "The fixture mentions mourning and comfort."
     assert len(connection.calls) == 3
     assert client.get("/api/v1/conversations").json()["items"] == []
+    second = client.post("/api/v1/chat", json={"message": "A second temporary question", "connection_id": "actual-test-boundary", "session_id": turn["session_id"]})
+    assert second.status_code == 200, second.text
     saved = client.post("/api/v1/conversations", json={"title": "Explicit saved conversation", "session_id": turn["session_id"]})
     assert saved.status_code == 201, saved.text
     conversation = client.get("/api/v1/conversations/" + saved.json()["id"]).json()
-    assert len(conversation["turns"]) == 1
+    assert [item["question"] for item in conversation["turns"]] == ["How can I cope with mourning?", "A second temporary question"]
     assert conversation["turns"][0]["citations"] == turn["citations"]
     followup = client.post("/api/v1/chat", json={"message": "What can I reflect on?", "connection_id": "actual-test-boundary", "conversation_id": saved.json()["id"]})
     assert followup.status_code == 200, followup.text
-    assert len(client.get("/api/v1/conversations/" + saved.json()["id"]).json()["turns"]) == 2
+    assert len(client.get("/api/v1/conversations/" + saved.json()["id"]).json()["turns"]) == 3
     assert len(connection.calls[-3][1]) > 2  # Saved prior turns reach the query planner.
 
 

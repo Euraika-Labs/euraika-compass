@@ -1,6 +1,6 @@
 # Euraika Compass — Systeemarchitectuur
 
-Status: architectuur voor een persoonlijke, neutrale theologische onderzoekstool, bijgewerkt op 8 november 2026. De eerste uitvoerbare skeleton bevat de webinterface, FastAPI, PostgreSQL-migraties, dossier-/beeldbewaring, handmatige leesrevisies en model-/jobgrenzen. Native Windows PostgreSQL 16.15 met pgvector 0.8.6 is beproefd. De overige beschreven componenten vormen de verdere bouwrichting; modelinferentie, corpusgestuurde generatie, webonderzoek, AI-Roundtable en dossierexport zijn nog niet volledig aangesloten. Praktische controles begeleiden de bouw. Zie de [actuele implementatiegrenzen](docs/development/README.md).
+Status: architectuur voor een persoonlijke, neutrale theologische onderzoekstool, bijgewerkt op 8 november 2026. De werkende basis bevat dossier-/beeldbewaring, leesrevisies, privémodelverbindingen, corpusimport, PostgreSQL-zoeking, modelgestuurde relevantieselectie, chat met bronmomentopnamen en expliciet bewaarde gesprekken. Mistral Large 4.0 is gekoppeld; de gekozen verbinding blijft gedurende een antwoord vastgezet. Vectorretrieval, autonoom webonderzoek, gegenereerde AI-Roundtable, dossierexport en lokale modelinstallatie blijven verdere bouwstappen. Zie de [chatgids](docs/development/grounded-chat.md) en [actuele implementatiegrenzen](docs/development/README.md).
 
 ## 1. Plaats van dit document
 

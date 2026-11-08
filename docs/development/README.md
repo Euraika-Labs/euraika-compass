@@ -152,9 +152,9 @@ and `app/workers/` for the selected optional runtime profiles.
 
 ## Remaining implementation
 
-- Broader source-package formats, original-language editions and semantic
-  embedding/reranking retrieval; the initial text import, lexical retrieval and
-  source-grounded chat path is implemented.
+- Broader source-package formats, original-language editions, vector retrieval
+  and dedicated local reranker workers; the current import, lexical retrieval,
+  model-based relevance selection and cited chat are implemented.
 - Autonomous web search/extraction under the source policy.
 - AI-generated Roundtable turns and synthesis.
 - Model/runtime installation UI; actual historical-script quality trials.
@@ -166,3 +166,7 @@ These are visible boundaries of the skeleton, not simulated working features.
 See the [Windows skeleton verification record](2026-11-08-skeleton-verification.md)
 for the exercised Pinokio lifecycle, real PostgreSQL and Chrome checks, actual
 screenshots and the limits of that verification.
+
+The [real model/chat verification record](2026-11-08-grounded-chat-verification.md)
+adds the Mistral connection, actual starter imports, cited Chat, explicit saving,
+current tests and the issues discovered during the real browser checks.
