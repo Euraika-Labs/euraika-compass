@@ -1,0 +1,51 @@
+import { expect, test } from '@playwright/test';
+import type { ChatResponse, Connection } from '../src/types';
+
+test('live Mistral chat answers with inspectable stored passages and saves explicitly', async ({ page }, testInfo) => {
+  test.skip(process.env.COMPASS_LIVE_CHAT !== '1', 'Explicit opt-in: uses an existing configured provider and may incur API cost.');
+  test.setTimeout(540_000);
+  const catalog = await page.request.get('/api/v1/connections');
+  expect(catalog.ok()).toBeTruthy();
+  const connection = ((await catalog.json()).items as Connection[]).find(item => item.provider === 'mistral' && item.model_id === 'mistral-large-4-0' && item.configured && item.enabled);
+  expect(connection, 'Configure the selected Mistral account model before the live test.').toBeTruthy();
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Chat', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Choose a connection', exact: true }).selectOption(connection!.id);
+  await expect(page.getByRole('combobox', { name: 'Answer language', exact: true })).toHaveValue('auto');
+  const question = 'Welke inzichten geven de Torah, de Bijbel en de Koran over rouw om een ouder? Vergelijk overeenkomsten en verschillen, onderscheid tekst en interpretatie, en geef voorzichtige praktische reflecties met bronverwijzingen.';
+  await page.getByRole('textbox', { name: 'Research question', exact: true }).fill(question);
+  const responsePromise = page.waitForResponse(response => response.url().endsWith('/api/v1/chat') && response.request().method() === 'POST', { timeout: 510_000 });
+  await page.getByRole('button', { name: 'Ask Compass', exact: true }).click();
+  const response = await responsePromise;
+  const reply = await response.json() as ChatResponse;
+  expect(response.ok(), JSON.stringify(reply)).toBeTruthy();
+  expect(reply.model_id).toBe('mistral-large-4-0');
+  expect(reply.answer).toMatch(/rouw|troost|ouder/i);
+  expect(reply.citations.length).toBeGreaterThan(0);
+  expect(reply.grounding.collections).toEqual(expect.arrayContaining(['torah', 'bible', 'quran']));
+  for (const citation of reply.citations) {
+    const original = await page.request.get(`/api/v1/passages/${citation.passage_id}`);
+    expect(original.ok()).toBeTruthy();
+    const passage = await original.json();
+    expect(citation.quote).toBe(passage.quote);
+    expect(citation.revision).toBe(passage.revision);
+    expect(citation.content_sha256).toBe(passage.content_sha256);
+  }
+  await page.locator('.citation-chip').first().click();
+  await expect(page.getByRole('complementary', { name: 'Citation details' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Open original source', exact: false })).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath('live-grounded-chat.png'), fullPage: true });
+  await page.getByRole('button', { name: 'Save conversation', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Conversation title', exact: true }).fill('QA — rouw en troost in drie tekstcollecties');
+  const savePromise = page.waitForResponse(response => response.url().endsWith('/api/v1/conversations') && response.request().method() === 'POST');
+  await page.getByRole('button', { name: 'Save conversation', exact: true }).last().click();
+  const savedResponse = await savePromise;
+  expect(savedResponse.ok()).toBeTruthy();
+  const saved = await savedResponse.json();
+  await page.reload();
+  await page.getByRole('button', { name: 'Chat', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Saved conversations', exact: true }).selectOption(saved.id);
+  await expect(page.locator('.user-message')).toHaveText(question);
+  await expect(page.locator('.citation-chip').first()).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath('live-saved-chat.png'), fullPage: true });
+});

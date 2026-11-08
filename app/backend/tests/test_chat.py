@@ -27,11 +27,19 @@ def test_citations_are_real_snapshots_and_explicit_quotes_must_match():
     ("A claim [S99]", "invalid_citations"),
     ("A claim [S1] and another [S2]", "invalid_citations"),
     ('It says “An invented quotation that does not exist.” [S1]', "unverified_quote"),
+    ('It says «An invented quotation that does not exist.» [S1]', "unverified_quote"),
 ])
 def test_unknown_missing_and_fabricated_quotes_are_rejected(answer, code):
     with pytest.raises(APIError) as error:
         checked_answer(json.dumps({"answer": answer}), EVIDENCE)
     assert error.value.code == code
+
+
+def test_visible_ellipsis_can_omit_but_not_invent_quoted_words():
+    answer, _, _ = checked_answer(json.dumps({"answer": "It says «The exact visible ... named edition.» [S1]"}), EVIDENCE)
+    assert "[S1]" in answer
+    with pytest.raises(APIError):
+        checked_answer(json.dumps({"answer": "It says «The exact visible ... invented edition.» [S1]"}), EVIDENCE)
 
 
 def test_full_temporary_session_can_still_be_saved():
@@ -71,6 +79,7 @@ class ControlledConnection:
         self.invalid = invalid
         self.cloud_blocked = False
         self.remote = False
+        self.ranked_ids = ["C1"]
 
     def get(self, connection_id):
         if connection_id != "actual-test-boundary":
@@ -87,8 +96,10 @@ class ControlledConnection:
         # Inference is outside DB transactions; no network is faked inside retrieval itself.
         assert self.application.state.database.engine.pool.checkedout() == 0
         self.calls.append((connection_id, messages))
-        if max_tokens == 300:
+        if max_tokens == 1200:
             text = json.dumps({"queries": ["mourning comfort"]})
+        elif max_tokens == 800:
+            text = json.dumps({"ids": self.ranked_ids})
         elif self.invalid:
             text = json.dumps({"answer": "A fabricated source [S99]"})
         else:
@@ -126,7 +137,7 @@ def test_grounded_chat_stays_temporary_until_explicit_save_and_reopens(postgres_
     turn = response.json()
     assert len(turn["citations"]) == 1 and turn["citations"][0]["id"] == "S1"
     assert turn["citations"][0]["quote"] == "The fixture mentions mourning and comfort."
-    assert len(connection.calls) == 2
+    assert len(connection.calls) == 3
     assert client.get("/api/v1/conversations").json()["items"] == []
     saved = client.post("/api/v1/conversations", json={"title": "Explicit saved conversation", "session_id": turn["session_id"]})
     assert saved.status_code == 201, saved.text
@@ -136,7 +147,7 @@ def test_grounded_chat_stays_temporary_until_explicit_save_and_reopens(postgres_
     followup = client.post("/api/v1/chat", json={"message": "What can I reflect on?", "connection_id": "actual-test-boundary", "conversation_id": saved.json()["id"]})
     assert followup.status_code == 200, followup.text
     assert len(client.get("/api/v1/conversations/" + saved.json()["id"]).json()["turns"]) == 2
-    assert len(connection.calls[-2][1]) > 2  # Saved prior turns reach the query planner.
+    assert len(connection.calls[-3][1]) > 2  # Saved prior turns reach the query planner.
 
 
 @pytest.mark.postgres
@@ -146,7 +157,7 @@ def test_invalid_references_never_save_and_no_hidden_model_fallback(postgres_app
     add_test_source(application)
     response = client.post("/api/v1/chat", json={"message": "mourning", "connection_id": "actual-test-boundary"})
     assert response.status_code == 502 and response.json()["error"]["code"] == "invalid_citations"
-    assert len(connection.calls) == 3  # Planner, first draft, one bounded same-model repair.
+    assert len(connection.calls) == 4  # Planner, selection, draft, one bounded same-model repair.
     assert {call[0] for call in connection.calls} == {"actual-test-boundary"}
     with application.state.database.sessions() as session:
         assert session.scalar(select(func.count()).select_from(ChatTurn)) == 0
@@ -178,7 +189,19 @@ def test_local_source_answers_do_not_leak_through_cloud_chat_history(postgres_ap
     connection.remote = True
     second = client.post("/api/v1/chat", json={**body, "session_id": first.json()["session_id"]})
     assert second.status_code == 200, second.text
-    new_calls = connection.calls[2:]
+    new_calls = connection.calls[3:]
     assert all("PRIVATE_SOURCE_MARKER" not in json.dumps(messages) for _, messages in new_calls)
     assert not any(message["role"] == "assistant" for _, messages in new_calls for message in messages)
     assert any("omitted" in warning for warning in second.json()["warnings"])
+
+
+@pytest.mark.postgres
+@pytest.mark.parametrize("selected,code", [([], "no_evidence"), (["C999"], "invalid_selection")])
+def test_irrelevant_or_invented_candidate_ids_never_become_answer_sources(postgres_app, selected, code):
+    client, application, _ = postgres_app
+    connection = configure_chat(application)
+    connection.ranked_ids = selected
+    add_test_source(application)
+    response = client.post("/api/v1/chat", json={"message": "mourning", "connection_id": "actual-test-boundary"})
+    assert response.status_code in {422, 502} and response.json()["error"]["code"] == code
+    assert len(connection.calls) == 2  # No final generation and no invented answer.
