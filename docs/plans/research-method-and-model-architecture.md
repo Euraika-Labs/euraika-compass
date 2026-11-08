@@ -1,5 +1,7 @@
 # Evidence method, hybrid models, and moderated discussion
 
+The central functional specification is [functional.md](../../functional.md). This document elaborates its evidence and orchestration contracts; implementation choices must preserve that functional behavior.
+
 Status: product requirements and architecture proposals, 8 November 2026. No models or API integrations have been run for this project. This document extends the main plan and supersedes its original local-only coordinator assumption and deferral of manuscript viewing. Provider selection remains subject to evaluation and account/region admission.
 
 ## One evidence method for all three collections
@@ -75,6 +77,22 @@ Cloud coordination is explicitly enabled by the user and visibly identified. Sel
 Use separate authorized primary/reviewer routes, context/output limits, token and monetary budgets, timeout/cancel behavior, and usage accounting. Per-run costs must identify estimates versus provider-reported usage. No silent provider changes, cloud fallback, or escalating multi-model loop after failure. Aliases such as latest require resolution/version recording and cannot silently inherit a previous model's evaluation claims. A provider update or routing-policy change invalidates affected claims under R15. A reviewer is a fallible critic, not a second source of historical evidence.
 
 ## User-moderated Roundtable
+
+### Orchestrator allocation: connected models only
+
+The general-model orchestrator can propose or automatically allocate persona/perspective roles across the user's configured model connections. It chooses only from a backend-provided eligible model registry, never an unrestricted list of model names or arbitrary URLs. Provider connection and individual model eligibility are separate: a connected provider does not mean every catalog model is accessible or enabled.
+
+Before suitability ranking, the backend filters candidates by user-configured connection, enabled provider and model, account/region availability, required capabilities, data-processing policy, admitted source-processing rights, applicable evaluation status, and remaining budget. The orchestrator itself must use an eligible configured route. Credentials are not included in its prompt. Merely existing in a vendor catalog, appearing in training data, or being suggested by another participant never makes a model eligible.
+
+Rank eligible candidates using recorded project evaluations for the actual role/task/language, then cost and latency preferences. Until sufficient evaluations exist, assignments are explicitly provisional; do not state that Mistral Large 4, Qwen3.8-Max, or another model is objectively best for a persona. Persona, analytical perspective, and model remain independent. Multiple roles can share a model; do not imply independent experts merely because their prompts differ. Local translation/retrieval workers retain their separate capability and evaluation records.
+
+The user can inspect the proposed role/model/provider mapping, override a role, or pin it. Automatic allocation is an enabled session option under the chosen provider/data/budget policy; it is not permission to activate new providers. Record each assignment's configuration version, capability/evaluation basis, and subsequent changes. Show a concise selection explanation rather than fabricated hidden reasoning. Backend validation checks every requested route ID again before executing a turn and rejects model output naming an ineligible route.
+
+On disconnection, quota failure, loss of capability, or a disabled model, mark the affected role unavailable. An explicitly authorized fallback policy may choose another eligible connected model and must show the reassignment; otherwise pause that role and let the user reassign it. A pinned role cannot silently move. No eligible candidate produces a clear unassigned state, not an invented response or an automatically enabled service. Disabling a route prevents subsequent calls; a cancellation attempt cannot retract context already sent in an in-flight request.
+
+Allocation is separate from moderation. The orchestrator prepares assignments and performs only moderator-requested rounds/turns. It cannot advance an unlimited debate or remove human control over speaking order, pause, and synthesis.
+
+Acceptance tests: disabled/disconnected/unavailable models are never selected; one accessible model can serve multiple roles; empty eligible registry pauses without outbound model calls; prompt injection cannot introduce an external route; missing tool support is filtered; pin/override survives a new round; approved fallback is visible and remains in the eligible registry; unapproved fallback and changes to a pinned assignment are blocked; budget/local-only constraints apply to orchestrator and participants; and provider/evaluation changes invalidate affected configuration claims.
 
 Within Chat, offer **One-to-one** and **Roundtable** as explicit interaction choices. Research can remain open beside either. Do not automatically turn a personal grief conversation into a debate. The human user is moderator; models are labeled AI participants, not actual scholars, clergy, prophets, or representatives of an entire faith.
 

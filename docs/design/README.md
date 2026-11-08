@@ -2,12 +2,15 @@
 
 These images were generated with the built-in image generation tool as design explorations. They are not screenshots of a running application. Example source links, text, translations, and language-analysis labels illustrate the proposed interface and have not been validated as application results. No religious preference is implied by the selected sample passages.
 
-The current direction is **version 4**: two connected views, **Chat** and **Research**, with English as the default UI language and the Euraika blue/gold palette. A language selector illustrates English, Dutch, Arabic, French, and German. The [interaction, language, and web research specification](interaction-and-localization.md) defines intended behavior, including RTL and optional internet research. The images show the web-enabled state; first launch will keep web access disabled until configured and enabled.
+The current direction combines the **version 4 base views** and **version 5 theological research, Roundtable, and routing explorations**: two connected views, **Chat** and **Research**, with English as the default UI language and the Euraika blue/gold palette. A language selector illustrates English, Dutch, Arabic, French, and German. The [interaction, language, and web research specification](interaction-and-localization.md) defines intended behavior, including RTL and optional internet research. Screens illustrate different web-control states; first launch will keep web access disabled until configured and enabled. They do not show a real running session.
 
 The first direction used warm ivory, forest green, and sage. Version 2 introduced petrol/turquoise and amber. Its files are retained below as earlier explorations, not the chosen visual direction. Version 3 explored compact research panels and an ordinary chat; version 4 applies the English-first multilingual requirement and verified Euraika brand palette to those layouts.
 
 | File | Screen |
 | --- | --- |
+| `compass-theology-research-v5.png` | Theological question, proposed interpretations, evidence, context and uncertainty |
+| `compass-theology-roundtable-v5.png` | User-moderated AI discussion with shared sources and open disagreements |
+| `compass-orchestrator-routing-v5.png` | Demo role allocation using enabled connections only, with a pinned role |
 | `compass-chat-v4.png` | Current English Chat concept: life questions, persona, sources on demand |
 | `compass-research-v4.png` | Current English Research concept: tabs, parallel texts, notes, source and assistant panels |
 | `compass-conversation-v2.png` | Personal conversation with expandable sources |
@@ -26,6 +29,8 @@ The first direction used warm ivory, forest green, and sage. Version 2 introduce
 - Typography, contrast, right-to-left text, keyboard navigation, and responsive layouts still need implementation and live testing.
 
 ## Generation prompts
+
+See the [complete version 5 prompts and inspection notes](generation-prompts-v5.md) for theological research, Roundtable and demo routing. The screenshots do not establish scholarly conclusions, real provider connections, or the best model for any role. The root [functional.md](../../functional.md) is the central functional specification.
 
 See the [complete version 4 prompts and inspection notes](generation-prompts-v4.md) for the current two deliverables. The prompts below document the previous versions.
 

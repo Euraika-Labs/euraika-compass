@@ -10,6 +10,8 @@ execution: code
 
 # Euraika Compass - Plan
 
+De centrale functionele specificatie staat in [functional.md](../../functional.md). Dit document beschrijft de implementatie, requirementsmapping en verificatie; technische uitwerking mag het functionele contract niet stilzwijgend veranderen.
+
 ## Goal Capsule
 
 **Objective:** Gebruikers kunnen oorspronkelijke religieuze teksten en vertalingen bestuderen en persoonlijke of vergelijkende vragen bespreken met een controleerbare assistent die geen religie voortrekt.

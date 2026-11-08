@@ -52,9 +52,21 @@ The current direction uses the Euraika brand palette: navy `#001C3A`, secondary 
 
 ![English Research design concept in Euraika blue and gold](docs/design/compass-research-v4.png)
 
+### Theological research and interpretation
+
+![Theological interpretation comparison with evidence and open questions](docs/design/compass-theology-research-v5.png)
+
+### User-moderated Roundtable
+
+![Theological Roundtable with shared evidence and moderator controls](docs/design/compass-theology-roundtable-v5.png)
+
+See also the [orchestrator role-allocation concept](docs/design/compass-orchestrator-routing-v5.png). It shows demo connections and provisional assignments only, not actual account access or evaluated model rankings.
+
 See [design notes and generation prompts](docs/design/README.md) for the concepts' scope and limitations.
 
 ## Implementation plan
+
+Start with [functional.md](functional.md), the central functional specification for the agreed product scope, user flows, source and interpretation rules, failure behavior, and remaining admission decisions. The orchestrator allocates roles only among user-configured, enabled and eligible models; evaluated role fit, capabilities, data policy and budget guide automatic assignments, while manual overrides and pinned roles remain available.
 
 The [detailed implementation plan](docs/plans/2026-11-08-1552-feat-religion-research-app-plan.md) is written in Dutch. It defines product requirements, candidate models, source packs, eight implementation units, evaluation datasets, and proposed release gates.
 
