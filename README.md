@@ -2,18 +2,29 @@
 
 **Explore texts. Understand perspectives. Find direction.**
 
-Euraika Compass is an open-source project for a local research and life-wisdom companion grounded in the Torah, Bible, and Quran. It combines a text workbench with source-linked conversations about meaning, choices, grief, forgiveness, and other questions of life.
+Euraika Compass is an open-source project for a locally hosted research and life-wisdom companion grounded in the Torah, Bible, and Quran. It combines a text workbench with source-linked conversations about meaning, choices, grief, forgiveness, and other questions of life. Its proposed hybrid architecture pairs optional cloud reasoning models with local source, retrieval, and translation services.
 
 **Project stage: planning and UI concepts. There is no runnable application or Pinokio installer yet.** The screenshots below are AI-generated design mockups, not captures of working software. Their example content and analysis labels are illustrative, not validated research results.
 
 ## Planned experience
 
 - Read named original-language editions alongside published translations.
+- Use a focused **Chat** view for life questions and a flexible **Research** workspace with tabs, resizable panels, sources, and notes. Switch views without losing the conversation or evidence.
 - Ask focused passage questions or broader questions across the three collections.
+- Let the assistant search and read additional web sources when web research is enabled, with visible queries, provenance, and citations.
 - Open the exact edition and passage behind an answer's citation.
 - Inspect translation alternatives and available linguistic annotations.
+- View genuine historical manuscript scans from admitted institutional and scholarly collections, including Quran manuscripts, with catalog provenance and separate transcription/translation layers.
+- Compare interpretations through primary-text context, historical/linguistic evidence, counterevidence, and explicit limits, using the same method for all three collections.
+- Moderate a **Roundtable** of AI personas and analytical perspectives, with a shared evidence dossier and control over speaking turns and synthesis.
 - Save research dossiers with source, model, and policy versions.
 - Install and run locally through Pinokio once the application is implemented.
+
+English is the default interface language. The initial localization target includes English, Dutch, Arabic, French, and German, with an extensible language catalog. Interface language, conversation language, and source/translation language are independent settings. Arabic includes right-to-left interface behavior; original Hebrew and Arabic passages retain their own reading direction in every interface language. Language support and model quality require separate validation.
+
+Local-only operation remains available. Cloud reasoning is explicitly configured and sends the selected conversation context and permitted evidence to the selected provider. Web research and remote manuscript viewing have separate controls. Search uses minimized topic terms rather than forwarding whole personal conversations; this differs from context sent to a configured conversation model. Search results supplement admitted editions. See the [interaction/language specification](docs/design/interaction-and-localization.md) and [evidence method, hybrid models, and moderated discussion](docs/plans/research-method-and-model-architecture.md).
+
+Hadith is excluded from default Quran retrieval and interpretive authority. No hadith pack is admitted; the narrow possible exception requires individually established direct provenance and permits context only. Later commentary does not automatically override primary text in any collection. Explaining an attributed interpretation differs from adopting its authority. Genuine manuscript candidates and image-rights limitations are documented in the [source register](docs/sources/manuscript-register.md).
 
 ## Five personas, one impartiality policy
 
@@ -31,19 +42,15 @@ Impartiality means consistent standards of evidence and respectful treatment. It
 
 ## Design concepts
 
-The current visual direction uses petrol, turquoise, warm amber, and light reading surfaces. Collections receive equal visual prominence.
+The current direction uses the Euraika brand palette: navy `#001C3A`, secondary blue `#003369`, and gold `#F4A616`, with light reading surfaces. These colors were checked against the [Euraika website](https://www.euraika.net/) on 8 November 2026. Collections receive equal visual prominence. The English concepts below replace the earlier petrol/turquoise direction.
 
 ### Conversations and life questions
 
-![Conversation design concept](docs/design/compass-conversation-v2.png)
+![English Chat design concept in Euraika blue and gold](docs/design/compass-chat-v4.png)
 
-### Original texts and translations
+### Research, original texts, and translations
 
-![Text workbench design concept](docs/design/compass-workbench-v2.png)
-
-### Comparing perspectives
-
-![Comparison design concept](docs/design/compass-comparison-v2.png)
+![English Research design concept in Euraika blue and gold](docs/design/compass-research-v4.png)
 
 See [design notes and generation prompts](docs/design/README.md) for the concepts' scope and limitations.
 
@@ -51,7 +58,7 @@ See [design notes and generation prompts](docs/design/README.md) for the concept
 
 The [detailed implementation plan](docs/plans/2026-11-08-1552-feat-religion-research-app-plan.md) is written in Dutch. It defines product requirements, candidate models, source packs, eight implementation units, evaluation datasets, and proposed release gates.
 
-The planned stack is React/TypeScript, FastAPI, SQLite/FTS5, a local semantic index, and managed model workers. Qwen3.5 is an initial coordinator candidate; compact embedding, reranking, and translation models are evaluated separately. These are proposals requiring runtime and quality validation, not tested product capabilities.
+The planned stack is React/TypeScript, FastAPI, SQLite/FTS5, a local semantic index, managed local workers, and backend cloud-provider adapters. The candidate pool includes Mistral, Alibaba Cloud/Qwen/GLM, OpenAI, Anthropic, MiniMax, and optionally OpenRouter as a gateway. Local Qwen3.5 remains a coordinator option; local embedding, reranking, and historical-language translation candidates are evaluated separately. No provider/model has been selected as a validated winner. API keys belong in backend-only local configuration, never this repository.
 
 ## Sources and licensing boundaries
 
@@ -67,6 +74,9 @@ The plan excludes HY-MT1.5 from the standard Belgian/EU deployment because its p
 - Use fixed evidence bundles to test persona, source-order, and irrelevant identity effects.
 - Measure factual and citation quality as well as consistent treatment across traditions.
 - Include missing sources, contested interpretations, fabricated citations, and attempts to induce religious preference.
+- Test web-source provenance, search bias, unavailable pages, source injection, query minimization, and the disabled-network path.
+- Verify localized flows and mixed-direction text in a real browser; assess answer quality separately for each supported conversation language.
+- Verify historical evidence arguments, manuscript provenance, alternative readings and counterevidence, source-policy enforcement, moderator control, and bounded cloud routing/costs.
 - Use blinded human assessment alongside deterministic checks and model-assisted triage.
 - Report sample sizes, uncertainty, and outstanding failures; never advertise a proof of perfect neutrality.
 

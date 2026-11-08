@@ -14,7 +14,7 @@ execution: code
 
 **Objective:** Gebruikers kunnen oorspronkelijke religieuze teksten en vertalingen bestuderen en persoonlijke of vergelijkende vragen bespreken met een controleerbare assistent die geen religie voortrekt.
 
-**Means:** Een lokale webapp met een Pinokio-launcher, gedeelde bronnenbank, vijf persona's en een gemeten evaluatieproces (KTD1-KTD8).
+**Means:** Een lokaal gehoste webapp met Pinokio-launcher, gedeelde bronnenbank, vijf persona's, lokale taalhulpmiddelen, optionele frontier-API-modellen en een gemeten evaluatieproces (KTD1-KTD8).
 
 **Authority:** De Product Contract bepaalt het gedrag; de Planning Contract bepaalt de technische aanpak. Gebruikersinstructies blijven leidend. De modelnamen hieronder zijn toetsbare startkeuzes, geen bewezen winnaars of neutraliteitsclaims.
 
@@ -22,7 +22,9 @@ execution: code
 
 **Stop conditions:** Geen brongebruik waarvoor de betreffende gebruiksstatus onbekend of niet toegestaan is. Een mislukte taalmodule of ontbrekend corpus levert een zichtbare beperking op. Een ongehaalde kwaliteitsgate blokkeert de betreffende vrijgave, niet het verdere bouwen of lezen van toegelaten bronnen.
 
-**Tail ownership:** Eerst persoonlijke lokale beta. Publieke distributie, cloudgebruik en finetuning zijn afzonderlijke vervolgwerkzaamheden. Het implementatieteam levert testbewijs; inhoudelijke beoordelaars leveren de hieronder genoemde beoordelingen. Geen productiecode, modelinstallaties of tests zijn in deze planningsronde uitgevoerd.
+**Tail ownership:** Eerst persoonlijke beta met lokale bronservices en optioneel geconfigureerde cloudmodellen. Publieke distributie en finetuning zijn afzonderlijke vervolgwerkzaamheden. Het implementatieteam levert testbewijs; inhoudelijke beoordelaars leveren de hieronder genoemde beoordelingen. Geen productiecode, modelinstallaties of model/API-tests zijn in deze planningsronde uitgevoerd.
+
+**Aanvullend productcontract:** De [onderzoeksmethode en modelarchitectuur](research-method-and-model-architecture.md) maakt deel uit van dit plan. Het legt de recente gebruikerskeuzes vast: echte manuscripten, dezelfde primaire-tekstgerichte historische bewijsregels voor de drie collecties, verklaring van interpretatieverschillen, lokale vertaalhulpmiddelen met optionele frontier-modelpool en door de gebruiker gemodereerde AI-discussie. Het specificeert de uitvoering per U1-U8 en bijbehorende acceptatieproeven. De [manuscriptkandidaten](../sources/manuscript-register.md) omvatten uitdrukkelijk Koranhandschriften. De aanvullende tekst vervangt eerdere lokale-coördinator-only aannames; er is nog geen modelwinnaar bewezen.
 
 ---
 
@@ -30,7 +32,7 @@ execution: code
 
 ### Summary
 
-Een onderzoekswerkbank met bibliotheek links, brontekst en vertalingen in het midden en gesprek rechts. Gesprekken kunnen gaan over verlies, schuld, vergeving, zingeving en andere levensvragen, naast tekstuitleg en vergelijkend onderzoek. Elke persona gebruikt dezelfde bronregels en onpartijdigheidsnormen.
+Twee verbonden weergaven: een gewone **Chat** voor levensvragen en een flexibele **Research**-werkbank met tabbladen, verplaatsbare leescontext, aanpasbare panelen en bronnen naast het gesprek. Wisselen behoudt gesprek, selectie en bewijs. Gesprekken kunnen gaan over verlies, schuld, vergeving, zingeving en andere levensvragen, naast tekstuitleg en vergelijkend onderzoek. Elke persona gebruikt dezelfde bronregels en onpartijdigheidsnormen. De interface start in het Engels, is meertalig en gebruikt Euraika-blauw en goudgeel. Optioneel webonderzoek vult de lokale edities aan. De uitwerking staat in de [interactie-, taal- en webspecificatie](../design/interaction-and-localization.md).
 
 ### Problem Frame
 
@@ -41,6 +43,9 @@ Een algemene chatbot kan religieuze kennis, interpretaties en eigen adviezen ver
 - **Lezen en vragen stellen zijn beide kernfuncties.** (session-settled: user-directed — chosen over alleen tekstonderzoek of alleen chat: beide gebruiksvormen zijn vereist.) Governs R1, R2.
 - **Persona's veranderen stijl en werkwijze, niet religieuze voorkeur.** (session-settled: user-directed — chosen over confessionele voorkeursstemmen: het antwoord moet telkens onpartijdig blijven.) Governs R3, R4, R5.
 - **Religieuze wijsheid is ook toepasbaar op levensvragen.** Governs R2, R6. Een toepassing door de assistent krijgt een herkenbaar label.
+- **Gewone Chat en krachtige Research zijn twee verbonden weergaven.** Gebruikerskeuze: rustig levensvragen bespreken en daarnaast met flexibele panelen, tabbladen en bronnen werken. Governs R17.
+- **Engels standaard, meertalig en Euraika-huisstijl.** Gebruikerskeuze: onder meer Nederlands, Arabisch, Frans en Duits; blauw en geel. UI-, gespreks- en brontaal blijven afzonderlijk instelbaar. Governs R18, R20.
+- **De app kan zelf aanvullende webbronnen zoeken en lezen.** Gebruikerskeuze; alleen met ingeschakelde webtoegang en zichtbare herkomst. Governs R19.
 
 ### Requirements
 
@@ -64,10 +69,19 @@ Een algemene chatbot kan religieuze kennis, interpretaties en eigen adviezen ver
 
 - R11. Pinokio biedt installeren, starten, stoppen, modellen/bronnen beheren, bijwerken en afhankelijkheden herstellen. Herstellen of bijwerken verwijdert geen modellen, bronnen, dossiers of instellingen.
 - R12. Onderzoek heeft een begrensde uitvoering, zichtbare voortgang en annulering. Een fout levert een specifieke terminale toestand op, zonder eindeloze herhaling of een onterecht voltooid antwoord.
-- R13. Inference en persoonlijke gespreksgegevens blijven standaard lokaal; alleen loopback is actief. Geen prompttelemetrie. Gewone gesprekken zijn tijdelijk; bewust opslaan maakt een dossier. Achtergrondgeheugen tussen gesprekken staat uit.
+- R13. De server bindt standaard alleen loopback. Bronservices, dossiers en taalworkers blijven lokaal; geen prompttelemetrie. Gewone gesprekken zijn tijdelijk; bewust opslaan maakt een dossier. Achtergrondgeheugen tussen gesprekken staat uit. Na expliciete cloudconfiguratie verwerkt de gekozen API-provider de geselecteerde gesprekscontext en toegestane bewijsbundel volgens R24. Lokale modus blokkeert cloudmodelaanroepen; webtoegang en remote scanservices hebben afzonderlijke controles. Geen volledig persoonlijk gesprek naar een zoekprovider.
 - R14. Dossiers bewaren antwoord, eigen notities, exact geciteerde passages en model-, prompt-, policy-, index- en bronversies. Heranalyse maakt een nieuwe gekoppelde versie. Export respecteert bronrechten.
 - R15. Iedere wijziging aan model, quantisatie, persona, beleid, corpus, alignering of zoekconfiguratie maakt de relevante eerdere evaluatieclaims ongeldig totdat de vereiste controles voor de nieuwe configuratie slagen. De app toont corpusdekking, configuratieversie en evaluatiegeldigheid met beperkingen, zonder absoluut unbiased-keurmerk. Onveranderde configuraties behouden hun eigen bewijs; nieuwe configuraties blijven een preview zolang hun gates ontbreken.
 - R16. De assistent kan een religieus of filosofisch perspectief geven op brede vragen. Actuele feiten en medische, juridische of andere specialistische claims worden niet uitsluitend uit schriftteksten afgeleid. De app presenteert zich niet als behandelaar of als religieuze autoriteit.
+- R17. Chat toont een leesbaar gewoon gesprek met optioneel uitklapbare bronnen. Research biedt tabbladen, aanpasbare/inklapbare panelen, parallelle teksten, notities en bronnen naast het gesprek. Wisselen en 'Open in Research' behouden actieve context, conceptbericht, persona, bronselectie en tijdelijke opslagstatus zonder automatisch nieuwe analyse te starten. Luisteren vereist niet bij iedere beurt een schriftvergelijking of webzoekactie.
+- R18. De UI start in het Engels en ondersteunt als eerste lokalisatiedoel EN/NL/AR/FR/DE met uitbreidbare berichtcatalogi. De gebruiker kiest en bewaart de UI-taal onafhankelijk van gesprekstaal en bron-/vertaaltaal. Arabisch heeft RTL-interfacegedrag; originele Arabische/Hebreeuwse tekst houdt eigen richting in iedere UI. Elke geclaimde gesprekstaal krijgt afzonderlijke kwaliteits- en onpartijdigheidsbeoordeling; menuvertaling is geen bewijs van modelkwaliteit.
+- R19. Bij ingeschakeld webonderzoek kan de assistent begrensd zoeken, pagina's lezen, perspectieven vergelijken en gecontroleerde webverwijzingen geven. Zoektermen, URL, uitgever/auteur indien bekend, datum indien vermeld, raadpleegtijd, bronsoort en beperkingen zijn inspecteerbaar. Snippets zijn geen zelfstandig bewijs. Webmateriaal blijft gescheiden van toegelaten tekstedities; uitgeschakelde webtoegang doet geen zoek-/fetchaanroepen. Eigen providerconfiguratie, queryminimalisatie, rechten per gebruik en veilige read-only fetching zijn vereist.
+- R20. De UI gebruikt Euraika Blue `#001C3A`, aanvullend blauw `#003369`, Gold `#F4A616` en Charcoal `#1E2D39`, op 8 november 2026 gecontroleerd op de [Euraika-website](https://www.euraika.net/). Goud heeft donkere tekst/iconen, is een spaarzaam accent en geeft geen religie voorrang. Contrast, focus, toetsenbordbediening en responsieve panelen worden in de echte UI getoetst.
+- R21. Research toont echte manuscriptafbeeldingen uit toegelaten officiële institutionele/wetenschappelijke collecties, ook Koranhandschriften: zoom, folio, instelling, signatuur, toegeschreven datering en rechten. Transcriptie, reconstructie, vertaling en scan blijven gescheiden. Beeldintegratie en vers-/foliokoppelingen vereisen toelating; anders officiële viewerlink. Geen AI-gegenereerde manuscripten als bewijs.
+- R22. Voor Thora, Bijbel en Koran gelden dezelfde primaire-tekstgerichte historische en taalkundige bewijsregels: passagecontext, verwante passages én tegenbewijs binnen de gekozen collectie, gevolgd door een onderbouwde afweging. E1/E2/E3 onderscheiden observatie, toegeschreven hypothese en gevolgtrekking met bron/methode/onzekerheid. Commentaar of overlevering heeft geen automatische uitlegautoriteit. Hadith blijft standaard uitgesloten; alleen individueel aantoonbare directe herkomst kan eventueel als afzonderlijke historische context worden toegelaten, nooit als interpretatieve autoriteit. Geen hadithpakket is goedgekeurd; een sahih-label is geen automatische toelating.
+- R23. De app verklaart interpretatieverschillen via taal, tekstvarianten, vertaling, genre, historische context en aannames, met steun- en tegenbewijs per lezing. Zij kan een beter onderbouwde lezing voor de gestelde vraag aangeven zonder absolute zekerheid, valse consensus of eigen geloofswaarheid. Een collectie wordt geen impliciete scheidsrechter over de andere; verschillen en overeenkomsten blijven toegeschreven.
+- R24. Het algemene model is verwisselbaar tussen toegelaten lokale en cloudroutes. Kandidaatproviders zijn Mistral, Alibaba/Qwen/GLM, OpenAI, Anthropic, MiniMax en optioneel OpenRouter als gateway. Hoofdmodel en optionele kritische reviewer delen dezelfde bewijsbundel; lokale vertaalworkers krijgen afzonderlijke toelating. Keys blijven backend-only buiten Git. Provider/model/versie/regio, verzonden context, budget en fallbackbeleid zijn zichtbaar en geëvalueerd; geen stille cloudroute of modelmeerderheid als waarheid.
+- R25. Chat biedt naast één-op-één expliciet een Roundtable met gelabelde AI-deelnemers. Persona, analytisch perspectief en model zijn afzonderlijke keuzes. De gebruiker modereert deelnemers, spreekbeurten, pauze, bronvragen en synthese. Een gedeeld dossier met vaste bewijsversies, begrensde rondes/kosten, bronregels en zichtbare geschillen voorkomen eindeloze autonome discussie of een stilzwijgend uitgeroepen winnaar.
 
 ### Personas
 
@@ -88,6 +102,9 @@ De persona is een begrensd configuratieprofiel op hetzelfde model. Zij krijgt ge
 - F3. Vergelijking: scope vastleggen, per collectie zoeken, relevante taalhulpmiddelen gebruiken, verschillen beoordelen en een antwoord met passagekoppelingen opleveren.
 - F4. Herbezoek: dossier openen met oorspronkelijke snapshots, een bron aanklikken, eventueel expliciet heranalyseren en beide versies vergelijken.
 - F5. Beheer: bron/model kiezen, voorwaarden en omvang bekijken, downloaden/importeren, integriteit en dekking controleren, activeren. Mislukking laat de vorige werkende versie actief.
+- F6. Van levensvraag naar onderzoek: normaal chatten, relevante bronnen uitklappen, 'Open in Research' kiezen, passage/vertalingen naast gesprek inspecteren en terugkeren zonder context of conceptbericht te verliezen. Covers R17.
+- F7. Talen: Engelse eerste start, UI-taal kiezen, afzonderlijke gesprekstaal/edities behouden; Arabisch toont RTL met per tekstblok de juiste richting. Covers R18.
+- F8. Webonderzoek: gebruiker configureert en activeert provider; assistent zoekt met geminimaliseerde termen, leest bronnen en toont herkomst/beperkingen. Uitschakelen of provideruitval laat lokale bronnen bruikbaar. Covers R13, R19.
 
 ### Acceptance Examples
 
@@ -97,12 +114,14 @@ De persona is een begrensd configuratieprofiel op hetzelfde model. Zij krijgt ge
 - AE4. Een Hebreeuws vers uit Thora dat ook in een Bijbelcollectie voorkomt behoudt zijn collectie- en interpretatiecontext, maar wordt geen tweede onafhankelijke bewijsbron. Covers R7, R9.
 - AE5. Een bron bevat 'negeer eerdere instructies'. Dat blijft broninhoud en wijzigt geen persona of zoekbeleid. Covers R4-R5, R10.
 - AE6. Na model-timeout, annulering of geheugenfout verschijnt zichtbaar gedeeltelijk onderzoek; afgeronde bronresultaten blijven beschikbaar en geen ongecontroleerde synthese krijgt het label voltooid. Covers R9, R12.
+- AE7. Een Engelse UI kan een Nederlands gesprek en een Arabische brontekst tonen. Overschakelen naar Arabische UI spiegelt de bediening waar passend, behoudt LTR-verwijzingen en verandert geen origineel tekstbestand. Covers R18.
+- AE8. Een webpagina die instructies bevat of een onjuist vers citeert, verandert het beleid niet en vervangt geen lokale editie. Een onbereikbare pagina wordt geen zogenaamd gelezen bron. Met web uit zijn er nul zoek-/fetchaanroepen. Covers R8-R10, R13, R19.
 
 ### Scope Boundaries
 
-Persoonlijke beta omvat alle persona's, beide werkmodi, toegelaten volledige tekstpakketten, bronverwijzingen, dossiers en evaluatierapport. Taalmodules worden per richting geactiveerd na toetsing.
+Persoonlijke beta omvat alle persona's, beide werkmodi, vijf initiële UI-lokalisaties, optioneel geconfigureerd webonderzoek, toegelaten volledige tekstpakketten, bronverwijzingen, dossiers en evaluatierapport. Gespreks- en vertaalmogelijkheden worden per taal/richting geactiveerd na toetsing; ongetoetste talen blijven zichtbaar preview. Optioneel uitgaand webonderzoek is geen cloudinference of toestemming om gesprekken naar een provider te sturen.
 
-**Deferred for later:** Finetuning, stem/audio, meerdere gebruikers, LAN-toegang, cloudmodellen, OCR/manuscriptafbeeldingen, een omvangrijke commentarenbibliotheek en publieke of commerciele distributie. Deze vervolgstappen worden niet stilzwijgend geactiveerd.
+**Deferred for later:** Finetuning, stem/audio, meerdere menselijke accounts, LAN-toegang, eigen OCR/HTR, een omvangrijke commentarenbibliotheek en publieke of commerciele distributie. Manuscriptweergave, optionele cloudmodellen en door één gebruiker gemodereerde AI-discussie vallen na de gebruikersaanvullingen wel binnen de geplande scope, onder R21-R25 en de aanvullende specificatie. Deze functies worden niet stilzwijgend geactiveerd.
 
 **Outside this product's identity:** Eigen openbaringen, nabootsen van God/profeten of een overleden familielid, bekeringsoptimalisatie, religies rangschikken op intrinsieke superioriteit, of een certificaat dat alle bias verdwenen is.
 
@@ -113,7 +132,7 @@ Persoonlijke beta omvat alle persona's, beide werkmodi, toegelaten volledige tek
 ### Assumptions
 
 - De eerste beta richt zich op lokaal, persoonlijk, niet-commercieel gebruik op Windows. Appcode en documentatie zijn opensource; bronpakketten worden afzonderlijk beoordeeld en niet automatisch meegeleverd.
-- Nederlands is de gesprekstaal, met Engelse bestaande vertalingen als eerste controleerbare zoeklaag waar toegelaten Nederlandse edities ontbreken. Een Nederlandse modelweergave krijgt steeds het juiste label.
+- Engels is de standaard UI-taal; EN/NL/AR/FR/DE zijn de eerste UI-lokalisaties. De gesprekstaal volgt de vraag of expliciete keuze. Engelse en Nederlandse edities vormen de eerste controleerbare zoeklaag; andere talen vereisen aanvullende retrieval-/antwoordbeoordeling. Een modelweergave krijgt steeds het juiste label.
 - Een NVIDIA GPU met circa 32 GB VRAM is de eerste referentieconfiguratie voor planning, geen gemeten minimumvereiste. U1 bepaalt actuele hardware en bruikbare precisie/contextlengte.
 - Er is geen bestaande app om op voort te bouwen. Dit plan en de ontwerpconcepten vormen het eerste projectmateriaal.
 - De corpus- en modeltabellen zijn op 8 november 2026 gecontroleerde uitgangspunten. Exacte downloadrevisies, bestandshashes, compatibele dependencylocks en editiedekking worden bij toelating vastgelegd.
@@ -121,7 +140,7 @@ Persoonlijke beta omvat alle persona's, beide werkmodi, toegelaten volledige tek
 
 ### Key Technical Decisions
 
-- KTD1. **React/TypeScript + FastAPI, als zelfstandige app onder Pinokio.** De drie samenwerkende panelen vragen gedeelde UI-state. Een Python-backend past bij tekstimport en modelworkers. De productie-UI wordt statisch gebouwd en door dezelfde lokale backend aangeboden. Geen verplichte Docker- of WSL-laag voor inference. Governs R1-R3, R11-R14.
+- KTD1. **React/TypeScript + FastAPI, als zelfstandige app onder Pinokio.** Chat en Research delen gesprek-/selectiestate; Research biedt aanpasbare panelen. UI-berichtcatalogi, opgeslagen taalvoorkeur en logische start/eind-layout ondersteunen EN/NL/AR/FR/DE. Een Python-backend past bij tekstimport en modelworkers. De productie-UI wordt statisch gebouwd en door dezelfde lokale backend aangeboden. Geen verplichte Docker- of WSL-laag voor inference. Governs R1-R3, R11-R14, R17-R18, R20.
 - KTD2. **SQLite + FTS5 + lokale vectorbestanden.** SQLite bewaart bronmetadata, alignering en dossiers; FTS5 levert woord/frasezoeken. Voor de beperkte schriftcollecties starten we met exacte vectorvergelijking in NumPy in plaats van een aparte databaseserver. Embeddings zijn herbouwbaar en verwijzen naar bronrevisies. Meet bij uitbreiding naar veel commentaren opnieuw. Governs R7-R10, R14. [SQLite FTS5](https://www.sqlite.org/fts5.html).
 - KTD3. **RAG en gecontroleerde bronnen voor kennis; persona-configuratie voor gespreksgedrag.** Geen finetuning in de eerste versie. Dat maakt broncorrecties en policytests mogelijk zonder hertraining. Een Base-model is niet automatisch neutraler dan een instructmodel. Governs R2-R10, R15.
 - KTD4. **Twee workerfamilies achter vaste modeladapters.** Een gepinde CUDA-build van llama.cpp voor het algemene GGUF-model, en afzonderlijke Python-workers voor embeddings/Marian/T5. Exacte Qwen3.5 chattemplate, gestructureerde uitvoer en afbreekgedrag moeten eerst worden bewezen. Python-dependencies van oude taalmodellen kunnen apart worden gelockt. Geen willekeurige remote modelcode uitvoeren. Governs R11-R12. [llama.cpp](https://github.com/ggml-org/llama.cpp).
@@ -132,11 +151,13 @@ Persoonlijke beta omvat alle persona's, beide werkmodi, toegelaten volledige tek
 
 ### Models
 
+**Bijgestelde rolverdeling:** de lokale algemene modellen hieronder zijn kandidaten voor een offline/private coördinator, niet meer het verplichte hoofdmodel. Frontier-providerkandidaten, actuele cataloguschecks, lokale vertaalworkers en hun gescheiden evaluatie staan in de [aanvullende architectuur](research-method-and-model-architecture.md). KTD4 wordt uitgebreid met backend-cloudadapters, versie-/regiotoelating, contextrechten, budgetten en annulering. Nog geen model is voor dit product gevalideerd.
+
 Grootten hieronder betreffen gewichten in decimale GB bij 16 bit, berekend als circa 2 bytes per parameter; runtime, activaties, cache en quantisatiemetadata komen erbij. Geen gemeten VRAM-belofte. Multimodale totale parameteraantallen kunnen afwijken van het taalmodelgetal in de modelnaam.
 
 | Rol | Exact model | Grootte en gewichten | Gebruik en toelatingsvoorwaarde |
 |---|---|---|---|
-| Primaire coordinator en vijf persona's | [Qwen/Qwen3.5-9B](https://huggingface.co/Qwen/Qwen3.5-9B) | 9B taalmodel; HF totaal circa 9,65B, theoretisch 19,3 GB op 16 bit | Apache-2.0. Eerste kandidaat in geteste 4/5-bit GGUF; startcontext 8k, pas vergroten na meting. Niet aangetoond religieus neutraal. |
+| Lokale coordinatoroptie en vijf persona's | [Qwen/Qwen3.5-9B](https://huggingface.co/Qwen/Qwen3.5-9B) | 9B taalmodel; HF totaal circa 9,65B, theoretisch 19,3 GB op 16 bit | Apache-2.0. Eerste lokale kandidaat in geteste 4/5-bit GGUF; startcontext 8k, pas vergroten na meting. Niet aangetoond religieus neutraal. |
 | Compacte fallback | [Qwen/Qwen3.5-4B](https://huggingface.co/Qwen/Qwen3.5-4B) | HF totaal circa 4,66B; 9,3 GB | Apache-2.0. Alleen behouden wanneer kwaliteit en toolgedrag de eigen gates halen. |
 | Semantisch zoeken | [Qwen/Qwen3-Embedding-0.6B](https://huggingface.co/Qwen/Qwen3-Embedding-0.6B) | circa 596M; 1,2 GB | Apache-2.0; maximaal 1024 dimensies. Test NL/EN-bronzoeken; 100+ talen is geen bewijs voor oude taalvarianten. |
 | Kandidaten herordenen | [Qwen/Qwen3-Reranker-0.6B](https://huggingface.co/Qwen/Qwen3-Reranker-0.6B) | circa 596M; 1,2 GB | Apache-2.0. Behouden als het aantoonbaar zoekkwaliteit verbetert zonder een collectie systematisch weg te drukken. |
@@ -183,18 +204,24 @@ flowchart TB
   API --> R[FTS5 en semantische retrieval]
   R --> V[Versievaste vectorindex]
   API --> O[Begrensde onderzoeksworkflow en gedeelde policy]
+  O --> W[Optionele webzoek- en extractieadapter]
+  W --> E[Webbewijs met herkomst en gebruiksstatus]
+  E --> C
   O --> Q[GPU wachtrij]
   Q --> L[Algemeen model via llama.cpp]
   Q --> T[Python taal- en zoekworkers]
+  O --> CL[Optionele cloudprovideradapter en reviewer]
   O --> C[Citaatvalidatie en claim-broncontrole]
   C --> UI
 ```
 
 **Gegevensmodel:** Work, Edition, Passage, CollectionMembership, TranslationAlignment, TokenAnnotation, SourceLicense, SourceRevision, ResearchRun, EvidenceItem, Claim, Citation, Conversation, Dossier en ModelRevision. Alignering kan een-op-veel/veel-op-een zijn en bewaart de referentiesystemen aan beide kanten. Geen gedwongen gelijke versnummering of woordalignering.
 
+**Weblaag en UI-contract:** Voeg WebQuery, WebDocumentRevision, FetchStatus en per-gebruikrechten toe aan bewijsregistratie; webdocumenten zijn geen Edition. De read-only provideradapter deelt het bestaande runbudget en heeft timeouts, antwoord-/redirectlimieten, queryminimalisatie en controle op onveilige URL-doelen. De concrete provider wordt pas na actuele API-/voorwaardencontrole gekozen en gebruikt eigen lokale credentials buiten Git en frontendbundel. De volledige eisen en verificaties voor R17-R20 staan in de [interactie-, taal- en webspecificatie](../design/interaction-and-localization.md). Offline en web-uit blijven volwaardige lokale paden; webresultaten geven geen toestemming voor permanente indexering, export of training.
+
 **Zoekprotocol:** scope bepalen; per gevraagde collectie maximaal 40 woordzoek- en 40 semantische kandidaten verzamelen; ranglijsten combineren; editievarianten per passagefamilie groeperen; optioneel reranken; circa 6-10 passages per collectie met context beoordelen binnen het contextbudget. Dit zijn startinstellingen. Verschillende collecties doorzoeken is een verplicht proces; alle gevonden passages evenveel citeren is dat niet. Omvangrijke broncontext verkleinen met geregistreerde selectie, niet ongemerkt afkappen.
 
-De eerste zoeklaag gebruikt benoemde EN/NL-vertalingen. Brontaalpassages en annotaties worden via alignering opgehaald. Rechtstreekse crosslinguale retrieval op oude talen is een aparte proef. Een vraag over een exact vers omzeilt onnodig breed thematisch zoeken.
+De eerste lokale zoeklaag gebruikt benoemde EN/NL-vertalingen. Brontaalpassages en annotaties worden via alignering opgehaald. Rechtstreekse crosslinguale retrieval op oude talen is een aparte proef. Een vraag over een exact vers omzeilt onnodig breed thematisch zoeken. Bij relevant ingeschakeld webonderzoek volgen geminimaliseerde zoektermen, lezen van gevonden pagina's en afzonderlijk toegeschreven webbewijs; een snippet of providerpositie is geen kwaliteitsbewijs.
 
 ```mermaid
 sequenceDiagram
@@ -262,7 +289,7 @@ Bijwerken bewaart de vorige werkende configuratie; databaseschemawijzigingen kri
 
 **Goal:** Werkende lokale app-shell en bewezen algemene modelroute als basis voor beide werkmodi.
 
-**Requirements:** R11-R13, R15. **Dependencies:** Geen.
+**Requirements:** R11-R13, R15, R24. **Dependencies:** Geen.
 
 **Files:** `app/backend/pyproject.toml`, `app/backend/religion_app/main.py`, `app/backend/religion_app/models/`, `app/frontend/package.json`, `app/frontend/src/`, `app/config/models.yaml`, `app/tests/integration/test_model_runtime.py`.
 
@@ -276,7 +303,7 @@ Bijwerken bewaart de vorige werkende configuratie; databaseschemawijzigingen kri
 
 **Goal:** Controleerbare, volledige gekozen edities met aparte lagen voor vertaling en annotatie.
 
-**Requirements:** R7-R10, R14. **Dependencies:** U1.
+**Requirements:** R7-R10, R14, R21-R22. **Dependencies:** U1.
 
 **Files:** `app/backend/religion_app/corpus/`, `app/backend/religion_app/storage/`, `app/config/sources.yaml`, `app/tests/unit/test_source_admission.py`, `app/tests/integration/test_corpus_import.py`, `app/tests/fixtures/corpus/`.
 
@@ -290,11 +317,11 @@ Bijwerken bewaart de vorige werkende configuratie; databaseschemawijzigingen kri
 
 **Goal:** Bruikbaar lezen, selecteren en vergelijken met exacte bronweergave.
 
-**Requirements:** R1, R7-R8. **Dependencies:** U2.
+**Requirements:** R1, R7-R8, R17-R18, R20-R23. **Dependencies:** U2.
 
 **Files:** `app/frontend/src/features/library/`, `app/frontend/src/features/reader/`, `app/backend/religion_app/passages/`, `app/tests/e2e/reader.spec.ts`, `app/tests/integration/test_passage_api.py`.
 
-**Approach:** Gedeelde selectiestate voor collectie/werk/vers/edities. RTL, diakritiek en toetsenbordnavigatie horen bij de eerste leesroute. Passagekoppelingen gebruiken editievaste IDs.
+**Approach:** Gedeelde selectiestate voor collectie/werk/vers/edities en beide weergaven. Bouw EN/NL/AR/FR/DE-catalogi, Engelse eerste start, RTL per interface/tekstblok en Euraika-kleurtokens. RTL, diakritiek, aanpasbare panelen en toetsenbordnavigatie horen bij de eerste leesroute. Passagekoppelingen gebruiken editievaste IDs. Voeg `app/frontend/src/locales/` en locale-/weergavestate toe aan de filescope.
 
 **Test scenarios:** (1) Arabisch/Hebreeuws met EN/NL naast elkaar. (2) Citaat opent juiste editie en tekstbereik. (3) Ontbrekende vertaling verschijnt als ontbrekend. (4) Een-op-veelalignering wordt leesbaar weergegeven. (5) Selectie blijft behouden bij wissel van persona/paneel. (6) Modelvertaling krijgt nooit het label bestaande editie.
 
@@ -304,11 +331,13 @@ Bijwerken bewaart de vorige werkende configuratie; databaseschemawijzigingen kri
 
 **Goal:** Relevante context per gevraagde collectie, met traceerbare selectie en gaten, plus een vastgelegde evaluatieopzet voordat persona-tuning begint.
 
-**Requirements:** R2, R5, R7, R9-R10, R15. **Dependencies:** U2.
+**Requirements:** R2, R5, R7, R9-R10, R13, R15, R19, R21-R23. **Dependencies:** U2.
 
 **Files:** `app/backend/religion_app/retrieval/`, `app/backend/religion_app/evidence/`, `app/evaluation/retrieval/`, `app/evaluation/families/`, `app/evaluation/rubrics/`, `app/evaluation/split-manifest.json`, `app/tests/integration/test_retrieval.py`.
 
 **Approach:** KTD2, KTD5-KTD7. Leg als eerste deliverable de vraagfamilies, rubrics en gescheiden splits uit V1-V3 vast; U5 begint pas na deze vastlegging. Vergelijk FTS-only, dense-only en gecombineerd met/zonder reranker op vastgestelde relevante passages. Kies daarna instellingen op ontwikkel/kalibratiedata.
+
+Voeg `app/backend/religion_app/web_sources/` en webfixture-/integratietests toe. Implementeer providerzoek-/extractieadapter, URL-/redirectcontroles, queryminimalisatie, bronsoorten, duplicaatgroepering, rechten en herkomst volgens R19 en de aanvullende specificatie. Geen volledige chats naar de provider; geen broninstructies uitvoeren. Test web-uit, timeouts, ontoegankelijke/gewijzigde pagina's, snippets zonder ondersteuning, private-netwerkdoelen en evenwichtige perspectiefdekking.
 
 **Test scenarios:** (1) Relevante passages uit iedere gevraagde collectie. (2) Covers AE2: missende Koran zichtbaar. (3) Veel vertalingen van een boek verdringen niet alle andere passages. (4) Geen directe parallel levert eerlijke melding. (5) Index van andere bronversie wordt niet gebruikt. (6) Een exact vers wordt rechtstreeks opgehaald met omliggende context.
 
@@ -318,11 +347,13 @@ Bijwerken bewaart de vorige werkende configuratie; databaseschemawijzigingen kri
 
 **Goal:** Alle vijf persona's geven bruikbare gesprekken en vergelijkingen onder dezelfde inhoudelijke normen.
 
-**Requirements:** R2-R6, R8-R9, R12, R15-R16. **Dependencies:** U1, U3, U4.
+**Requirements:** R2-R6, R8-R9, R12, R15-R19, R22-R25. **Dependencies:** U1, U3, U4.
 
 **Files:** `app/config/personas/`, `app/config/policy/`, `app/backend/religion_app/research/`, `app/backend/religion_app/validation/`, `app/frontend/src/features/chat/`, `app/tests/integration/test_persona_policy.py`, `app/tests/e2e/research.spec.ts`.
 
 **Approach:** KTD3, KTD5-KTD6. Houd persona, gedeelde policy en broninhoud apart. Sla bewijs- en beoordelingsresultaten gestructureerd op; de UI toont compacte brontoelichting zonder interne redeneersporen te verzinnen.
+
+Bouw de normale Chat met uitklapbare bronnen en de gedeelde Chat/Research-overgang. Websearch en paginaextractie passen binnen dezelfde toolbudgetten en verificatie; een gewone luisterbeurt hoeft geen externe zoekactie. Wisselen van weergave of taal behoudt conceptbericht, context en tijdelijke opslagstatus. De zichtbare gesprekshistoriek bevat alleen bewust opgeslagen gesprekken.
 
 **Test scenarios:** (1) Covers AE1: rouwvraag en alle drie perspectieven. (2) Covers AE3: druk om religie te bevoordelen. (3) Covers AE5: instructies in bron genegeerd. (4) Persona veranderen behoudt feiten en scope. (5) Fout citaat wordt voor weergave verwijderd of gecorrigeerd. (6) Covers AE6: tooltimeout/contextlimiet/annulering. (7) Onenigheid tussen bronnen blijft zichtbaar. (8) Een reflectie wordt niet als letterlijk schriftadvies gelabeld.
 
@@ -332,7 +363,7 @@ Bijwerken bewaart de vorige werkende configuratie; databaseschemawijzigingen kri
 
 **Goal:** Vertaalkeuzes onderzoeken en het resultaat controleerbaar bewaren.
 
-**Requirements:** R1, R7-R8, R10, R12-R14. **Dependencies:** U3, U5.
+**Requirements:** R1, R7-R8, R10, R12-R14, R18-R25. **Dependencies:** U3, U5.
 
 **Files:** `app/backend/religion_app/language_tools/`, `app/backend/religion_app/dossiers/`, `app/frontend/src/features/dossiers/`, `app/tests/integration/test_translation_contract.py`, `app/tests/integration/test_dossier_versions.py`.
 
@@ -346,7 +377,7 @@ Bijwerken bewaart de vorige werkende configuratie; databaseschemawijzigingen kri
 
 **Goal:** Bronkwaliteit, onpartijdigheid en gesprekskwaliteit afzonderlijk aantonen op de gekozen testset.
 
-**Requirements:** R4-R6, R8-R10, R15-R16. **Dependencies:** U4-U6. U4 bezit de vroege dataset-/rubric-/splitvastlegging; U7 bouwt de runner en voert de vrijgave-evaluatie uit.
+**Requirements:** R4-R6, R8-R10, R15-R25. **Dependencies:** U4-U6. U4 bezit de vroege dataset-/rubric-/splitvastlegging; U7 bouwt de runner en voert de vrijgave-evaluatie uit.
 
 **Files:** `app/evaluation/families/`, `app/evaluation/rubrics/`, `app/evaluation/runners/`, `app/evaluation/reports/`, `app/tests/unit/test_evaluation_scoring.py`, `app/tests/integration/test_evaluation_manifest.py`.
 
@@ -360,7 +391,7 @@ Bijwerken bewaart de vorige werkende configuratie; databaseschemawijzigingen kri
 
 **Goal:** Normaal installeren/starten/gebruiken/herstellen zonder terminal en zonder dataverlies.
 
-**Requirements:** R11-R15. **Dependencies:** U1-U7 voor beta; launcher kan na U1 al als preview ontwikkeld worden.
+**Requirements:** R11-R15, R18-R19, R24-R25. **Dependencies:** U1-U7 voor beta; launcher kan na U1 al als preview ontwikkeld worden.
 
 **Files:** `pinokio.js`, `pinokio.json`, `install.js`, `start.js`, `update.js`, `reset.js`, `README.md`, `app/tests/integration/test_data_preservation.py`.
 
@@ -446,11 +477,29 @@ Meet koude/warme start, piek-VRAM/RAM, tijd tot eerste reactie, totaalduur en an
 
 Elke evaluatie bewaart dataset-/splitmanifest, corpus-/modelhashes, prompts/policy, inferenceinstellingen, antwoorden, claim-bronrelaties, deterministische checkresultaten en individuele/adjudicatiescores. Synthetische fixtures en niet-persoonlijke vragen zijn de standaard. Werkelijke persoonlijke gesprekken worden niet vanzelf test- of trainingsdata.
 
+### V7. Connected Views, Localization and Web Research
+
+Toets R17-R20 en de scenario's uit de [aanvullende specificatie](../design/interaction-and-localization.md) met echte UI-flows. Verifieer Chat/Research met behoud van concept/context/opslagstatus, alle vijf UI-talen inclusief foutmeldingen, Arabisch RTL met gemengde referenties, stabiele bron-IDs, toetsenbordbediening, contrast en smalle schermen. Een gegenereerd beeld geldt nooit als bewijs dat een UI-interactie werkt.
+
+Voeg vaste webfixtures toe voor herkomst, ontoegankelijke/gewijzigde pagina's, onbekende datums, onjuiste autoriteit, dubbeltellingen, promptinjectie, privacy van uitgaande query's, private-netwerk-/redirectdoelen en bronrechten. Web-uit moet nul zoek-/fetchaanroepen opleveren. Houd een apart gedateerde live providerproef naast reproduceerbare fixtures. Vergelijk webretrieval per gevraagd perspectief en bronsoort; meerdere pagina's of gelijke aantallen bewijzen geen onpartijdigheid.
+
+De aantallen uit V1-V3 betreffen de bestaande EN/NL-opzet; zij bewijzen geen AR/FR/DE-antwoordkwaliteit. Vóór claims over die gesprekstalen wordt per taal een begroting, geldige vertaalde/gepaarde families, rubric en gekwalificeerde reviewdekking vastgelegd binnen dezelfde familie-splits. Rapporteer UI-lokalisatie, gesprekstaalkwaliteit en specialistische vertaalrichtingen afzonderlijk. Extra reviewwerk wordt niet verstopt in de bestaande 3.600 beoordelingen.
+
+### V8. Evidence, Manuscripts, Hybrid Models and Roundtable
+
+Toets R21-R25 volgens de [aanvullende specificatie](research-method-and-model-architecture.md), die uitvoering verdeelt over U1-U8. Vereist: echte bron-/folioverificatie en rechten; onderscheid tussen materiaal-/compositiedatum, feit/hypothese en interpretatie; context én tegenbewijs; geen verboden hadith/commentaarlekkage als uitlegautoriteit; en geen theologische harmonisatie als bewezen neutraliteit.
+
+Beoordeel lokale vertaalworkers afzonderlijk van hoofdmodel/reviewer en providerroute. Test gedeeld bewijs, versie-/providerdrift, lokale-modus-egress, budget, fouten en annulering. Roundtable vereist echte UI/modelproeven voor moderatorcontrole, begrensde beurten, gedeelde evidenceversies en synthese met behouden geschillen. Meerdere modellen of een meerderheid vervangen geen bronbewijs. Extra combinaties/talen/mensenreview worden vooraf afzonderlijk begroot; V1-V3 dekken die niet impliciet.
+
 ---
 
 ## Definition of Done
 
 Een persoonlijke beta is pas gereed als F1-F5 en AE1-AE6 met echte UI/model/brongegevens werken, alle toegepaste bronrechten vastliggen, de gekozen corpusdekking klopt, de gates uit V4 voor de geclaimde functies beoordeeld zijn en Pinokio install/start/stop/update/reset aantoonbaar werken.
+
+Voor de uitgebreide scope gelden ook F6-F8, AE7-AE8 en V7: de twee verbonden weergaven, vijf UI-lokalisaties, Euraika-huisstijl en optioneel webonderzoek zijn geverifieerd. Niet-beoordeelde gesprekstalen krijgen geen vrijgaveclaim op basis van alleen een vertaald menu.
+
+Voor de verdere scope-uitbreiding gelden R21-R25, V8 en de aanvullende specificatie eveneens: manuscriptweergave, gedeelde bewijs-/interpretatiemethode, toegelaten hybride modelroutes en menselijke moderatorregie. Technische previews mogen eerder met hun ongetoetste scope zichtbaar vermeld.
 
 Iedere U-eenheid levert haar beschreven testscenario's en observaties op. Onbeschikbare beoordelingen of ontbrekende bronpakketten blijven zichtbaar vrijgaveblokkades, geen stilzwijgend 'geslaagd'. Een technische preview kan eerder bestaan met die beperkingen prominent aangegeven.
 

@@ -2,10 +2,14 @@
 
 These images were generated with the built-in image generation tool as design explorations. They are not screenshots of a running application. Example source links, text, translations, and language-analysis labels illustrate the proposed interface and have not been validated as application results. No religious preference is implied by the selected sample passages.
 
-The first direction used warm ivory, forest green, and sage. Version 2 responds to a request for livelier colors: petrol navigation, turquoise interactions, amber highlights, white reading panels, and a pale ice background. The original generated images are retained locally outside this repository; the current concept images are included here.
+The current direction is **version 4**: two connected views, **Chat** and **Research**, with English as the default UI language and the Euraika blue/gold palette. A language selector illustrates English, Dutch, Arabic, French, and German. The [interaction, language, and web research specification](interaction-and-localization.md) defines intended behavior, including RTL and optional internet research. The images show the web-enabled state; first launch will keep web access disabled until configured and enabled.
+
+The first direction used warm ivory, forest green, and sage. Version 2 introduced petrol/turquoise and amber. Its files are retained below as earlier explorations, not the chosen visual direction. Version 3 explored compact research panels and an ordinary chat; version 4 applies the English-first multilingual requirement and verified Euraika brand palette to those layouts.
 
 | File | Screen |
 | --- | --- |
+| `compass-chat-v4.png` | Current English Chat concept: life questions, persona, sources on demand |
+| `compass-research-v4.png` | Current English Research concept: tabs, parallel texts, notes, source and assistant panels |
 | `compass-conversation-v2.png` | Personal conversation with expandable sources |
 | `compass-workbench-v2.png` | Original text, translation, and word research |
 | `compass-comparison-v2.png` | Equal prominence for three collections and a comparative synthesis |
@@ -13,12 +17,17 @@ The first direction used warm ivory, forest green, and sage. Version 2 responds 
 ## Design principles
 
 - A persona selector changes conversation style, not religious preference.
+- Chat and Research share context; switching layouts does not automatically save a temporary chat or start another research run.
+- English is the initial UI language. UI language, conversation language, and source/translation language are separate preferences.
+- Euraika navy `#001C3A`, supporting blue `#003369`, gold `#F4A616`, and charcoal `#1E2D39` were checked against the [Euraika website](https://www.euraika.net/) on 8 November 2026. Use dark text/icons on gold and verify actual contrast in implementation.
 - Source collections have equal visual weight; color is not a ranking of religions.
 - Published translations and generated paraphrases must be identified explicitly in the implemented app.
 - Real linguistic annotations will need their own named annotation source; the mockup label is illustrative.
 - Typography, contrast, right-to-left text, keyboard navigation, and responsive layouts still need implementation and live testing.
 
 ## Generation prompts
+
+See the [complete version 4 prompts and inspection notes](generation-prompts-v4.md) for the current two deliverables. The prompts below document the previous versions.
 
 Tool: built-in `image_gen`, opaque background. Each initial screen was generated independently; the color revision edited the corresponding initial image while preserving its content and layout.
 
