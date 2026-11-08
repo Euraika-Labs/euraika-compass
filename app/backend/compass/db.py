@@ -29,7 +29,8 @@ class Database:
         try:
             with self.engine.connect() as connection:
                 connection.execute(text("SELECT 1"))
-                if not inspect(connection).has_table("dossiers"):
+                required = {"dossiers", "sources", "editions", "passages", "conversations", "chat_turns"}
+                if not required.issubset(inspect(connection).get_table_names()):
                     return False, "PostgreSQL is reachable; apply Alembic migrations first."
             return True, "PostgreSQL is ready."
         except Exception:

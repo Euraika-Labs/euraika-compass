@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, ApiError } from './api';
 import { chatTranslate } from './chat-i18n';
-import { translate } from './i18n';
+import { locales, translate } from './i18n';
 import { answerSegments, canUseConnection, chatRequest, collections, RequestError, safeExternalUrl } from './research-chat';
 import type { ChatResponse, ChatSettings, ChatTurn, Citation, Collection, Connection, ConversationRecord, ConversationSummary, CorpusSource, Locale, Participant, Persona } from './types';
 
@@ -14,6 +14,7 @@ export function ChatPanel({ locale, connections, settings, sources, personas, re
   const t = (key: Parameters<typeof translate>[1]) => translate(locale, key);
   const [connectionId, setConnectionId] = useState('');
   const [persona, setPersona] = useState('supportive');
+  const [answerLanguage, setAnswerLanguage] = useState('auto');
   const [mode, setMode] = useState<'one' | 'roundtable'>('one');
   const [filter, setFilter] = useState<Collection[]>([...collections]);
   const [restrictSources, setRestrictSources] = useState(false);
@@ -59,7 +60,7 @@ export function ChatPanel({ locale, connections, settings, sources, personas, re
     const version = ++requestVersion.current;
     try {
       const answer = await api<ChatResponse>('/chat', { method: 'POST', signal: controller.signal, body: JSON.stringify(chatRequest({
-        message, connectionId: selected.id, personaId: persona, locale, turns,
+        message, connectionId: selected.id, personaId: persona, answerLanguage, turns,
         conversationId: conversation?.id, sessionId, filter, sourceIds: restrictSources ? sourceIds : undefined,
       })) });
       if (version !== requestVersion.current) return;
@@ -99,7 +100,7 @@ export function ChatPanel({ locale, connections, settings, sources, personas, re
   return <section className="chat-view real-chat">
     <div className="section-heading"><div><p className="eyebrow">{conversation ? conversation.title : c('ephemeral')}</p><h1>{t('chat')}</h1></div><div className="segmented-control"><button className={mode === 'one' ? 'active' : ''} disabled={!!busy} onClick={() => setMode('one')}>{t('oneToOne')}</button><button className={mode === 'roundtable' ? 'active' : ''} disabled={!!busy} onClick={() => setMode('roundtable')}>{t('roundtable')}</button></div></div>
     <RequestError error={error} locale={locale} />{stopped && <div className="notice warning" role="status">{c('cancelled')}</div>}
-    <div className="chat-tools"><label>{c('chooseConnection')}<select value={connectionId} disabled={!!busy} onChange={event => setConnectionId(event.target.value)}><option value="">{c('chooseConnection')}</option>{connections.map(item => <option key={item.id} value={item.id} disabled={!allowed(item)}>{item.title} · {item.model_id}{!allowed(item) ? ` · ${!item.local && settings?.local_only !== false ? c('cloudBlocked') : t('unavailable')}` : ''}</option>)}</select></label><label>{t('persona')}<select value={persona} disabled={!!busy} onChange={event => setPersona(event.target.value)}>{personaOptions.map(id => <option key={id} value={id}>{name(id)}</option>)}</select></label><button className="text-button" onClick={openConnections}>{c('connections')}</button></div>
+    <div className="chat-tools"><label>{c('chooseConnection')}<select value={connectionId} disabled={!!busy} onChange={event => setConnectionId(event.target.value)}><option value="">{c('chooseConnection')}</option>{connections.map(item => <option key={item.id} value={item.id} disabled={!allowed(item)}>{item.title} · {item.model_id}{!allowed(item) ? ` · ${!item.local && settings?.local_only !== false ? c('cloudBlocked') : t('unavailable')}` : ''}</option>)}</select></label><label>{t('persona')}<select value={persona} disabled={!!busy} onChange={event => setPersona(event.target.value)}>{personaOptions.map(id => <option key={id} value={id}>{name(id)}</option>)}</select></label><label>{c('answerLanguage')}<select value={answerLanguage} disabled={!!busy} onChange={event => setAnswerLanguage(event.target.value)}><option value="auto">{c('questionLanguage')}</option>{locales.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label><button className="text-button" onClick={openConnections}>{c('connections')}</button></div>
     {!connections.some(allowed) && <div className="notice"><span>{c(connections.length ? 'noReadyConnections' : 'noConnections')}</span><button className="text-button" onClick={openConnections}>{c('connections')}</button></div>}
     {mode === 'roundtable' ? <div className="roundtable-setup"><div className="notice">{t('roundtablePending')}</div><div className="panel-heading"><h2>{t('participants')}</h2><button className="button secondary" disabled={participants.length >= 4} onClick={() => setParticipants(items => [...items, { id: nextParticipant.current++, persona: 'comparative', perspective: '', routeId: '', pinned: false }])}>{t('addParticipant')}</button></div>{participants.map((participant, index) => {
       const connection = connections.find(item => item.id === participant.routeId);

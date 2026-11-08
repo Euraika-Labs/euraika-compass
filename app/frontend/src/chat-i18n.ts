@@ -1,6 +1,8 @@
 import type { Locale } from './types';
 
 export const chatCatalog = {
+  answerLanguage: ['Answer language', 'Antwoordtaal', 'لغة الإجابة', 'Langue de réponse', 'Antwortsprache'],
+  questionLanguage: ['Auto · language of your question', 'Automatisch · taal van je vraag', 'تلقائي · لغة سؤالك', 'Auto · langue de votre question', 'Automatisch · Sprache Ihrer Frage'],
   connections: ['Model connections', 'Modelverbindingen', 'اتصالات النماذج', 'Connexions des modèles', 'Modellverbindungen'],
   connectionIntro: ['Connect a local server or your own provider account. Enter API keys here, never in a chat message.', 'Verbind een lokale server of je eigen provideraccount. Voer API-sleutels hier in, nooit in een chatbericht.', 'اربط خادمًا محليًا أو حسابك لدى المزوّد. أدخل مفاتيح API هنا وليس في المحادثة.', 'Connectez un serveur local ou votre compte fournisseur. Saisissez les clés API ici, jamais dans la discussion.', 'Verbinden Sie einen lokalen Server oder Ihr Anbieterkonto. API-Schlüssel gehören hierher, niemals in den Chat.'],
   localOnly: ['Local models only', 'Alleen lokale modellen', 'نماذج محلية فقط', 'Modèles locaux uniquement', 'Nur lokale Modelle'],

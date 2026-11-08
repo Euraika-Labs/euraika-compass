@@ -587,3 +587,54 @@ async def test_large_4_connection_test_has_bounded_low_effort_budget(tmp_path, t
     assert body["reasoning_effort"] == "low" and body["max_tokens"] == 512
     assert body["model"] == model_id
     assert result["ok"] and result["model_id"] == model_id
+
+
+@pytest.mark.parametrize(
+    "provider,effort,read_limit,deadline",
+    [
+        ("mistral", "high", 210, 240),
+        ("mistral", "low", 60, 90),
+        ("mistral", "medium", 60, 90),
+        ("mistral", None, 60, 90),
+        ("local", None, 60, 90),
+    ],
+)
+@pytest.mark.asyncio
+async def test_only_high_mistral_reasoning_gets_longer_bounded_timeout(
+    tmp_path,
+    transport,
+    monkeypatch,
+    provider,
+    effort,
+    read_limit,
+    deadline,
+):
+    store = ConnectionStore(tmp_path, environ={"COMPASS_LOCAL_ONLY": "false"})
+    item = add(store, provider, api_key="private-key")
+    if provider == "mistral":
+        store.patch(item["id"], model_id="mistral-large-4-0")
+    seen_clients, seen_deadlines = [], []
+    client, timeout = httpx.AsyncClient, asyncio.timeout
+
+    def capture_client(**kwargs):
+        seen_clients.append(kwargs["timeout"])
+        return client(**kwargs)
+
+    def capture_deadline(value):
+        seen_deadlines.append(value)
+        return timeout(value)
+
+    monkeypatch.setattr("compass.connections.httpx.AsyncClient", capture_client)
+    monkeypatch.setattr("compass.connections.asyncio.timeout", capture_deadline)
+    transport[1].append(
+        httpx.Response(200, json={"choices": [{"message": {"content": "Visible answer"}}]})
+    )
+    assert (
+        await store.complete(
+            item["id"], [{"role": "user", "content": "Question"}], reasoning_effort=effort
+        )
+    )["text"] == "Visible answer"
+    assert seen_deadlines == [deadline]
+    assert len(seen_clients) == 1 and len(transport[0]) == 1
+    assert seen_clients[0].read == read_limit and seen_clients[0].connect == 10
+    assert seen_clients[0].write == 60 and seen_clients[0].pool == 60

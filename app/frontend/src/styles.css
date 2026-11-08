@@ -271,7 +271,7 @@ details[open] summary { margin-bottom: 12px; }
 .manual-import .file-label { width: fit-content; }
 .manual-import textarea { font-family: ui-monospace,Consolas,monospace; font-size: 12px; }
 .real-chat { max-width: 1300px; }
-.chat-tools { display: grid; grid-template-columns: minmax(220px,1.2fr) minmax(200px,1fr) auto; gap: 15px; align-items: end; margin-bottom: 20px; }
+.chat-tools { display: grid; grid-template-columns: minmax(200px,1.2fr) minmax(180px,1fr) minmax(170px,.9fr) auto; gap: 15px; align-items: end; margin-bottom: 20px; }
 .chat-tools .text-button { margin-bottom: 13px; }
 .grounding-controls { padding: 15px 18px; margin-block: 20px; font-size: 13px; }
 .grounding-controls summary { color: var(--blue); font-weight: 600; }

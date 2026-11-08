@@ -8,6 +8,12 @@ const citation: Citation = { id: 'S1', passage_id: 'passage', source_id: 'source
 const turn: ChatTurn = { id: 'turn', question: 'Earlier question', answer: 'Earlier answer [S1]', citations: [citation], warnings: [], connection_id: connection.id, model_id: connection.model_id, grounding: { mode: 'retrieval', retrieved_count: 1, collections: ['torah'] } };
 
 describe('research chat boundaries', () => {
+  it('defaults answers to the question language and permits an independent explicit choice', () => {
+    const input = { message: 'Een Nederlandse vraag', connectionId: connection.id, personaId: 'supportive', turns: [], filter: ['torah'] as const };
+    expect(chatRequest({ ...input, filter: [...input.filter] }).language).toBe('auto');
+    expect(chatRequest({ ...input, filter: [...input.filter], answerLanguage: 'nl' }).language).toBe('nl');
+    expect(chatRequest({ ...input, filter: [...input.filter], answerLanguage: 'fr' }).language).toBe('fr');
+  });
   it('requires explicit cloud permission and does not treat an unknown policy as permission', () => {
     expect(canUseConnection(connection, null)).toBe(false);
     expect(canUseConnection(connection, { local_only: true })).toBe(false);
@@ -17,21 +23,21 @@ describe('research chat boundaries', () => {
     expect(canUseConnection({ ...connection, configured: false }, { local_only: false })).toBe(false);
   });
   it('sends the selected connection, plain conversation history and explicit filters without secrets', () => {
-    const payload = chatRequest({ message: '  Current question  ', connectionId: connection.id, personaId: 'critical', locale: 'nl', turns: [turn], sessionId: 'temporary-id', filter: ['torah'], sourceIds: ['source'] });
+    const payload = chatRequest({ message: '  Current question  ', connectionId: connection.id, personaId: 'critical', answerLanguage: 'nl', turns: [turn], sessionId: 'temporary-id', filter: ['torah'], sourceIds: ['source'] });
     expect(JSON.parse(JSON.stringify(payload))).toEqual({ message: 'Current question', connection_id: 'mistral-account', persona_id: 'critical', language: 'nl', history: [{ role: 'user', content: 'Earlier question' }, { role: 'assistant', content: 'Earlier answer [S1]' }], session_id: 'temporary-id', collection_filter: ['torah'], source_ids: ['source'] });
     expect(payload).not.toHaveProperty('api_key');
     expect(payload).not.toHaveProperty('citations');
   });
   it('does not auto-persist a temporary chat and retires the session ID after explicit saving', () => {
-    const temporary = chatRequest({ message: 'Question', connectionId: connection.id, personaId: 'textual', locale: 'en', turns: [], filter: ['quran'] });
+    const temporary = chatRequest({ message: 'Question', connectionId: connection.id, personaId: 'textual', turns: [], filter: ['quran'] });
     expect(temporary.conversation_id).toBeUndefined();
-    const saved = chatRequest({ message: 'Question', connectionId: connection.id, personaId: 'textual', locale: 'en', turns: [turn], filter: ['quran'], sessionId: 'old-session', conversationId: 'explicitly-saved' });
+    const saved = chatRequest({ message: 'Question', connectionId: connection.id, personaId: 'textual', turns: [turn], filter: ['quran'], sessionId: 'old-session', conversationId: 'explicitly-saved' });
     expect(saved.conversation_id).toBe('explicitly-saved');
     expect(saved.session_id).toBeUndefined();
   });
   it('bounds model history to the last six full turns without losing the visible conversation', () => {
     const turns = Array.from({ length: 8 }, (_, index) => ({ ...turn, id: String(index), question: `Q${index}`, answer: `A${index}` }));
-    const payload = chatRequest({ message: 'Next', connectionId: connection.id, personaId: 'textual', locale: 'en', turns, filter: ['torah'] });
+    const payload = chatRequest({ message: 'Next', connectionId: connection.id, personaId: 'textual', turns, filter: ['torah'] });
     expect(payload.history).toHaveLength(12);
     expect(payload.history[0]).toEqual({ role: 'user', content: 'Q2' });
     expect(payload.history.at(-1)).toEqual({ role: 'assistant', content: 'A7' });

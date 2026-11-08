@@ -61,7 +61,7 @@ test('setup keeps cloud permission explicit and chat citations remain inspectabl
   await page.getByRole('textbox', { name: 'Research question', exact: true }).fill('Neutral UI question');
   await page.getByRole('button', { name: 'Ask Compass', exact: true }).click();
   await expect(page.getByText('Neutral fixture answer', { exact: false })).toBeVisible();
-  expect(chatBody).toMatchObject({ message: 'Neutral UI question', connection_id: 'fixture-connection' });
+  expect(chatBody).toMatchObject({ message: 'Neutral UI question', connection_id: 'fixture-connection', language: 'auto' });
   expect(chatBody).not.toHaveProperty('conversation_id');
   expect(chatBody).not.toHaveProperty('api_key');
   await expect(page.locator('.assistant-message img')).toHaveCount(0);
@@ -82,12 +82,16 @@ test('setup keeps cloud permission explicit and chat citations remain inspectabl
   await expect(page.getByText('Neutral fixture answer', { exact: false })).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath('chat-saved-contract.png'), fullPage: true });
   await page.getByRole('textbox', { name: 'Research question', exact: true }).fill('No matching evidence');
+  await page.getByRole('combobox', { name: 'Answer language', exact: true }).selectOption('nl');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   await page.getByRole('button', { name: 'Ask Compass', exact: true }).click();
   await expect(page.getByRole('alert').getByText('No suitable passages were found', { exact: false })).toBeVisible();
   await expect(page.getByRole('textbox', { name: 'Research question', exact: true })).toHaveValue('No matching evidence');
   expect(chatCalls).toBe(2);
+  expect(chatBody).toMatchObject({ language: 'nl' });
   await page.getByRole('combobox', { name: 'Interface language', exact: true }).selectOption('ar');
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+  await expect(page.getByRole('combobox', { name: 'لغة الإجابة', exact: true })).toHaveValue('nl');
   await expect(page.getByRole('button', { name: 'اسأل Compass', exact: true })).toBeVisible();
   await page.getByRole('button', { name: '[S1]', exact: true }).click();
   await page.screenshot({ path: testInfo.outputPath('chat-arabic-contract.png'), fullPage: true });

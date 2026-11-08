@@ -359,10 +359,15 @@ class ConnectionStore:
                 "connection_changed",
                 "This connection changed before dispatch. Submit the request again with the selected model.",
             )
+        high_reasoning = (
+            item["provider"] == "mistral"
+            and isinstance(payload, dict)
+            and payload.get("reasoning_effort") == "high"
+        )
         try:
-            async with asyncio.timeout(90):
+            async with asyncio.timeout(240 if high_reasoning else 90):
                 async with httpx.AsyncClient(
-                    timeout=httpx.Timeout(60, connect=10),
+                    timeout=httpx.Timeout(60, connect=10, read=210 if high_reasoning else 60),
                     follow_redirects=False,
                     trust_env=False,
                 ) as client:

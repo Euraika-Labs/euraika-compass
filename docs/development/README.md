@@ -1,9 +1,11 @@
 # Developing the Compass skeleton
 
-This repository now contains application source, not just planning documents. The
-first useful slice is a private research dossier with original images and versioned
-manual or configured-engine readings. It does not invent corpus-grounded chat,
-web-search results or AI Roundtable discussions to fill unfinished screens.
+This repository now contains application source, not just planning documents.
+Implemented slices include private dossiers with original images and versioned
+readings, real model connections, traceable text imports, lexical retrieval and
+source-grounded chat with explicitly saved conversations. Autonomous web research
+and AI Roundtable generation remain unfinished. See the [grounded-chat guide](grounded-chat.md)
+and [corpus-import guide](corpus-imports.md) for the current flow and its limits.
 
 ## Layout
 
@@ -42,15 +44,20 @@ app/backend/env/Scripts/python.exe app/scripts/manage.py doctor
 
 On Linux/macOS use the venv's `bin/python` instead. The default uses local
 application data (`EuraikaLabs/EuraikaCompass`), outside the repository and
-OneDrive. It contains PostgreSQL, immutable image bytes and route settings.
+OneDrive. It contains PostgreSQL, immutable images and source snapshots, route
+settings and private connection configuration.
 **Reset dependencies does not remove this directory or model weights.**
 An explicitly supplied external `DATABASE_URL` is never stopped by Compass.
 
 Put selected environment settings in that private directory's `settings.env`;
 see the root `.env.example`. The launcher loads this file before starting. Keys
-are backend-only. Route toggles in Connections do not configure credentials,
-start another server or download a model. Discovery does not probe paid APIs.
-Keep `COMPASS_LOCAL_ONLY=true` to block all cloud inference.
+are backend-only. Connections can also store provider credentials privately through
+the UI. Opening connection metadata makes no network request; **Discover models**
+explicitly requests a provider listing, and **Test connection** performs a small
+real inference call. Neither operation downloads a model or starts another server.
+Local-only is the default. Explicit cloud permission in Connections is required
+for remote chat or enabled remote readers; the reader route remains a separate
+choice. See [source-grounded chat](grounded-chat.md) for API examples.
 
 ## Development commands
 
@@ -145,7 +152,9 @@ and `app/workers/` for the selected optional runtime profiles.
 
 ## Remaining implementation
 
-- Scripture/source-package import, verified retrieval and grounded chat.
+- Broader source-package formats, original-language editions and semantic
+  embedding/reranking retrieval; the initial text import, lexical retrieval and
+  source-grounded chat path is implemented.
 - Autonomous web search/extraction under the source policy.
 - AI-generated Roundtable turns and synthesis.
 - Model/runtime installation UI; actual historical-script quality trials.

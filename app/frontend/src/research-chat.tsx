@@ -31,11 +31,11 @@ export function canUseConnection(connection: Connection, settings: ChatSettings 
   return connection.enabled && connection.configured && (connection.local || settings?.local_only === false);
 }
 export function chatRequest(input: {
-  message: string; connectionId: string; personaId: string; locale: Locale; turns: ChatTurn[];
+  message: string; connectionId: string; personaId: string; answerLanguage?: string; turns: ChatTurn[];
   conversationId?: string; sessionId?: string; filter: Collection[]; sourceIds?: string[];
 }) {
   return {
-    message: input.message.trim(), connection_id: input.connectionId, persona_id: input.personaId, language: input.locale,
+    message: input.message.trim(), connection_id: input.connectionId, persona_id: input.personaId, language: input.answerLanguage ?? 'auto',
     history: input.turns.flatMap(turn => [{ role: 'user', content: turn.question }, { role: 'assistant', content: turn.answer }]).slice(-12),
     conversation_id: input.conversationId, session_id: input.conversationId ? undefined : input.sessionId,
     collection_filter: input.filter, source_ids: input.sourceIds,

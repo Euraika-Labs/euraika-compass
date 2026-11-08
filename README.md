@@ -6,7 +6,7 @@ Euraika Compass is an open-source, locally hosted tool for **personal, neutral t
 
 The Research workspace is central. A connected Chat view also supports conversations about meaning, choices, grief, forgiveness, and other life questions. Optional cloud reasoning models work alongside local source, retrieval, and translation services. Authentic, traceable material available online can be used for personal research; institutional publication is not an exclusive admission rule. Practical source and usability checks guide development.
 
-**Project stage: runnable skeleton.** The repository includes the React/TypeScript workbench, FastAPI backend, PostgreSQL/pgvector schema and migrations, private image storage, manual transcript revisions, model registry and transcription-job plumbing. The full research and conversation features below remain the product target; the skeleton does not generate invented answers for unfinished capabilities. No actual model inference or historical-script accuracy has been verified yet.
+**Project stage: runnable foundation with a first source-grounded chat flow.** The React/TypeScript workbench and FastAPI/PostgreSQL backend now support private dossiers, immutable source images, transcript revisions, real provider connections, traceable text imports, lexical retrieval and conversations with inspectable citations and explicit saving. The broader research experience below remains the product target. Live chat verification is recorded separately; model configuration does not establish answer quality, neutrality or historical-script accuracy.
 
 The screenshots in **Design concepts** remain AI-generated explorations. Their example content and analysis labels are illustrative, not validated research results. A capture of the running skeleton appears below.
 
@@ -16,7 +16,9 @@ The screenshots in **Design concepts** remain AI-generated explorations. Their e
 2. Choose **Install**. The launcher installs Python 3.12, compatible PostgreSQL 16.15/pgvector 0.8.6 binaries, locked backend dependencies and the frontend build. It does not download model weights or configure API keys.
 3. Choose **Start**, then **Open Web UI** when the local server is ready.
 4. Create a research dossier, attach your own photo and enter a manual reading. Saving a correction creates a new revision while preserving the original image and earlier text.
-5. Use Pinokio's normal **Stop** control when finished. **Reset dependencies** targets generated environments/build files and preserves the separate personal data directory.
+5. For source-grounded Chat, add an account model in **Connections**, explicitly allow cloud processing if using a remote provider, and import selected editions in **Sources**. The recommended Mistral default is `mistral-large-4-0`; keys stay in private backend configuration.
+6. Ask a question in **Chat**, inspect its cited passages and choose **Save conversation** to preserve the temporary conversation. See the [grounded-chat guide](docs/development/grounded-chat.md).
+7. Use Pinokio's normal **Stop** control when finished. **Reset dependencies** targets generated environments/build files and preserves the separate personal data directory.
 
 The default data directory is per-user local application data, outside the checkout and OneDrive. An external PostgreSQL database can be configured explicitly. See [the development and API guide](docs/development/README.md) for configuration, local commands and model-worker setup. Pinokio Install, Start, Stop, dependency Reset and reinstall were exercised on Windows, including retained dossiers, readings and identical original image bytes. See the [verification record](docs/development/2026-11-08-skeleton-verification.md) for scope and limits.
 
@@ -27,9 +29,11 @@ The default data directory is per-user local application data, outside the check
 | Dossiers and original images | PostgreSQL CRUD, conflict detection, validated private image imports and immutable byte storage are implemented |
 | Manual readings and corrections | Implemented as separate transcript revisions; no automatic authenticity or canonical-verification label |
 | Model catalog and jobs | Configurable Kraken profiles, local Qwen and Mistral OCR adapters; honest unavailable-route status, job polling/SSE and cancellation |
-| Model execution | Requires separately installed/configured readers or endpoints; no model inference has been verified in this work |
-| Workbench interface | Research/Chat/Connections scaffolding, localization and RTL; implemented functions are separated from unfinished actions |
-| Corpus import, retrieval and grounded chat | Planned; generation endpoints return an explicit unavailable/not-implemented response |
+| Chat model connections | Real Mistral, OpenAI Responses, Anthropic Messages and compatible local/OpenRouter/Alibaba/MiniMax transports; private keys, explicit tests, cloud policy and frozen model selection |
+| Image-model execution | Requires separately installed/configured readers or endpoints; historical-script inference and accuracy remain unverified |
+| Workbench interface | Research, Sources, Chat and Connections workflows, five interface languages and RTL; AI-generated design concepts remain illustrative |
+| Corpus import and retrieval | Traceable JPS Torah, KJV Bible and Pickthall Quran translation starters, manual JSON import, immutable snapshots, PostgreSQL lexical search and nearby passage context |
+| Source-grounded chat | Model-assisted multilingual query rewriting, passage citations, practical output checks, five personas, temporary sessions and explicit saving/reopening; see the guide for current limits |
 | Autonomous web research and AI Roundtable turns | Planned; no fabricated search results or model discussions |
 | Dossier export/import and complete backup UI | Planned; durable storage and migration foundations are present |
 | Temporary Chat image attachments | Planned; initial image uploads deliberately require a saved research dossier |
@@ -51,6 +55,8 @@ This is the running skeleton with a neutral image-upload fixture and an explicit
 | [design.md](design.md) | Interface structure, Euraika design tokens, Chat/Research/Roundtable interactions, source states, localization, and accessibility |
 | [Implementation plan](docs/plans/2026-11-08-1552-feat-religion-research-app-plan.md) | Technical approach, implementation units, and practical checks for personal use |
 | [Development and API guide](docs/development/README.md) | Running the skeleton, private configuration, tests, API examples and remaining implementation |
+| [Source-grounded chat](docs/development/grounded-chat.md) | Connections, Mistral selection, source import, citations, private processing and conversation saving |
+| [Corpus imports](docs/development/corpus-imports.md) | Starter editions, provenance, original snapshots, lexical retrieval and source-use limits |
 | [OCR/HTR and vision model research](docs/research/2026-11-08-ocr-htr-model-selection.md) | Local-first reading candidates for historical Hebrew, Greek and Arabic, optional cloud routes, and practical hardware/domain limits |
 | [Design concepts](docs/design/README.md) | UI explorations, saved images, prompts, and their limitations |
 | [Full-plan review — 8 November 2026](docs/reviews/2026-11-08-full-plan-review.md) | Historical review and two resolved inconsistencies; its former evaluation assumptions are superseded by the personal-use scope |
@@ -129,7 +135,7 @@ Start with [functional.md](functional.md), the central specification for persona
 
 The [detailed implementation plan](docs/plans/2026-11-08-1552-feat-religion-research-app-plan.md) is written in Dutch. It defines product requirements, candidate models, starter sources, eight implementation units, and practical source, interpretation, UI and persistence checks. There is no fixed test volume, required expert panel or statistical certification program for personal use.
 
-The implemented stack foundation is React/TypeScript with Vite, Python/FastAPI, SQLAlchemy/Alembic and PostgreSQL with full-text/pgvector schema support. End-to-end corpus retrieval and local model installation remain unfinished. PostgreSQL is the primary database for both local and future server deployments. The wider candidate model pool includes Mistral, Alibaba Cloud/Qwen/GLM, OpenAI, Anthropic, MiniMax, and optionally OpenRouter as a gateway; catalog presence does not mean every inference adapter is implemented. Local Qwen remains a coordinator/vision option; embedding, reranking, and historical-language translation candidates are tried separately. No provider/model has been selected as a validated reading winner. API keys belong in backend-only local configuration, never this repository.
+The implemented stack uses React/TypeScript with Vite, Python/FastAPI, SQLAlchemy/Alembic and PostgreSQL with full-text/pgvector schema support. The first corpus import, lexical retrieval and grounded-chat path is implemented; semantic embeddings/reranking and local model installation remain unfinished. PostgreSQL is the primary database for local and future server deployments. Chat connections support Mistral, Alibaba Cloud, OpenAI, Anthropic, MiniMax, OpenRouter and compatible local endpoints; actual account access depends on the supplied credentials and selected model. Mistral Large 4 is the recommended general chat model, with low reasoning effort for query planning and high effort for final answers. Local Qwen remains a coordinator/vision option; historical-language translation candidates are tried separately. No provider/model has been selected as a validated historical-image reading winner. API keys belong in backend-only local configuration, never this repository.
 
 The [storage architecture](technology.md) keeps large source objects outside PostgreSQL. The skeleton stores original dossier images once by hash and preserves transcript revisions. Broader source-retention, export/import and complete backup/restore flows remain planned; a later opt-in sharing service is separate. Native Windows PostgreSQL 16.15 with pgvector 0.8.6 and the Pinokio install/start/stop/reset lifecycle have been exercised. Neither cache permission nor private-study access automatically permits redistribution.
 
