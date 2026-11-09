@@ -93,8 +93,10 @@ def test_catalog_covers_three_scripts_with_separate_permissions(catalog_transpor
     }
     assert list_manuscripts("Kennicott", "hebrew")[0]["id"] == "bodleian-kennicott-1"
     assert list_manuscripts("Codex", "arabic") == []
+    assert list_manuscripts("naskh", "arabic")[0]["id"] == "met-mamluk-quran"
     assert [item["id"] for item in items if item["use_limits"]["external_processing"]] == [
-        "met-tashkent-quran"
+        "met-tashkent-quran",
+        "met-mamluk-quran",
     ]
     assert requests == []
 

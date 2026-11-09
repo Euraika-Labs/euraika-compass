@@ -1,7 +1,7 @@
 # Find and read manuscript scans
 
 Open **Manuscripts** in Compass. Search by title, institution, or shelfmark,
-or filter by manuscript language. The starting catalog covers five institutional
+or filter by manuscript language. The starting catalog covers six institutional
 witnesses. Compass reads the live IIIF manifests or collection record and
 loads the selected folio's institutional image. This catalog is deliberately
 bounded. It does not crawl arbitrary links or claim to identify passages from
@@ -14,6 +14,7 @@ folio numbers.
 | Codex Bezae, MS Nn.2.41 | [Cambridge University Library](https://cudl.lib.cam.ac.uk/view/MS-NN-00002-00041/1) | View, private copy, local reading |
 | Codex Vaticanus, Vat.gr.1209 | [Vatican Library](https://digi.vatlib.it/view/MSS_Vat.gr.1209/0050) | Preview; use the library's site for its own options |
 | Tashkent Qur’an folio, 2004.87 | [The Metropolitan Museum of Art](https://www.metmuseum.org/art/collection/search/454661) | View, save and local reading; image eligible for explicitly selected cloud OCR |
+| Mamluk Qur’an folio in naskh, 62.152.5 | [The Metropolitan Museum of Art](https://www.metmuseum.org/art/collection/search/451680) | View, save and local reading; image eligible for explicitly selected cloud OCR |
 
 Select a folio to see the image, holder, shelfmark, attribution and source terms.
 Where permitted, select a dossier and choose **Add folio to dossier**. Then open
@@ -36,3 +37,5 @@ abbreviations, damage and line order can lead to missed or wrong text.
 Where the model returns coordinates, Compass records them against the actual
 input region. It does not infer missing glyphs or use a stored scripture
 edition to fill in a manuscript. Save corrections as separate revisions.
+See the [live verification](2026-11-09-manuscript-verification.md) for tested
+pages, models and limits, including the incomplete local Arabic reading.

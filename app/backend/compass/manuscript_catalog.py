@@ -198,6 +198,26 @@ _CATALOG = {
             use_limits=_OPEN_ACCESS,
             default_folio_id="primary",
         ),
+        _Manuscript(
+            id="met-mamluk-quran",
+            title="Mamluk Qur’an folio in naskh",
+            institution="The Metropolitan Museum of Art",
+            shelfmark="62.152.5",
+            language="ar",
+            collections=("quran",),
+            date="Fifteenth century CE",
+            description="A Qur’an folio attributed to Egypt, with black Arabic verses in naskh and a gold Kufic heading for Sura Yunus.",
+            catalog_url="https://www.metmuseum.org/art/collection/search/451680",
+            manifest_url="https://collectionapi.metmuseum.org/public/collection/v1/objects/451680",
+            provider="met",
+            object_key="451680",
+            attribution="The Metropolitan Museum of Art. Rogers Fund, 1962. Open Access.",
+            rights_url=_MET_TERMS,
+            terms_url=_MET_TERMS,
+            rights_note="The Met identifies this object image as public domain under its CC0 Open Access policy.",
+            use_limits=_OPEN_ACCESS,
+            default_folio_id="primary",
+        ),
     )
 }
 

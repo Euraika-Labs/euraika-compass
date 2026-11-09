@@ -13,7 +13,7 @@ export const manuscriptCatalog = {
   noMatches: ['No manuscripts match this search.', 'Geen handschriften gevonden.', 'لا توجد مخطوطات مطابقة.', 'Aucun manuscrit ne correspond à la recherche.', 'Keine passenden Handschriften gefunden.'],
   selectManuscript: ['Select a manuscript to browse its folios.', 'Kies een handschrift om de folio’s te bekijken.', 'اختر مخطوطًا لتصفّح أوراقه.', 'Sélectionnez un manuscrit pour parcourir ses folios.', 'Wählen Sie eine Handschrift, um ihre Blätter zu durchsuchen.'],
   openCatalog: ['Open collection record', 'Collectierecord openen', 'فتح سجل المجموعة', 'Ouvrir la notice de collection', 'Sammlungseintrag öffnen'],
-  openManifest: ['Open IIIF manifest', 'IIIF-manifest openen', 'فتح بيان IIIF', 'Ouvrir le manifeste IIIF', 'IIIF-Manifest öffnen'],
+  openManifest: ['Open digital image record', 'Digitaal beeldrecord openen', 'فتح سجل الصور الرقمي', 'Ouvrir la notice numérique des images', 'Digitalen Bilddatensatz öffnen'],
   openRights: ['Open rights statement', 'Rechtenverklaring openen', 'فتح بيان الحقوق', 'Ouvrir la déclaration de droits', 'Rechtehinweis öffnen'],
   openFolio: ['Open folio source', 'Foliobron openen', 'فتح مصدر الورقة', 'Ouvrir la source du folio', 'Blattquelle öffnen'],
   folio: ['Folio', 'Folio', 'الورقة', 'Folio', 'Blatt'],

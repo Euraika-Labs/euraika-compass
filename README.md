@@ -30,11 +30,11 @@ The default data directory is per-user local application data, outside the check
 | Manual readings and corrections | Implemented as separate transcript revisions; no automatic authenticity or canonical-verification label |
 | Model catalog and jobs | Configurable Kraken profiles, local Qwen and Mistral OCR adapters; honest unavailable-route status, job polling/SSE and cancellation |
 | Chat model connections | Real Mistral, OpenAI Responses, Anthropic Messages and compatible local/OpenRouter/Alibaba/MiniMax transports; private keys, explicit tests, cloud policy and frozen model selection |
-| Image-model execution | Requires separately installed/configured readers or endpoints; historical-script inference and accuracy remain unverified |
+| Image-model execution | Configured Kraken on Windows WSL reads institutional Hebrew, Greek and Arabic examples with uneven coverage. Mistral OCR 4.1 was tested on a public-domain crop. [Live checks and limits](docs/development/2026-11-09-manuscript-verification.md) |
 | Workbench interface | Research, Sources, Chat and Connections workflows, five interface languages and RTL; AI-generated design concepts remain illustrative |
 | Corpus import and retrieval | UXLC Hebrew Bible, SBLGNT Greek New Testament and Tanzil Uthmani Quran; existing JPS, KJV and Pickthall translations; immutable source snapshots, lexical search and passage context |
 | Parallel reading | Named original-language editions and published English translations side by side from **Sources** and chat citations. Reference mappings and uncertain comparisons have distinct labels |
-| Institutional manuscript scans | Search five verified holdings across Hebrew, Greek and Arabic, view live folios, and save eligible image renditions with provenance for local OCR |
+| Institutional manuscript scans | Search six verified holdings across Hebrew, Greek and Arabic, view live folios, and save eligible image renditions with provenance for OCR |
 | Source-grounded chat | Multilingual query planning, relevant passages and eligible parallel editions, exact edition citations, five personas and explicit saving/reopening |
 | Web research in Chat | Per-question online lookup with disclosed queries, publisher abstracts and page excerpts, separate clickable web citations and provenance snapshots |
 | AI Roundtable turns | Planned |
@@ -102,7 +102,7 @@ The original image stays unchanged. Automatic transcription, your corrections, r
 
 Use a suitable local reader or an explicitly selected, configured image-capable route. The adapters and job flow are present, but the initial candidates below still need a real runtime and photo trial; support for every ancient script is not assumed. Local-only mode prevents cloud image calls. In the skeleton, initial uploads belong to an explicitly saved dossier; temporary Chat uploads are planned separately. The complete image-reading flow retains the selected original, regions and reading revisions for later reference.
 
-The [8 November model research](docs/research/2026-11-08-ocr-htr-model-selection.md) recommends starting with local Kraken 7.1 / historical PP-OCRv6 medium and matching script profiles, with local Qwen3.8-27B as a second image reader. Mistral OCR 4.1 and selected configured vision APIs are optional comparisons. These are sourced starting choices; no reading accuracy or runtime on our own photos has been measured yet.
+The [8 November model research](docs/research/2026-11-08-ocr-htr-model-selection.md) recommends starting with local Kraken 7.1 / historical PP-OCRv6 medium and matching script profiles, with local Qwen3.8-27B as a second image reader. Mistral OCR 4.1 and selected configured vision APIs are optional comparisons. See the [live manuscript checks](docs/development/2026-11-09-manuscript-verification.md) for the first practical results; they do not establish reading accuracy on other documents.
 
 ## Five personas, one impartiality policy
 
