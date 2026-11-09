@@ -123,6 +123,8 @@ disable local corpus retrieval.
 Explicitly saving a conversation preserves its cited excerpt and provenance with
 the turn. Chat does not add fetched sources to the corpus or retain entire pages.
 Earlier web-derived answers are not passed back as trusted evidence to cloud models.
+See the [live mixed-citation verification](2026-11-09-web-research-verification.md)
+for a question exercised with the installed Pinokio app.
 
 ## Private processing and saving
 
