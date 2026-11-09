@@ -58,7 +58,7 @@ def health(request: Request):
             "manual_transcription": ready,
             "configured_model_adapters": True,
             "grounded_chat": ready,
-            "web_research": False,
+            "web_research": ready,
             "roundtable_generation": False,
         },
     }

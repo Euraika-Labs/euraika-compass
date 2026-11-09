@@ -6,7 +6,7 @@ import pytest
 from sqlalchemy import func, select
 
 from compass.adapters.base import AdapterError
-from compass.chat import ChatService, checked_answer, while_connected
+from compass.chat import ChatService, checked_answer, web_queries, while_connected
 from compass.corpus import STARTERS
 from compass.errors import APIError
 from compass.models import ChatTurn, Conversation, Edition, Passage, Source
@@ -53,6 +53,14 @@ def test_full_temporary_session_can_still_be_saved():
     assert service.session(UUID(key), allow_full=True)[1] is value
 
 
+@pytest.mark.parametrize("sensitive_query", [
+    "qa-private@example.org", "https://example.org", "record 123456789",
+    "mourning comfort\nsecret", "site:example.org",
+])
+def test_web_query_boundary_rejects_identifiers_and_urls(sensitive_query):
+    assert web_queries([sensitive_query, "mortuary rites Psalm 23:4"]) == ["mortuary rites Psalm 23:4"]
+
+
 @pytest.mark.asyncio
 async def test_disconnect_cancels_owned_generation():
     cancelled = asyncio.Event()
@@ -79,9 +87,11 @@ class ControlledConnection:
         self.calls = []
         self.invalid = invalid
         self.cloud_blocked = False
+        self.local_only = False
         self.remote = False
         self.ranked_ids = ["C1"]
         self.reference = None
+        self.web_queries = []
         self.answer = "A gentle reflection on the retrieved test passage [S1]."
 
     def get(self, connection_id):
@@ -90,7 +100,7 @@ class ControlledConnection:
         return {"enabled": True, "configured": True, "local": not (self.cloud_blocked or self.remote)}
 
     def settings(self):
-        return {"local_only": self.cloud_blocked}
+        return {"local_only": self.cloud_blocked or self.local_only}
 
     def signature(self, connection_id):
         return "controlled-configuration"
@@ -100,7 +110,7 @@ class ControlledConnection:
         assert self.application.state.database.engine.pool.checkedout() == 0
         self.calls.append((connection_id, messages))
         if max_tokens == 1200:
-            text = json.dumps({"queries": ["mourning comfort"], "references": [self.reference] if self.reference else []})
+            text = json.dumps({"queries": ["mourning comfort"], "references": [self.reference] if self.reference else [], "web_queries": self.web_queries})
         elif max_tokens == 800:
             collections = json.loads(messages[-1]["content"])["collections"]
             text = json.dumps({"selections": {collection: self.ranked_ids for collection in collections}})
@@ -129,6 +139,97 @@ def configure_chat(application, invalid=False):
     application.state.connections = connection
     application.state.chat = ChatService(application.state.database, connection)
     return connection
+
+
+@pytest.mark.postgres
+@pytest.mark.parametrize("cite_web", [True, False])
+def test_web_and_edition_citations_save_with_distinct_evidence_and_search_provenance(postgres_app, monkeypatch, cite_web):
+    client, application, _ = postgres_app
+    connection = configure_chat(application)
+    connection.remote = True
+    connection.web_queries = ["mourning rituals ancient Judaism", "qa-private@example.org"]
+    connection.answer = "A textual observation [S1]."
+    if cite_web:
+        connection.answer += " An academic interpretation [S2]."
+    add_test_source(application)
+    seen = []
+    abstract = "The study surveys rituals and practices across different communities."
+
+    async def search(query, *, language, limit, external_processing):
+        assert application.state.database.engine.pool.checkedout() == 0
+        seen.append((query, external_processing))
+        return {"items": [{
+            "title": "Synthetic publisher record",
+            "url": "https://example.org/paper",
+            "excerpt": abstract,
+            "provider": "publisher_index",
+            "source_type": "article",
+            "evidence_type": "abstract",
+            "source_date": "2020-01-01",
+            "retrieved_at": "2026-11-09T00:00:00+00:00",
+            "content_sha256": "a" * 64,
+            "use_limits": {"external_processing": True},
+        }, {
+            "url": "https://example.org/private",
+            "excerpt": "LOCAL_WEB_EXCERPT",
+            "use_limits": {"external_processing": False},
+        }]}
+
+    monkeypatch.setattr("compass.web_research.search_web", search)
+    body = {"message": "Private concern: qa-private@example.org", "connection_id": "actual-test-boundary", "web_research": True}
+    response = client.post("/api/v1/chat", json=body)
+    assert response.status_code == 200, response.text
+    turn = response.json()
+    assert seen == [("mourning rituals ancient Judaism", True)]
+    assert turn["grounding"]["web_research"]["status"] == ("used" if cite_web else "not_used")
+    assert turn["grounding"]["web_research"]["source_count"] == int(cite_web)
+    assert turn["grounding"]["web_research"]["retrieved_count"] == 1
+    assert set(turn["grounding"]["cited_collections"]) == {"torah", "bible", "quran"}
+    assert turn["citations"][0]["passage_id"]
+    if cite_web:
+        web = turn["citations"][1]
+        assert web["kind"] == "web" and "passage_id" not in web and web["collection_memberships"] == []
+        assert web["source_url"] == "https://example.org/paper" and web["quote"] == abstract
+    else:
+        assert len(turn["citations"]) == 1
+    sent = json.loads(connection.calls[-1][1][-1]["content"])
+    assert sent["evidence"][-1]["quote"] == abstract
+    assert "LOCAL_WEB_EXCERPT" not in json.dumps(sent)
+    saved = client.post("/api/v1/conversations", json={"title": "Web provenance fixture", "session_id": turn["session_id"]})
+    assert saved.status_code == 201
+    reopened = client.get("/api/v1/conversations/" + saved.json()["id"]).json()["turns"][0]
+    assert reopened["citations"] == turn["citations"]
+    assert reopened["grounding"] == turn["grounding"]
+
+
+@pytest.mark.postgres
+@pytest.mark.parametrize("web_enabled,local_only,status,called", [
+    (False, False, "off", False),
+    (True, True, "restricted", False),
+    (True, False, "unavailable", True),
+])
+def test_web_switch_and_provider_failure_preserve_local_evidence(
+    postgres_app, monkeypatch, web_enabled, local_only, status, called,
+):
+    client, application, _ = postgres_app
+    connection = configure_chat(application)
+    connection.local_only = local_only
+    connection.web_queries = ["mourning customs"]
+    add_test_source(application)
+    seen = []
+
+    async def unavailable(query, **_):
+        seen.append(query)
+        return {"items": [], "unavailable": True}
+
+    monkeypatch.setattr("compass.web_research.search_web", unavailable)
+    response = client.post("/api/v1/chat", json={
+        "message": "mourning", "connection_id": "actual-test-boundary", "web_research": web_enabled,
+    })
+    assert response.status_code == 200, response.text
+    assert response.json()["grounding"]["web_research"]["status"] == status
+    assert response.json()["citations"][0]["passage_id"]
+    assert bool(seen) is called
 
 
 @pytest.mark.postgres

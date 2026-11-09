@@ -3,8 +3,8 @@
 This repository now contains application source, not just planning documents.
 Implemented slices include private dossiers with original images and versioned
 readings, real model connections, traceable text imports, lexical retrieval and
-source-grounded chat with explicitly saved conversations. Autonomous web research
-and AI Roundtable generation remain unfinished. See the [grounded-chat guide](grounded-chat.md)
+source-grounded chat with optional web research and explicitly saved conversations.
+AI Roundtable generation remains unfinished. See the [grounded-chat guide](grounded-chat.md)
 and [corpus-import guide](corpus-imports.md) for the current flow and its limits.
 
 ## Layout
@@ -155,7 +155,7 @@ and `app/workers/` for the selected optional runtime profiles.
 - Broader source-package formats, additional editions and translations, vector
   retrieval and dedicated local reranker workers. The initial original-language
   imports and parallel reader are described in [Original-language editions](original-text-sources.md).
-- Autonomous web search/extraction under the source policy.
+- Expanded web provider coverage and manuscript discovery under the source policy.
 - AI-generated Roundtable turns and synthesis.
 - Model/runtime installation UI; actual historical-script quality trials.
 - Full dossier export/import and consistent backup/restore UI.

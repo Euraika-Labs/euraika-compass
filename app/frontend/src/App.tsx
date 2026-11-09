@@ -320,7 +320,7 @@ export default function App() {
         {!dbReady && view !== 'models' && <Notice tone="warning">{t('errorDb')}</Notice>}
 
         {view !== 'research' && <RequestError error={setupError} locale={locale} />}
-        <div hidden={view !== 'chat'}><ChatPanel locale={locale} connections={connections} settings={chatSettings} sources={sources} personas={personas} ready={dbReady} draft={chatDraft} setDraft={setChatDraft} openConnections={() => setView('models')} openSources={() => setView('sources')} openResearch={() => setView('research')} /></div>
+        <div hidden={view !== 'chat'}><ChatPanel locale={locale} connections={connections} settings={chatSettings} sources={sources} personas={personas} ready={dbReady} webResearchAvailable={health?.features?.web_research === true} draft={chatDraft} setDraft={setChatDraft} openConnections={() => setView('models')} openSources={() => setView('sources')} openResearch={() => setView('research')} /></div>
         {view === 'chat' ? null : view === 'sources' ? <SourcesPanel locale={locale} sources={sources} starters={starters} ready={dbReady} refresh={refreshSetup} /> : view === 'models' ? <section className="models-view">
           <ConnectionsPanel locale={locale} connections={connections} settings={chatSettings} ready={dbReady} refresh={refreshSetup} />
           <div className="section-heading"><div><p className="eyebrow">Euraika Compass</p><h1>{t('connectedModels')}</h1></div><button className="button secondary" onClick={() => void refreshConnection()}>{t('retry')}</button></div>

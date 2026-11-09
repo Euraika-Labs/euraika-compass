@@ -6,7 +6,7 @@ Euraika Compass is an open-source, locally hosted tool for **personal, neutral t
 
 The Research workspace is central. A connected Chat view also supports conversations about meaning, choices, grief, forgiveness, and other life questions. Optional cloud reasoning models work alongside local source, retrieval, and translation services. Authentic, traceable material available online can be used for personal research; institutional publication is not an exclusive admission rule. Practical source and usability checks guide development.
 
-**Project stage: runnable foundation with a first source-grounded chat flow.** The React/TypeScript workbench and FastAPI/PostgreSQL backend now support private dossiers, immutable source images, transcript revisions, real provider connections, traceable text imports, lexical retrieval and conversations with inspectable citations and explicit saving. The broader research experience below remains the product target. Live chat verification is recorded separately; model configuration does not establish answer quality, neutrality or historical-script accuracy.
+**Project stage: runnable foundation with source-grounded chat and optional web research.** The React/TypeScript workbench and FastAPI/PostgreSQL backend now support private dossiers, immutable source images, transcript revisions, real provider connections, traceable text imports, lexical retrieval and conversations with inspectable citations and explicit saving. The broader research experience below remains the product target. Live chat verification is recorded separately; model configuration does not establish answer quality, neutrality or historical-script accuracy.
 
 The screenshots in **Design concepts** remain AI-generated explorations. Their example content and analysis labels are illustrative, not validated research results. A capture of the running skeleton appears below.
 
@@ -17,7 +17,7 @@ The screenshots in **Design concepts** remain AI-generated explorations. Their e
 3. Choose **Start**, then **Open Web UI** when the local server is ready.
 4. Create a research dossier, attach your own photo and enter a manual reading. Saving a correction creates a new revision while preserving the original image and earlier text.
 5. For source-grounded Chat, add an account model in **Connections**, explicitly allow cloud processing if using a remote provider, and import selected editions in **Sources**. The recommended Mistral default is `mistral-large-4-0`; keys stay in private backend configuration.
-6. Look up a passage in **Sources** or open a citation in **Chat** to read the named source edition beside an available translation. Choose **Save conversation** to preserve a temporary chat. See the [grounded-chat guide](docs/development/grounded-chat.md).
+6. Look up a passage in **Sources** or open a citation in **Chat** to read the named source edition beside an available translation. Turn on **Web research** for a question to include separately labelled online evidence. Choose **Save conversation** to preserve a temporary chat. See the [grounded-chat guide](docs/development/grounded-chat.md).
 7. Use Pinokio's normal **Stop** control when finished. **Reset dependencies** targets generated environments/build files and preserves the separate personal data directory.
 
 The default data directory is per-user local application data, outside the checkout and OneDrive. An external PostgreSQL database can be configured explicitly. See [the development and API guide](docs/development/README.md) for configuration, local commands and model-worker setup. Pinokio Install, Start, Stop, dependency Reset and reinstall were exercised on Windows, including retained dossiers, readings and identical original image bytes. See the [verification record](docs/development/2026-11-08-skeleton-verification.md) for scope and limits.
@@ -35,7 +35,8 @@ The default data directory is per-user local application data, outside the check
 | Corpus import and retrieval | UXLC Hebrew Bible, SBLGNT Greek New Testament and Tanzil Uthmani Quran; existing JPS, KJV and Pickthall translations; immutable source snapshots, lexical search and passage context |
 | Parallel reading | Named original-language editions and published English translations side by side from **Sources** and chat citations. Reference mappings and uncertain comparisons have distinct labels |
 | Source-grounded chat | Multilingual query planning, relevant passages and eligible parallel editions, exact edition citations, five personas and explicit saving/reopening |
-| Autonomous web research and AI Roundtable turns | Planned; no fabricated search results or model discussions |
+| Web research in Chat | Per-question online lookup with disclosed queries, publisher abstracts and page excerpts, separate clickable web citations and provenance snapshots |
+| AI Roundtable turns | Planned |
 | Dossier export/import and complete backup UI | Planned; durable storage and migration foundations are present |
 | Temporary Chat image attachments | Planned; initial image uploads deliberately require a saved research dossier |
 

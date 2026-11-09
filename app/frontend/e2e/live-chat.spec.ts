@@ -24,6 +24,7 @@ test('live Mistral chat answers with inspectable stored passages and saves expli
   expect(reply.citations.length).toBeGreaterThan(0);
   expect(reply.grounding.collections).toEqual(expect.arrayContaining(['torah', 'bible', 'quran']));
   for (const citation of reply.citations) {
+    if (citation.kind === 'web') throw new Error('Unexpected web citation without web research opt-in.');
     const original = await page.request.get(`/api/v1/passages/${citation.passage_id}`);
     expect(original.ok()).toBeTruthy();
     const passage = await original.json();
@@ -32,8 +33,9 @@ test('live Mistral chat answers with inspectable stored passages and saves expli
     expect(citation.content_sha256).toBe(passage.content_sha256);
   }
   await page.locator('.citation-chip').first().click();
-  await expect(page.getByRole('complementary', { name: 'Citation details' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Open original source', exact: false })).toBeVisible();
+  const citationDetails = page.getByRole('complementary', { name: 'Citation details' });
+  await expect(citationDetails).toBeVisible();
+  await expect(citationDetails.locator('.passage-card').first().getByRole('link', { name: 'Open original source', exact: false })).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath('live-grounded-chat.png'), fullPage: true });
   await page.getByRole('button', { name: 'Save conversation', exact: true }).click();
   await page.getByRole('textbox', { name: 'Conversation title', exact: true }).fill('QA — rouw en troost in drie tekstcollecties');

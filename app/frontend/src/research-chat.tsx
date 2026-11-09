@@ -3,11 +3,12 @@ import { chatTranslate } from './chat-i18n';
 import type { ChatSettings, ChatTurn, Citation, Collection, Connection, Locale } from './types';
 
 export const collections: Collection[] = ['torah', 'bible', 'quran'];
-export function safeExternalUrl(value: string | null | undefined): string | undefined {
+export function safeExternalUrl(value: string | null | undefined, httpsOnly = false): string | undefined {
   if (!value) return undefined;
   try {
     const url = new URL(value);
-    return ['https:', 'http:'].includes(url.protocol) && !url.username && !url.password ? url.href : undefined;
+    const allowedProtocol = url.protocol === 'https:' || (!httpsOnly && url.protocol === 'http:');
+    return allowedProtocol && !url.username && !url.password ? url.href : undefined;
   } catch { return undefined; }
 }
 function record(value: unknown): value is Record<string, unknown> { return !!value && typeof value === 'object' && !Array.isArray(value); }
@@ -32,13 +33,13 @@ export function canUseConnection(connection: Connection, settings: ChatSettings 
 }
 export function chatRequest(input: {
   message: string; connectionId: string; personaId: string; answerLanguage?: string; turns: ChatTurn[];
-  conversationId?: string; sessionId?: string; filter: Collection[]; sourceIds?: string[];
+  conversationId?: string; sessionId?: string; filter: Collection[]; sourceIds?: string[]; webResearch?: boolean;
 }) {
   return {
     message: input.message.trim(), connection_id: input.connectionId, persona_id: input.personaId, language: input.answerLanguage ?? 'auto',
     history: input.turns.flatMap(turn => [{ role: 'user', content: turn.question }, { role: 'assistant', content: turn.answer }]).slice(-12),
     conversation_id: input.conversationId, session_id: input.conversationId ? undefined : input.sessionId,
-    collection_filter: input.filter, source_ids: input.sourceIds,
+    collection_filter: input.filter, source_ids: input.sourceIds, web_research: input.webResearch ?? false,
   };
 }
 export function RequestError({ error, locale }: { error: unknown; locale: Locale }) {

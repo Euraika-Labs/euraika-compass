@@ -1,6 +1,6 @@
 # Euraika Compass — Systeemarchitectuur
 
-Status: architectuur voor een persoonlijke, neutrale theologische onderzoekstool, bijgewerkt op 8 november 2026. De werkende basis bevat dossier-/beeldbewaring, leesrevisies, privémodelverbindingen, corpusimport, PostgreSQL-zoeking, modelgestuurde relevantieselectie, chat met bronmomentopnamen en expliciet bewaarde gesprekken. Mistral Large 4.0 is gekoppeld; de gekozen verbinding blijft gedurende een antwoord vastgezet. Vectorretrieval, autonoom webonderzoek, gegenereerde AI-Roundtable, dossierexport en lokale modelinstallatie blijven verdere bouwstappen. Zie de [chatgids](docs/development/grounded-chat.md) en [actuele implementatiegrenzen](docs/development/README.md).
+Status: architectuur voor een persoonlijke, neutrale theologische onderzoekstool, bijgewerkt op 9 november 2026. De werkende basis bevat dossier-/beeldbewaring, leesrevisies, privémodelverbindingen, corpusimport, PostgreSQL-zoeking, modelgestuurde relevantieselectie, chat met bronmomentopnamen en expliciet bewaarde gesprekken. Een aparte optie in Chat haalt online bewijs op met een beperkte zoekdekking. Mistral Large 4.0 is gekoppeld; de gekozen verbinding blijft gedurende een antwoord vastgezet. Vectorretrieval, gegenereerde AI-Roundtable, dossierexport en lokale modelinstallatie blijven verdere bouwstappen. Zie de [chatgids](docs/development/grounded-chat.md) en [actuele implementatiegrenzen](docs/development/README.md).
 
 ## 1. Plaats van dit document
 
@@ -104,7 +104,7 @@ Een gedeelde blobhash betekent dezelfde bytes, niet dezelfde licentie, wetenscha
 
 Technische gebruiksregistratie mag status, foutcode, route-ID en kosten bevatten, maar geen ongevraagde persoonlijke vraagtekst. Een taakrecord voor tijdelijke Chat is geen achterdeur om die inhoud of een volledige eventstream te bewaren. Persoonlijke context wordt alleen aan een expliciet gekozen cloudroute geleverd. Zoekproviders krijgen geminimaliseerde onderwerptermen; dit is een andere gegevensstroom dan cloudgesprekscontext.
 
-Lokale modelmodus, webonderzoek en remote manuscripttoegang hebben onafhankelijke schakelaars. De backend controleert deze voor iedere uitgaande opdracht. Secrets worden via backendinstellingen opgeslagen en nooit teruggeleverd in statusresponses, prompts, dossierpakketten of diagnostiek.
+Modelkeuze, webonderzoek en remote manuscripttoegang hebben aparte instellingen. Local-only verhindert uitgaande model- en zoekopdrachten. Webonderzoek vereist daarnaast activering per chatvraag. De backend stuurt alleen korte zoektermen naar de zoekdiensten en houdt geciteerde webfragmenten en hun herkomst gescheiden van het corpus. Secrets worden via backendinstellingen opgeslagen en nooit teruggeleverd in statusresponses, prompts, dossierpakketten of diagnostiek.
 
 Een eigen foto blijft een persoonlijke upload, ook als dezelfde bytes elders bestaan. Een hash maakt haar geen openbaar bronobject. Bij expliciet bewaren als onderzoek worden gekozen originele bytes, afgeleiden en transcriptierevisies aan het dossier gekoppeld. Een layoutwissel of geslaagde OCR-opdracht verandert de bewaarkeuze niet. Beeldverwerking via een gekozen cloudroute toont of het hele beeld of een uitsnede wordt verzonden; lokale modus staat geen stille cloudfallback toe.
 

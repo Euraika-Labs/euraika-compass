@@ -100,18 +100,33 @@ export interface PassageSnapshot {
   use_limits?: SourceUseLimits; licence_url?: string | null;
 }
 interface SourceUseLimits { external_processing: boolean; rights_note?: string | null; licence_url?: string | null }
-export interface Citation extends PassageSnapshot { id: string }
+export interface ScriptureCitation extends PassageSnapshot { id: string; kind?: 'scripture' }
+export interface WebCitation {
+  id: string; kind: 'web'; title: string; source_url: string; quote: string;
+  source_type: string; retrieved_at: string; content_sha256?: string | null;
+  source_title?: string; edition_title?: string; publication?: string; language?: string;
+  provider?: string; evidence_type?: string; authors?: string[]; issued_date?: string;
+  license?: string; license_url?: string;
+}
+export type Citation = ScriptureCitation | WebCitation;
 export type PassageAlignment = 'same_reference' | 'mapped_reference' | 'compare_only';
 export interface ParallelPassage extends PassageSnapshot {
   alignment: PassageAlignment; alignment_note: string;
 }
 export interface ParallelPassages { anchor: PassageSnapshot; parallels: ParallelPassage[]; warnings: string[] }
+export interface WebResearchGrounding {
+  status: 'off' | 'used' | 'not_used' | 'no_results' | 'unavailable' | 'restricted';
+  source_count?: number; retrieved_count?: number; queries?: string[]; partial?: boolean;
+}
+export interface ChatGrounding {
+  mode: string; retrieved_count: number; collections: Collection[]; web_research?: WebResearchGrounding;
+}
 export interface ChatResponse {
   answer: string; citations: Citation[]; warnings: string[]; connection_id: string; model_id: string;
-  grounding: { mode: string; retrieved_count: number; collections: Collection[] }; turn_id?: string; session_id?: string;
+  grounding: ChatGrounding; turn_id?: string; session_id?: string;
 }
 export interface ChatTurn extends ChatResponse { question: string; id: string }
 export interface ConversationSummary { id: string; title: string; dossier_id: string | null; created_at: string }
 export interface ConversationRecord extends ConversationSummary {
-  turns: { id: string; question: string; answer: string; citations: Citation[]; warnings: string[]; connection_id: string; model_id: string; created_at: string }[];
+  turns: { id: string; question: string; answer: string; citations: Citation[]; warnings: string[]; connection_id: string; model_id: string; created_at: string; grounding?: Partial<ChatGrounding> | null }[];
 }

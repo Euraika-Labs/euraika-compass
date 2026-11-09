@@ -12,9 +12,9 @@ is a per-user local application-data directory, outside this checkout and OneDri
 An external PostgreSQL URL can be configured explicitly for development. SQLite is
 not used as a fallback.
 
-The first live slice is a dossier with an original photo and manually entered or
-configured-engine transcript revisions. Corpus-grounded conversation, web search
-and AI Roundtable generation are scaffolded, clearly unavailable capabilities.
-Actual model inference, corpus grounding and dossier export/import remain unfinished
-or unverified as described in the [development guide](../docs/development/README.md).
+The app supports dossiers with original photos and revision history, model
+connections, text editions, and conversations with inspectable corpus and online
+evidence. See the [grounded-chat guide](../docs/development/grounded-chat.md)
+for search and citations. Roundtable generation and dossier export/import are
+planned, as described in the [development guide](../docs/development/README.md).
 See the root README for the Pinokio Install/Start quick start.

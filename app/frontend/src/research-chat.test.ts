@@ -24,7 +24,7 @@ describe('research chat boundaries', () => {
   });
   it('sends the selected connection, plain conversation history and explicit filters without secrets', () => {
     const payload = chatRequest({ message: '  Current question  ', connectionId: connection.id, personaId: 'critical', answerLanguage: 'nl', turns: [turn], sessionId: 'temporary-id', filter: ['torah'], sourceIds: ['source'] });
-    expect(JSON.parse(JSON.stringify(payload))).toEqual({ message: 'Current question', connection_id: 'mistral-account', persona_id: 'critical', language: 'nl', history: [{ role: 'user', content: 'Earlier question' }, { role: 'assistant', content: 'Earlier answer [S1]' }], session_id: 'temporary-id', collection_filter: ['torah'], source_ids: ['source'] });
+    expect(JSON.parse(JSON.stringify(payload))).toEqual({ message: 'Current question', connection_id: 'mistral-account', persona_id: 'critical', language: 'nl', history: [{ role: 'user', content: 'Earlier question' }, { role: 'assistant', content: 'Earlier answer [S1]' }], session_id: 'temporary-id', collection_filter: ['torah'], source_ids: ['source'], web_research: false });
     expect(payload).not.toHaveProperty('api_key');
     expect(payload).not.toHaveProperty('citations');
   });
@@ -51,6 +51,11 @@ describe('research chat boundaries', () => {
   it('permits original HTTP(S) source links but rejects executable, relative and credential URLs', () => {
     expect(safeExternalUrl('https://example.org/text#verse')).toBe('https://example.org/text#verse');
     for (const value of ['javascript:alert(1)', 'data:text/html,hi', '/private', 'file:///C:/private', 'https://secret@example.org']) expect(safeExternalUrl(value)).toBeUndefined();
+  });
+  it('requires HTTPS for web evidence links', () => {
+    expect(safeExternalUrl('https://example.org/article', true)).toBe('https://example.org/article');
+    expect(safeExternalUrl('http://example.org/article', true)).toBeUndefined();
+    expect(safeExternalUrl('https://secret@example.org/article', true)).toBeUndefined();
   });
 });
 

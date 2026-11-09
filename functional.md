@@ -1,6 +1,6 @@
 # Euraika Compass — Functionele specificatie
 
-Status: functionele baseline van 8 november 2026, met een werkende eerste onderzoeks- en chatflow. Naast dossiers, beelden en transcriptierevisies zijn privémodelverbindingen, tekstedities importeren, passagezoeking, relevantieselectie, chat met controleerbare verwijzingen en expliciet bewaarde gesprekken geïmplementeerd. De Mistral Large 4.0-koppeling is daadwerkelijk gebruikt. Webonderzoek, gegenereerde AI-Roundtable, dossierexport en de volledige beoogde ervaring blijven verdere bouwstappen. Historische OCR/HTR-kwaliteit is nog niet beproefd. Zie de [chatgids](docs/development/grounded-chat.md) en [ontwikkelhandleiding](docs/development/README.md).
+Status: functionele baseline van 9 november 2026, met een werkende eerste onderzoeks- en chatflow. Naast dossiers, beelden en transcriptierevisies zijn privémodelverbindingen, tekstedities importeren, passagezoeking, relevantieselectie, chat met controleerbare verwijzingen en expliciet bewaarde gesprekken geïmplementeerd. Chat kan op verzoek online bewijs naast de tekstedities gebruiken. De Mistral Large 4.0-koppeling is daadwerkelijk gebruikt. Gegenereerde AI-Roundtable, dossierexport en de volledige beoogde ervaring blijven verdere bouwstappen. Historische OCR/HTR-kwaliteit is nog niet beproefd. Zie de [chatgids](docs/development/grounded-chat.md) en [ontwikkelhandleiding](docs/development/README.md).
 
 [vision.md](vision.md) beschrijft het doel, de doelgroep en de richting van het product. Dit document vertaalt die visie naar functioneel gedrag; de technische plannen werken de bouw en verificatie uit.
 
@@ -114,7 +114,7 @@ Eigen foto's blijven privé. Een upload in tijdelijke Chat maakt niet vanzelf ee
 
 ## Webonderzoek
 
-De gebruiker configureert en activeert webonderzoek afzonderlijk. Dan kan de app binnen een begrensde run zelfstandig zoektermen maken, pagina's lezen en aanvullende bronnen beoordelen. Alleen een snippet is geen gecontroleerde bron. Zoektermen, URL, titel, auteur/uitgever indien bekend, opgegeven publicatie-/wijzigingsdatum, raadpleegtijd en beperkingen zijn inspecteerbaar. Onbekende gegevens blijven onbekend.
+De gebruiker activeert **Web research** per chatvraag. Dan kan de app binnen een begrensde run zelfstandig zoektermen maken en echte fragmenten uit publieke bronnen ophalen, zoals een uitgeversabstract of een encyclopediefragment. De eerste bronnen werken zonder extra zoek-API-sleutel. Alleen een zoekmachinesnippet is geen gecontroleerde bron. Zoektermen, URL, titel, auteur/uitgever indien bekend, opgegeven publicatiedatum, raadpleegtijd en beperkingen zijn inspecteerbaar. Onbekende gegevens blijven onbekend. De dekking van de huidige zoekdiensten is beperkt en kan worden uitgebreid.
 
 Persoonlijke vragen gebruiken geminimaliseerde onderwerptermen in plaats van volledige gesprekken of onnodige identificerende details. De app toont werkelijke uitgaande queries; zij belooft geen onfeilbare automatische anonimisering. Broninstructies zijn gegevens, geen opdrachten aan het systeem. Webbewijs blijft gescheiden van toegelaten tekstedities en voldoet aan hetzelfde bronbeleid. Mislukte toegang of ontbrekende dekking levert een zichtbare beperking op. Web-uit veroorzaakt nul zoek-/fetchaanroepen.
 

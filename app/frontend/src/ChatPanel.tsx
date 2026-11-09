@@ -1,14 +1,16 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { api, ApiError } from './api';
 import { chatTranslate } from './chat-i18n';
 import { locales, translate } from './i18n';
 import { answerSegments, canUseConnection, chatRequest, collections, RequestError } from './research-chat';
 import { ParallelPassageReader } from './ParallelPassageReader';
+import { WebEvidenceCard, WebResearchStatus } from './WebEvidenceCard';
 import type { ChatResponse, ChatSettings, ChatTurn, Citation, Collection, Connection, ConversationRecord, ConversationSummary, CorpusSource, Locale, Participant, Persona } from './types';
 
 const personaIds = ['supportive', 'wisdom', 'textual', 'comparative', 'critical'] as const;
-export function ChatPanel({ locale, connections, settings, sources, personas, ready, draft, setDraft, openConnections, openSources, openResearch }: {
+export function ChatPanel({ locale, connections, settings, sources, personas, ready, webResearchAvailable, draft, setDraft, openConnections, openSources, openResearch }: {
   locale: Locale; connections: Connection[]; settings: ChatSettings | null; sources: CorpusSource[]; personas: Persona[]; ready: boolean;
+  webResearchAvailable: boolean;
   draft: string; setDraft: (value: string) => void; openConnections: () => void; openSources: () => void; openResearch: () => void;
 }) {
   const c = (key: Parameters<typeof chatTranslate>[1]) => chatTranslate(locale, key);
@@ -16,6 +18,7 @@ export function ChatPanel({ locale, connections, settings, sources, personas, re
   const [connectionId, setConnectionId] = useState('');
   const [persona, setPersona] = useState('supportive');
   const [answerLanguage, setAnswerLanguage] = useState('auto');
+  const [webResearch, setWebResearch] = useState(false);
   const [mode, setMode] = useState<'one' | 'roundtable'>('one');
   const [filter, setFilter] = useState<Collection[]>([...collections]);
   const [restrictSources, setRestrictSources] = useState(false);
@@ -39,6 +42,8 @@ export function ChatPanel({ locale, connections, settings, sources, personas, re
   const requestVersion = useRef(0);
   const citationPanel = useRef<HTMLElement>(null);
   const citationTrigger = useRef<HTMLElement | null>(null);
+  const webResearchHelp = useId();
+  const canResearchWeb = ready && webResearchAvailable && settings?.local_only === false;
   const selected = connections.find(item => item.id === connectionId);
   const allowed = (connection: Connection) => canUseConnection(connection, settings);
   const personaOptions = personas.length ? personas.map(item => item.id) : [...personaIds];
@@ -52,9 +57,10 @@ export function ChatPanel({ locale, connections, settings, sources, personas, re
   }, [ready]);
   useEffect(() => () => { request.current?.abort(); }, []);
   useEffect(() => { if (citation) citationPanel.current?.focus(); }, [citation]);
+  useEffect(() => { if (!canResearchWeb) setWebResearch(false); }, [canResearchWeb]);
 
   async function send() {
-    if (!draft.trim() || !selected || !allowed(selected) || !filter.length || (restrictSources && !sourceIds.length)) return;
+    if (request.current || !draft.trim() || !selected || !allowed(selected) || !filter.length || (restrictSources && !sourceIds.length)) return;
     const message = draft.trim();
     setBusy('chat'); setError(null); setStopped(false);
     const controller = new AbortController(); request.current = controller;
@@ -63,18 +69,20 @@ export function ChatPanel({ locale, connections, settings, sources, personas, re
       const answer = await api<ChatResponse>('/chat', { method: 'POST', signal: controller.signal, body: JSON.stringify(chatRequest({
         message, connectionId: selected.id, personaId: persona, answerLanguage, turns,
         conversationId: conversation?.id, sessionId, filter, sourceIds: restrictSources ? sourceIds : undefined,
+        webResearch: canResearchWeb && webResearch,
       })) });
       if (version !== requestVersion.current) return;
       setTurns(items => [...items, { ...answer, question: message, id: answer.turn_id ?? crypto.randomUUID() }]);
       if (answer.session_id) setSessionId(answer.session_id);
       setDraft('');
+      setWebResearch(false);
     } catch (problem) {
       if (version !== requestVersion.current) return;
       if (controller.signal.aborted) setStopped(true); else setError(problem);
     } finally { if (version === requestVersion.current) { setBusy(''); request.current = null; } }
   }
   function cancel() { ++requestVersion.current; request.current?.abort(); request.current = null; setBusy(''); setStopped(true); }
-  function newChat() { setTurns([]); setConversation(null); setSessionId(undefined); setCitation(null); setError(null); setStopped(false); setSaveOpen(false); setDraft(''); }
+  function newChat() { setTurns([]); setConversation(null); setSessionId(undefined); setCitation(null); setError(null); setStopped(false); setSaveOpen(false); setDraft(''); setWebResearch(false); }
   async function save() {
     if (!saveTitle.trim()) return;
     if (turns.length && !sessionId) { setError(new ApiError('session_expired', 'The temporary server session is no longer available.', 409)); return; }
@@ -90,8 +98,16 @@ export function ChatPanel({ locale, connections, settings, sources, personas, re
     setBusy('open'); setError(null);
     try {
       const record = await api<ConversationRecord>(`/conversations/${encodeURIComponent(id)}`);
-      setConversation(record); setSessionId(undefined); setCitation(null); setStopped(false); setSaveOpen(false); setDraft('');
-      setTurns(record.turns.map(turn => ({ ...turn, grounding: { mode: 'saved', retrieved_count: 0, collections: [] } })));
+      setConversation(record); setSessionId(undefined); setCitation(null); setStopped(false); setSaveOpen(false); setDraft(''); setWebResearch(false);
+      setTurns(record.turns.map(turn => ({
+        ...turn,
+        grounding: {
+          mode: turn.grounding?.mode ?? 'saved',
+          retrieved_count: turn.grounding?.retrieved_count ?? 0,
+          collections: turn.grounding?.collections ?? [],
+          web_research: turn.grounding?.web_research,
+        },
+      })));
     } catch (problem) { setError(problem); }
     finally { setBusy(''); }
   }
@@ -113,16 +129,61 @@ export function ChatPanel({ locale, connections, settings, sources, personas, re
       {!sources.length && <div className="notice"><span>{c('noSources')}</span><button className="text-button" onClick={openSources}>{c('sources')}</button></div>}
       <div className="chat-reading-layout"><div className="chat-thread" aria-label={t('chat')}>
         {!turns.length && <p className="chat-intro">{c('chatIntro')}</p>}
-        {turns.map(turn => <article className="chat-turn" key={turn.id}><div className="user-message" dir="auto">{turn.question}</div><div className="assistant-message" dir="auto">{answerSegments(turn.answer, turn.citations).map((segment, index) => segment.citation ? <button className="citation-button" key={index} onClick={() => showCitation(segment.citation!)}>{segment.text}</button> : <span key={index}>{segment.text}</span>)}</div><div className="turn-meta"><code>{turn.model_id}</code>{turn.grounding.mode !== 'saved' && <span>{c('evidenceCount')}: {turn.grounding.retrieved_count} · {turn.grounding.collections.map(id => c(id)).join(' · ')}</span>}</div>{turn.citations.length > 0 && <div className="citation-list">{turn.citations.map(item => <button className="citation-chip" key={item.id} onClick={() => showCitation(item)}>[{item.id}] {item.reference}</button>)}</div>}{turn.warnings.length > 0 && <details className="turn-warnings"><summary>{c('warnings')} ({turn.warnings.length})</summary><ul>{turn.warnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul></details>}</article>)}
+        {turns.map(turn => <article className="chat-turn" key={turn.id}>
+          <div className="user-message" dir="auto">{turn.question}</div>
+          <div className="assistant-message" dir="auto">{answerSegments(turn.answer, turn.citations).map((segment, index) => {
+            const source = segment.citation;
+            if (!source) return <span key={index}>{segment.text}</span>;
+            return <button className={`citation-button${source.kind === 'web' ? ' web-citation' : ''}`} key={index} onClick={() => showCitation(source)}>{segment.text}</button>;
+          })}</div>
+          <div className="turn-meta">
+            <code>{turn.model_id}</code>
+            {turn.grounding.mode !== 'saved' && <span>{c('evidenceCount')}: {turn.grounding.retrieved_count} · {turn.grounding.collections.map(id => c(id)).join(' · ')}</span>}
+          </div>
+          {turn.grounding.web_research && <WebResearchStatus research={turn.grounding.web_research} locale={locale} />}
+          {turn.citations.length > 0 && <div className="citation-list">
+            {turn.citations.map(item => <button className={`citation-chip${item.kind === 'web' ? ' web-citation' : ''}`} key={item.id} onClick={() => showCitation(item)}>
+              [{item.id}] {item.kind === 'web' ? <>{c('webEvidence')} · <bdi>{item.title}</bdi></> : <bdi>{item.reference}</bdi>}
+            </button>)}
+          </div>}
+          {turn.warnings.length > 0 && <details className="turn-warnings">
+            <summary>{c('warnings')} ({turn.warnings.length})</summary>
+            <ul>{turn.warnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul>
+          </details>}
+        </article>)}
       </div>{citation && <aside ref={citationPanel} tabIndex={-1} className="panel citation-panel" aria-label={c('citationDetails')}>
         <div className="panel-heading">
           <h2>{c('citationDetails')} [{citation.id}]</h2>
           <button className="text-button" onClick={() => { setCitation(null); citationTrigger.current?.focus(); }}>{c('close')}</button>
         </div>
-        <ParallelPassageReader key={citation.passage_id} snapshot={citation} locale={locale} cited />
-        <p className="helper">{c('citationCaveat')}</p>
+        {citation.kind === 'web' ? <WebEvidenceCard citation={citation} locale={locale} /> : <>
+          <ParallelPassageReader key={citation.passage_id} snapshot={citation} locale={locale} cited />
+          <p className="helper">{c('citationCaveat')}</p>
+        </>}
       </aside>}</div>
-      <form className="chat-composer" onSubmit={event => { event.preventDefault(); void send(); }}><label htmlFor="chat-draft" className="sr-only">{t('question')}</label><textarea id="chat-draft" value={draft} onChange={event => setDraft(event.target.value)} disabled={!!busy} placeholder={t('chatPlaceholder')} dir="auto" rows={4} /><div className="composer-footer"><span className="muted">{conversation ? c('savedConversation') : c('ephemeral')}</span><div className="button-row"><button type="button" className="button quiet" onClick={openResearch}>{t('openResearch')} ↗</button>{busy === 'chat' ? <button type="button" className="button secondary" onClick={cancel}>{c('cancel')}</button> : <button className="button primary" disabled={!ready || !!busy || !draft.trim() || !selected || !allowed(selected) || !sources.length || !filter.length || (restrictSources && !sourceIds.length)}>{c('ask')}</button>}</div></div>{busy === 'chat' && <p role="status" className="helper">{c('asking')}</p>}</form>
+      <form className="chat-composer" onSubmit={event => { event.preventDefault(); void send(); }}>
+        <label htmlFor="chat-draft" className="sr-only">{t('question')}</label>
+        <textarea id="chat-draft" value={draft} onChange={event => setDraft(event.target.value)} disabled={!!busy} placeholder={t('chatPlaceholder')} dir="auto" rows={4} />
+        <div className="web-research-controls">
+          <label className="checkbox-label">
+            <input type="checkbox" checked={canResearchWeb && webResearch} disabled={!canResearchWeb || !!busy}
+              aria-describedby={webResearchHelp} onChange={event => setWebResearch(event.target.checked)} />
+            {c('webResearch')}
+          </label>
+          <p id={webResearchHelp} className="helper">
+            {c(!webResearchAvailable ? 'webNotConfigured' : settings?.local_only !== false ? 'webLocalOnly' : 'webResearchHint')}
+          </p>
+        </div>
+        <div className="composer-footer">
+          <span className="muted">{conversation ? c('savedConversation') : c('ephemeral')}</span>
+          <div className="button-row">
+            <button type="button" className="button quiet" onClick={openResearch}>{t('openResearch')} ↗</button>
+            {busy === 'chat' ? <button type="button" className="button secondary" onClick={cancel}>{c('cancel')}</button>
+              : <button className="button primary" disabled={!ready || !!busy || !draft.trim() || !selected || !allowed(selected) || !sources.length || !filter.length || (restrictSources && !sourceIds.length)}>{c('ask')}</button>}
+          </div>
+        </div>
+        {busy === 'chat' && <p role="status" className="helper">{c('asking')}</p>}
+      </form>
       <div className="conversation-actions"><button className="button secondary" disabled={!!busy} onClick={newChat}>{c('newChat')}</button>{!conversation && <button className="button secondary" disabled={!ready || !!busy} onClick={() => setSaveOpen(value => !value)}>{c('saveFuture')}</button>}{conversations.length > 0 && <label>{c('conversations')}<select value={conversation?.id ?? ''} disabled={!!busy} onChange={event => void openConversation(event.target.value)}><option value="">—</option>{conversations.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label>}</div>
       {saveOpen && !conversation && <form className="panel save-conversation" onSubmit={event => { event.preventDefault(); void save(); }}><p className="helper">{c('futureHint')}</p><label>{c('conversationTitle')}<input required maxLength={200} value={saveTitle} onChange={event => setSaveTitle(event.target.value)} /></label><button className="button primary" disabled={!ready || !!busy || !saveTitle.trim()}>{c('saveFuture')}</button></form>}
     </>}

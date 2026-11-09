@@ -24,6 +24,8 @@ a complete research conversation, neutrality or historical-script accuracy.
    passage or published translation beside it. The cited edition stays the anchor.
    A mapped reference may display a different verse number; an uncertain match is
    labelled for comparison only. Source and licence links remain visible.
+   For online context, enable **Web research** for the question. Its citations
+   show a separate evidence card with the consulted excerpt and a link to the source.
 6. Choose **Save conversation**, enter a title and optionally attach it to a
    dossier. Saving includes all validated temporary turns. Reopen the saved
    conversation to continue it in PostgreSQL.
@@ -86,10 +88,41 @@ English translation. Opening the reader does not send text to a model.
 
 There is **no vector-embedding retrieval or dedicated local reranker worker yet**,
 despite the pgvector foundations. The current relevance selector is the selected
-chat model. Chat does not autonomously search the web, discover or
-download manuscripts, or generate Roundtable discussions. Starter imports are
-explicit catalog downloads. Broader web research and Roundtable generation remain
-future work.
+chat model. Autonomous manuscript acquisition and Roundtable generation remain
+future work. Starter imports are explicit catalog downloads.
+
+## Optional web research
+
+**Web research** starts off for each question. With Local-only off and this option
+enabled, the selected model proposes at most two short public search topics.
+Only the accepted search terms go to the search services. The planner is asked to
+omit personal details, and the backend rejects obvious identifiers and links.
+Query minimization is not guaranteed anonymization. The turn records the actual
+queries; search services also receive normal connection metadata such as IP address.
+Local-only prevents lookup even with a local inference model selected.
+
+The initial search services need no separate API key: [DOAJ](https://doaj.org/terms/)
+supplies publisher-deposited abstract metadata under its metadata terms, and
+[Wikimedia TextExtracts](https://www.mediawiki.org/wiki/Extension:TextExtracts)
+supplies introductory text with a link to the consulted revision. A local model
+can also use indexed [OpenAlex abstracts](https://help.openalex.org/data/works/attributes/);
+the app keeps those out of cloud prompts when the excerpt's processing rights
+are unclear. This is a bounded search of public indexes rather than an
+unrestricted crawler or a guarantee of full-text access.
+
+The web sources supplement the editions. A publisher abstract supports what its
+authors report; it does not establish what the whole paper says. An encyclopedia
+excerpt gives background and is labelled as such. A search snippet or a title alone
+is not usable evidence. Only rights-eligible excerpts are sent to a cloud model.
+The evidence panel shows the original URL, retrieval time, source type and available
+attribution, publication date and licence. The same source markers open both web
+evidence and edition passages, each in its own reader. Web evidence has no
+scripture collection membership. A failure or lack of usable results does not
+disable local corpus retrieval.
+
+Explicitly saving a conversation preserves its cited excerpt and provenance with
+the turn. Chat does not add fetched sources to the corpus or retain entire pages.
+Earlier web-derived answers are not passed back as trusted evidence to cloud models.
 
 ## Private processing and saving
 
