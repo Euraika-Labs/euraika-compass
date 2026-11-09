@@ -7,6 +7,7 @@ from sqlalchemy import func, select
 
 from compass.adapters.base import AdapterError
 from compass.chat import ChatService, checked_answer, while_connected
+from compass.corpus import STARTERS
 from compass.errors import APIError
 from compass.models import ChatTurn, Conversation, Edition, Passage, Source
 
@@ -80,6 +81,8 @@ class ControlledConnection:
         self.cloud_blocked = False
         self.remote = False
         self.ranked_ids = ["C1"]
+        self.reference = None
+        self.answer = "A gentle reflection on the retrieved test passage [S1]."
 
     def get(self, connection_id):
         if connection_id != "actual-test-boundary":
@@ -97,13 +100,14 @@ class ControlledConnection:
         assert self.application.state.database.engine.pool.checkedout() == 0
         self.calls.append((connection_id, messages))
         if max_tokens == 1200:
-            text = json.dumps({"queries": ["mourning comfort"]})
+            text = json.dumps({"queries": ["mourning comfort"], "references": [self.reference] if self.reference else []})
         elif max_tokens == 800:
-            text = json.dumps({"selections": {collection: self.ranked_ids for collection in ["torah", "bible", "quran"]}})
+            collections = json.loads(messages[-1]["content"])["collections"]
+            text = json.dumps({"selections": {collection: self.ranked_ids for collection in collections}})
         elif self.invalid:
             text = json.dumps({"answer": "A fabricated source [S99]"})
         else:
-            text = json.dumps({"answer": "A gentle reflection on the retrieved test passage [S1].", "limitations": ["Synthetic transport fixture."]})
+            text = json.dumps({"answer": self.answer, "limitations": ["Synthetic transport fixture."]})
         return {"text": text, "model_id": "boundary-model", "usage": {}}
 
 
@@ -207,3 +211,42 @@ def test_irrelevant_or_invented_candidate_ids_never_become_answer_sources(postgr
     response = client.post("/api/v1/chat", json={"message": "mourning", "connection_id": "actual-test-boundary"})
     assert response.status_code in {422, 502} and response.json()["error"]["code"] == code
     assert len(connection.calls) == 2  # No final generation and no invented answer.
+
+
+@pytest.mark.postgres
+@pytest.mark.parametrize("translation_only", [False, True])
+def test_chat_cites_aligned_original_without_ignoring_source_filter(postgres_app, translation_only):
+    client, application, _ = postgres_app
+    ids = {}
+    with application.state.database.sessions() as session:
+        # Model only sees this synthetic fixture; alignment still runs against the
+        # same DB identity and passage joins used for imported starter editions.
+        for starter_id, content in [("kjv-1769", "Fixture translation"), ("sblgnt-grc", "Δεῖγμα")]:
+            starter = STARTERS[starter_id]
+            source = Source(title=starter.title, url=starter.source_url, source_type=starter.source_type,
+                            provenance={"starter_id": starter_id, "content_sha256": starter.sha256,
+                                        "snapshot_format": "original_download", "format": starter.format,
+                                        "snapshot_path": f"sources/{starter.sha256}/original",
+                                        "download_url": starter.download_url},
+                            use_limits={"external_processing": True})
+            session.add(source)
+            session.flush()
+            ids[starter_id] = str(source.id)
+            edition = Edition(source_id=source.id, title=starter.edition_title, language=starter.language,
+                              revision=starter.revision, collection_memberships=list(starter.collections))
+            session.add(edition)
+            session.flush()
+            session.add(Passage(edition_id=edition.id, reference="John 1:1", text=content))
+        session.commit()
+    connection = configure_chat(application)
+    connection.remote = True
+    connection.reference = {"collection": "bible", "reference": "John 1:1"}
+    connection.answer = "The English edition is stored [S1]." if translation_only else "The English [S1] and Greek [S2] editions are stored."
+    response = client.post("/api/v1/chat", json={
+        "message": "Compare John 1:1", "connection_id": "actual-test-boundary",
+        "collection_filter": ["bible"], "source_ids": [ids["kjv-1769"]] if translation_only else None,
+    })
+    assert response.status_code == 200, response.text
+    citations = response.json()["citations"]
+    assert [item["language"] for item in citations] == (["en"] if translation_only else ["en", "grc"])
+    assert citations[-1]["quote"] == ("Fixture translation" if translation_only else "Δεῖγμα")

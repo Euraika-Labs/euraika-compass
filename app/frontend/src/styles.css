@@ -264,7 +264,7 @@ details[open] summary { margin-bottom: 12px; }
 .edition-row p { color: var(--muted); }
 .source-provenance { margin-block: 16px; font-size: 12px; }
 .source-provenance pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 11px; line-height: 1.7; color: var(--muted); }
-.source-card a, .citation-panel a { font-size: 12px; color: var(--blue); overflow-wrap: anywhere; }
+.source-card a, .passage-card a { font-size: 12px; color: var(--blue); overflow-wrap: anywhere; }
 .manual-import { padding: 20px; margin-block: 26px 20px; }
 .manual-import summary { color: var(--navy); font-weight: 650; font-size: 14px; }
 .manual-import[open] > :not(summary) { margin-top: 15px; }
@@ -281,7 +281,6 @@ details[open] summary { margin-bottom: 12px; }
 .collection-options, .source-options { display: flex; flex-wrap: wrap; gap: 14px 24px; }
 .source-options { margin-block: 13px; }
 .chat-reading-layout { display: grid; grid-template-columns: minmax(0,1fr); gap: 22px; }
-.chat-reading-layout.with-citation { grid-template-columns: minmax(0,1.3fr) minmax(270px,1fr); align-items: start; }
 .chat-thread { min-width: 0; }
 .chat-intro { padding: 40px 25px; text-align: center; color: var(--muted); line-height: 1.9; font-size: 14px; }
 .chat-turn { margin-bottom: 25px; }
@@ -295,12 +294,34 @@ details[open] summary { margin-bottom: 12px; }
 .citation-chip { padding: 5px 8px; border: 1px solid #cbdaeb; background: #f3f7fd; color: var(--blue); border-radius: 5px; font-size: 11px; }
 .turn-warnings { font-size: 11px; color: #765521; margin-top: 10px; line-height: 1.7; }
 .turn-warnings ul { padding-inline-start: 20px; }
-.citation-panel { position: sticky; top: 20px; padding: 20px; min-width: 0; display: grid; gap: 13px; }
-.citation-panel .panel-heading { margin-bottom: 0; }
-.citation-panel > p, .citation-panel > strong { font-size: 12px; line-height: 1.7; }
-.citation-panel blockquote { margin: 0; padding: 14px 16px; border-inline-start: 3px solid var(--gold); background: #faf7ef; font-size: 16px; line-height: 2; white-space: pre-wrap; overflow-wrap: anywhere; }
-.citation-panel details { font-size: 11px; color: var(--muted); }
-.citation-panel details code { display: block; margin-top: 7px; }
+.citation-panel { padding: 20px; min-width: 0; display: grid; gap: 13px; }
+.citation-panel .panel-heading { padding-bottom: 0; }
+.passage-lookup { padding: 20px; margin-bottom: 22px; display: grid; gap: 14px; }
+.passage-lookup h2 { color: var(--navy); }
+.passage-lookup form { display: grid; gap: 8px; }
+.passage-search-fields { display: grid; grid-template-columns: minmax(160px, 1.4fr) minmax(130px, .8fr) minmax(160px, 1fr) auto; align-items: end; gap: 12px; }
+.passage-results { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; max-height: 245px; overflow: auto; padding: 4px; margin-inline: -4px; }
+.passage-result { display: grid; gap: 5px; padding: 11px 12px; text-align: start; color: var(--navy); background: #f5f8fd; border: 1px solid var(--line); border-radius: 7px; min-width: 0; }
+.passage-result:hover, .passage-result[aria-pressed="true"] { background: #e6effb; border-color: #8faed0; }
+.passage-result strong { font-size: 12px; overflow-wrap: anywhere; }
+.passage-preview { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; line-height: 1.6; color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+.parallel-reader { display: grid; gap: 12px; min-width: 0; }
+.parallel-picker { max-width: 580px; }
+.parallel-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: start; }
+.parallel-grid.has-parallel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.passage-card { display: grid; gap: 9px; min-width: 0; padding: 16px; border: 1px solid #d7e2ef; border-radius: 9px; background: #f9fbfe; }
+.passage-card h3 { color: var(--navy); overflow-wrap: anywhere; }
+.passage-edition, .passage-card > strong { font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.passage-edition { color: var(--muted); }
+.passage-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.passage-kind { color: var(--blue); background: #e8eff9; justify-self: start; }
+.passage-quote { margin: 0; padding: 14px 16px; border-inline-start: 3px solid var(--gold); background: #faf7ef; font-size: 16px; line-height: 1.85; text-align: start; white-space: pre-wrap; overflow-wrap: anywhere; }
+.passage-quote:lang(he), .passage-quote:lang(ar) { font-family: "Noto Naskh Arabic", "Times New Roman", serif; font-size: 22px; line-height: 1.9; }
+.passage-quote:lang(grc), .passage-quote:lang(el) { font-family: "Times New Roman", serif; font-size: 19px; }
+.passage-rights { display: grid; gap: 5px; border-top: 1px solid var(--line); padding-top: 9px; color: var(--muted); font-size: 11px; line-height: 1.65; overflow-wrap: anywhere; }
+.passage-hash { font-size: 11px; color: var(--muted); }
+.passage-hash code { display: block; margin-top: 7px; }
+.parallel-notice { margin: 0; }
 .real-chat .chat-composer { margin-top: 20px; }
 .conversation-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-block: 20px; }
 .conversation-actions label { margin-inline-start: auto; min-width: 200px; }
@@ -310,8 +331,7 @@ details[open] summary { margin-bottom: 12px; }
   .connection-layout { grid-template-columns: minmax(0,1fr); }
   .chat-tools { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
   .chat-tools > .text-button { margin-block: 0; }
-  .chat-reading-layout.with-citation { grid-template-columns: minmax(0,1fr); }
-  .citation-panel { position: static; }
+  .passage-search-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 760px) {
   .sidebar-bottom { grid-template-columns: repeat(2,minmax(0,1fr)); }
@@ -323,4 +343,6 @@ details[open] summary { margin-bottom: 12px; }
   .real-chat .composer-footer > .button-row { justify-content: space-between; }
   .source-cards, .starter-grid { grid-template-columns: minmax(0,1fr); }
   .user-message { margin-inline-start: 15px; }
+  .passage-search-fields, .passage-results, .parallel-grid.has-parallel { grid-template-columns: minmax(0, 1fr); }
+  .passage-lookup, .citation-panel, .passage-card { padding: 14px; }
 }

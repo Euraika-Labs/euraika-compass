@@ -22,6 +22,7 @@ from compass.db import Database
 from compass.errors import error_response, install_error_handlers
 from compass.jobs import JobService
 from compass.middleware import UploadBodyLimitMiddleware
+from compass.parallel_text import router as parallel_text_router
 from compass.storage import BlobStore
 
 logger = logging.getLogger("compass")
@@ -129,6 +130,7 @@ def create_app(settings: Settings | None = None, registry=None) -> FastAPI:
     application.include_router(router)
     application.include_router(connections_router)
     application.include_router(corpus_router)
+    application.include_router(parallel_text_router)
     application.include_router(chat_router)
     frontend = settings.frontend_dir
     if (frontend / "assets").is_dir():

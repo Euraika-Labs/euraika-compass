@@ -19,10 +19,12 @@ from compass.corpus import (
     import_corpus,
     neighbor_references,
     normalize_search_text,
+    original_search_lexemes,
     parse_bible_snapshot,
     parse_ebible_torah_snapshot,
     parse_starter,
     parse_tanzil_snapshot,
+    parse_uxlc_snapshot,
     reference_values,
     retrieve_passages,
     router,
@@ -125,6 +127,39 @@ def test_reference_lookup_accepts_actual_edition_naming_without_rewriting_citati
     assert set(reference_values("1 John 4:8")) == {"1 john 4:8", "i john 4:8"}
     assert "revelation of john 1:1" in reference_values("Revelation 1:1")
     assert reference_values("John 11:35-34") == []
+    assert "john 1:1" in reference_values("Johannes 1:1")
+    assert "psalms 23:1" in reference_values("Psalmen 23:1")
+    assert "genesis 1:1" in reference_values("Gen. 1:1")
+    assert {"1 john 4:8", "i john 4:8"} <= set(reference_values("I Johannes 4:8"))
+
+
+def test_uxlc_preserves_exact_payload_with_internal_bidi_and_native_versification():
+    verse = "\xa0מֶלֶךְ־שָׁלוֹם׃ \u202a[x]\u202c "
+    line = f"\u202b\xa026\xa0\u05c320\xa0\xa0{verse}\u202c\r\n"
+    stream = io.BytesIO()
+    with zipfile.ZipFile(stream, "w") as archive:
+        for book in ("Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy"):
+            archive.writestr(
+                f"TextFiles/{book}.txt",
+                "\u202axxxx    Title\u202c\r\n" + line + "\u202axxxx    End of book.",
+            )
+        archive.writestr("TextFiles/Joshua.txt", "Outside the Torah selection.")
+    parsed = parse_uxlc_snapshot(stream.getvalue(), torah_only=True)
+    assert len(parsed) == 5
+    assert parsed[1].reference == "Exodus 20:26"
+    assert parsed[1].text.encode("utf-8") == verse.encode("utf-8")
+
+
+@pytest.mark.parametrize(("marked", "unmarked"), [
+    ("מֶלֶךְ", "מלך"),
+    ("ΛΌΓΟς", "λογος"),
+    ("ٱلرَّحْمَـٰنِ", "الرحمن"),
+])
+def test_original_script_search_lexemes_match_with_or_without_marks(marked, unmarked):
+    tokens = original_search_lexemes(marked)
+    assert len(tokens) == 1 and tokens[0].isascii()
+    assert tokens == original_search_lexemes(unmarked)
+    assert original_search_lexemes("English topic search") == []
 
 
 def test_context_lookup_keys_stay_in_chapter_and_reject_ambiguous_references():
@@ -276,7 +311,12 @@ def test_http_starter_import_uses_verified_snapshot_and_is_repeatable(corpus_app
     monkeypatch.setattr(module, "download_starter", controlled_download)
     client, application, _ = corpus_app
     metadata = client.get("/api/v1/corpus/starters").json()["items"]
-    assert {row["id"] for row in metadata} == {"jps-1917-torah", "kjv-1769", "pickthall-en"}
+    assert {row["id"] for row in metadata if row["source_type"] == "translation"} == {
+        "jps-1917-torah", "kjv-1769", "pickthall-en"
+    }
+    assert {row["id"] for row in metadata if row["source_type"] == "original_text"} == {
+        "uxlc-he-torah", "uxlc-he-tanakh-rest", "sblgnt-grc", "tanzil-uthmani-ar"
+    }
     response = client.post("/api/v1/corpus/starters/pickthall-en/import")
     assert response.status_code == 201, response.text
     source = response.json()
@@ -286,6 +326,39 @@ def test_http_starter_import_uses_verified_snapshot_and_is_repeatable(corpus_app
     assert snapshot.read_bytes() == raw
     assert client.post("/api/v1/corpus/starters/pickthall-en/import").json()["id"] == source["id"]
     assert client.post("/api/v1/corpus/starters/not-a-preset/import").status_code == 404
+
+
+@pytest.mark.postgres
+def test_pg_original_scripts_match_unmarked_queries_and_return_exact_quotes(corpus_app):
+    client, application, _ = corpus_app
+    cases = (
+        ("he", "torah", "Genesis 1:1", "מֶלֶךְ־שָׁלוֹם׃ ", "מלך"),
+        ("grc", "bible", "John 1:1", " ⟦Λόγος⟧ ", "λογος"),
+        ("ar", "quran", "1:1", "ٱلرَّحْمَـٰنِ ۩ ۞\n", "الرحمن"),
+    )
+    licence_url = "https://example.org/fixture-licence"
+    for language, collection, reference, original, query in cases:
+        body = payload(
+            title=f"Original-script fixture ({language})",
+            source_type="original_text",
+            edition={"title": f"Test {language}", "language": language, "revision": "v1",
+                     "collection_memberships": [collection]},
+            passages=[{"reference": reference, "text": original}],
+            provenance={"licence_url": licence_url},
+        )
+        with application.state.database.sessions() as session:
+            imported = import_corpus(session, body, application.state.settings.data_dir)
+        response = client.get("/api/v1/corpus/search", params={
+            "q": query, "collection": collection, "source_id": imported["id"],
+        })
+        assert response.status_code == 200, response.text
+        results = response.json()["items"]
+        assert len(results) == 1
+        passage = results[0]
+        assert passage["quote"].encode("utf-8") == original.encode("utf-8")
+        assert passage["quote_sha256"] == hashlib.sha256(original.encode("utf-8")).hexdigest()
+        assert passage["licence_url"] == licence_url
+        assert client.get(f"/api/v1/passages/{passage['passage_id']}").json()["quote"] == original
 
 
 @pytest.mark.postgres

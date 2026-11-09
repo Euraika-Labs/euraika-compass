@@ -1,8 +1,8 @@
 """Traceable text imports and lexical retrieval, with original bytes kept separately.
 
-Only the three hard-coded starter URLs are fetched by this module. A user import's
+Only catalog starter URLs are fetched by this module. A user import's
 URL is attribution metadata, never an instruction to fetch an arbitrary address.
-No starter is a manuscript, a critical edition, or an interpretive authority.
+Starter texts are identified electronic editions. Manuscript images are a separate workflow.
 """
 
 import hashlib
@@ -13,7 +13,7 @@ import re
 import tempfile
 import unicodedata
 import zipfile
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Annotated, Any, Literal
@@ -37,11 +37,13 @@ MAX_PASSAGES = 40_000
 MAX_TOTAL_TEXT_BYTES = 16 * 1024 * 1024
 MAX_METADATA_BYTES = 64 * 1024
 COLLECTIONS = frozenset({"torah", "bible", "quran"})
-TORAH_BOOKS = frozenset({"Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy"})
+TORAH_BOOK_NAMES = ("Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy")
+TORAH_BOOKS = frozenset(TORAH_BOOK_NAMES)
 SCROLLMAPPER_REVISION = "59b18c5af5845728c275d5b7178ad0d024172b1f"
 SCROLLMAPPER_RAW = (
     f"https://raw.githubusercontent.com/scrollmapper/bible_databases/{SCROLLMAPPER_REVISION}"
 )
+SBLGNT_COMMIT = "d7f35adca9ec410e1d1499c63b4dd989d76c8d4d"
 
 
 class ImportModel(BaseModel):
@@ -174,6 +176,10 @@ class Starter:
     passage_count: int
     rights_note: str
     provenance_note: str
+    source_type: str = "translation"
+    external_processing: bool = True
+    verified_on: str = "2026-11-08"
+    selection: str | None = None
 
     def metadata(self) -> dict:
         return {
@@ -182,7 +188,7 @@ class Starter:
             "language": self.language,
             "collections": list(self.collections),
             "description": self.description,
-            "source_type": "translation",
+            "source_type": self.source_type,
             "url": self.source_url,
             "download_url": self.download_url,
             "revision": self.revision,
@@ -190,8 +196,45 @@ class Starter:
             "content_sha256": self.sha256,
             "rights_note": self.rights_note,
             "licence_url": self.licence_url,
-            "external_processing": True,
+            "external_processing": self.external_processing,
         }
+
+
+UXLC_TORAH = Starter(
+    id="uxlc-he-torah",
+    title="UXLC 2.6 — Torah in Hebrew",
+    edition_title="Unicode/XML Leningrad Codex 2.6 (Torah)",
+    language="he",
+    collections=("torah", "bible"),
+    description=(
+        "Genesis–Deuteronomy in the publisher's Full/Accents electronic text. "
+        "Uses Hebrew Bible verse numbering. The Torah appears in both collections."
+    ),
+    download_url="https://www.tanach.us/TextFiles/Tanach.txt.zip",
+    source_url="https://www.tanach.us/",
+    licence_url="https://www.tanach.us/License.html",
+    sha256="71d958aec48ec62d11240bc5d13e7a2234ee921c1d162bdd1664f09c4688e446",
+    revision="UXLC 2.6 / build 27.7 (18 Oct 2026)",
+    format="uxlc-full-accents-torah",
+    passage_count=5853,
+    rights_note=(
+        "Tanach.us permits unrestricted viewing and copying of its biblical Hebrew text "
+        "and requests attribution. Cite Unicode/XML Leningrad Codex 2.6, build 27.7, "
+        "Tanach.us Inc., West Redding, CT, October 2026. The publisher has separate terms "
+        "for site files and fonts."
+    ),
+    provenance_note=(
+        "Official Tanach.us Full/Accents UTF-8 text archive of the Unicode/XML Leningrad "
+        "Codex, an electronic transcription derived from WLC 4.20 and revised by Tanach.us. "
+        "This Hebrew Bible edition contains Aramaic passages in parts of the Tanakh. The "
+        "app reads exact verse payloads with cantillation, vocalization and transcription "
+        "markers. The edition preserves the publisher's chapter and verse boundaries."
+    ),
+    source_type="original_text",
+    external_processing=True,
+    verified_on="2026-11-09",
+    selection="Genesis–Deuteronomy only",
+)
 
 
 STARTERS = {
@@ -286,12 +329,123 @@ STARTERS = {
             "itself cautions that translations are not replacements for the Arabic text."
         ),
     ),
+    UXLC_TORAH.id: UXLC_TORAH,
+    "uxlc-he-tanakh-rest": replace(
+        UXLC_TORAH,
+        id="uxlc-he-tanakh-rest",
+        title="UXLC 2.6 — Tanakh Prophets and Writings",
+        edition_title="Unicode/XML Leningrad Codex 2.6 (Prophets and Writings)",
+        collections=("bible",),
+        description=(
+            "Prophets and Writings in Hebrew and Aramaic from the same UXLC edition as "
+            "the Torah starter. Includes all 34 book files outside Genesis–Deuteronomy."
+        ),
+        format="uxlc-full-accents-rest",
+        passage_count=17360,
+        selection="Prophets and Writings, excluding Genesis–Deuteronomy",
+    ),
+    "sblgnt-grc": Starter(
+        id="sblgnt-grc",
+        title="SBLGNT 1.2 — Greek New Testament",
+        edition_title="SBL Greek New Testament 1.2 (Holmes)",
+        language="grc",
+        collections=("bible",),
+        description=(
+            "Michael W. Holmes's Greek critical edition of the 27 New Testament books. "
+            "Retains the publisher's punctuation, accents and editorial brackets."
+        ),
+        download_url=f"https://codeload.github.com/Faithlife/SBLGNT/zip/{SBLGNT_COMMIT}",
+        source_url=f"https://github.com/Faithlife/SBLGNT/tree/{SBLGNT_COMMIT}",
+        licence_url="https://sblgnt.com/license/",
+        sha256="bcb9cfd8678a863be77c01641aab14c31515e7057852b5abfe0920aac73cbf56",
+        revision=f"SBLGNT 1.2 / publisher commit {SBLGNT_COMMIT[:12]}",
+        format="sblgnt-text-zip",
+        passage_count=7939,
+        rights_note=(
+            "SBL Greek New Testament, edited by Michael W. Holmes. Copyright 2010 by the "
+            "Society of Biblical Literature and Logos Bible Software. Creative Commons "
+            "Attribution 4.0 International, https://creativecommons.org/licenses/by/4.0/. "
+            "Retain attribution and a link to the source edition and licence."
+        ),
+        provenance_note=(
+            "Publisher GitHub archive linked from the SBLGNT download site. The 27 text "
+            "files under data/sblgnt/text supply the base text. Each stored passage keeps "
+            "the exact tab-delimited Greek payload, including the editorial brackets "
+            "around John 7:53–8:11 added in version 1.2. The separate apparatus stays in "
+            "the original archive."
+        ),
+        source_type="original_text",
+        external_processing=True,
+        verified_on="2026-11-09",
+        selection="Complete Greek New Testament base text",
+    ),
+    "tanzil-uthmani-ar": Starter(
+        id="tanzil-uthmani-ar",
+        title="Tanzil 1.1 — Uthmani Arabic Quran",
+        edition_title="Tanzil Quran Text (Uthmani, Version 1.1)",
+        language="ar",
+        collections=("quran",),
+        description=(
+            "Complete Arabic Uthmani encoding of the Medina Mushaf, with pause, "
+            "sajdah and rub-el-hizb marks."
+        ),
+        download_url=(
+            "https://tanzil.net/pub/download/index.php?quranType=uthmani&outType=txt-2"
+            "&marks=true&sajdah=true&rub=true&alef=true&tatweel=true&agree=true"
+        ),
+        source_url="https://tanzil.net/download/",
+        licence_url="https://tanzil.net/docs/text_license",
+        sha256="7f30c647331a61100ebf24a80507dc0fcdd9f2df97f1312b5b2dfcb982a7f326",
+        revision="Tanzil Uthmani 1.1 / fully marked snapshot 2026-11-09",
+        format="tanzil-uthmani-text",
+        passage_count=6236,
+        rights_note=(
+            "Tanzil Quran Text (Uthmani, Version 1.1). Copyright (C) 2007-2026 Tanzil "
+            "Project, as printed in the downloaded snapshot. Creative Commons Attribution "
+            "3.0 and Tanzil's verbatim-copy terms. Attribute the Tanzil Project, retain its "
+            "copyright notice and link to https://tanzil.net/. The app uses this original "
+            "edition locally."
+        ),
+        provenance_note=(
+            "Official Tanzil UTF-8 surah|ayah|text download with pause, sajdah and "
+            "rub-el-hizb marks, superscript alefs and tatweel selected. The exact verse "
+            "payloads are retained. The complete private download includes the publisher's "
+            "copyright footer."
+        ),
+        source_type="original_text",
+        external_processing=False,
+        verified_on="2026-11-09",
+        selection="Complete 114-surah Uthmani Arabic Quran",
+    ),
 }
 
 
-def normalize_search_text(value: str) -> str:
+def normalize_search_text(value: str, *, with_original_lexemes: bool = False) -> str:
     """Search derivative only: canonical Unicode compatibility, case and spacing."""
-    return " ".join(unicodedata.normalize("NFKC", value).casefold().split())
+    normalized = " ".join(unicodedata.normalize("NFKC", value).casefold().split())
+    if with_original_lexemes:
+        return " ".join([normalized, *original_search_lexemes(value)])
+    return normalized
+
+
+ORIGINAL_SCRIPT = re.compile(r"[\u0370-\u03ff\u0590-\u06ff\u0750-\u077f\u08a0-\u08ff\u1f00-\u1fff]")
+WORD = re.compile(r"[^\W_]+", re.UNICODE)
+
+
+def original_search_lexemes(value: str) -> list[str]:
+    """Use ASCII lexemes so PostgreSQL's simple parser can index them even under locale C."""
+    folded = "".join(
+        char for char in unicodedata.normalize("NFKD", value)
+        if not unicodedata.category(char).startswith("M") and char != "\u0640"
+    ).replace("\u0671", "\u0627").casefold()
+    lexemes = []
+    for word in WORD.findall(folded):
+        if len(word) <= 1 or not ORIGINAL_SCRIPT.search(word):
+            continue
+        encoded = word.encode("utf-8")
+        if len(encoded) <= 512:
+            lexemes.append("cmpx" + encoded.hex())
+    return lexemes
 
 
 def invalid_format() -> APIError:
@@ -422,16 +576,130 @@ def parse_ebible_torah_snapshot(raw: bytes) -> list[ImportedPassage]:
         raise invalid_format() from exc
 
 
+UXLC_OTHER_BOOKS = (
+    "Joshua", "Judges", "1 Samuel", "2 Samuel", "1 Kings", "2 Kings", "Isaiah",
+    "Jeremiah", "Ezekiel", "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah",
+    "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi", "Psalms",
+    "Proverbs", "Job", "Song of Songs", "Ruth", "Lamentations", "Ecclesiastes", "Esther",
+    "Daniel", "Ezra", "Nehemiah", "1 Chronicles", "2 Chronicles",
+)
+SBLGNT_BOOKS = {
+    "Matt": "Matthew", "Mark": "Mark", "Luke": "Luke", "John": "John", "Acts": "Acts",
+    "Rom": "Romans", "1Cor": "1 Corinthians", "2Cor": "2 Corinthians", "Gal": "Galatians",
+    "Eph": "Ephesians", "Phil": "Philippians", "Col": "Colossians", "1Thess": "1 Thessalonians",
+    "2Thess": "2 Thessalonians", "1Tim": "1 Timothy", "2Tim": "2 Timothy", "Titus": "Titus",
+    "Phlm": "Philemon", "Heb": "Hebrews", "Jas": "James", "1Pet": "1 Peter", "2Pet": "2 Peter",
+    "1John": "1 John", "2John": "2 John", "3John": "3 John", "Jude": "Jude", "Rev": "Revelation",
+}
+UXLC_VERSE_LINE = re.compile(
+    r"\u202b\xa0(?P<verse>[1-9][0-9\xa0]{2})\u05c3"
+    r"(?P<chapter>[1-9][0-9\xa0]{2})\xa0(?P<text>.+)\u202c"
+)
+SBLGNT_VERSE_LINE = re.compile(
+    r"(?P<book>[A-Za-z0-9]+) (?P<chapter>[1-9][0-9]{0,2}):(?P<verse>[1-9][0-9]{0,2})\t(?P<text>.+)"
+)
+
+
+def original_archive_texts(raw: bytes, members: list[str]):
+    """Read explicitly named publisher text members in memory."""
+    if len(raw) > MAX_SNAPSHOT_BYTES:
+        raise APIError(413, "source_too_large", "The source snapshot exceeds the import size limit.")
+    try:
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            entries = archive.infolist()
+            if (
+                len(entries) > 128
+                or len({entry.filename for entry in entries}) != len(entries)
+                or sum(entry.file_size for entry in entries) > MAX_SNAPSHOT_BYTES
+                or any(entry.flag_bits & 1 for entry in entries)
+            ):
+                raise ValueError("Unsupported archive.")
+            remaining = MAX_TOTAL_TEXT_BYTES
+            for name in members:
+                entry = archive.getinfo(name)
+                if entry.is_dir() or entry.file_size > remaining:
+                    raise ValueError("Oversized or invalid text member.")
+                with archive.open(entry) as member:
+                    data = member.read(remaining + 1)
+                if len(data) != entry.file_size or len(data) > remaining:
+                    raise ValueError("Invalid decompressed text size.")
+                remaining -= len(data)
+                yield data.decode("utf-8-sig")
+    except (ValueError, OSError, KeyError, RuntimeError, zipfile.BadZipFile) as exc:
+        raise invalid_format() from exc
+
+
+def parse_uxlc_snapshot(raw: bytes, *, torah_only: bool) -> list[ImportedPassage]:
+    books = TORAH_BOOK_NAMES if torah_only else UXLC_OTHER_BOOKS
+    members = []
+    for book in books:
+        file_name = f"{book[2:]}_{book[0]}" if book[0].isdigit() else book.replace(" ", "_")
+        members.append(f"TextFiles/{file_name}.txt")
+    passages = []
+    try:
+        for book, content in zip(books, original_archive_texts(raw, members), strict=True):
+            previous = (0, 0)
+            for raw_line in content.split("\n"):
+                line = raw_line.removesuffix("\r")
+                if not line or line.startswith("\u202axxxx"):
+                    continue
+                match = UXLC_VERSE_LINE.fullmatch(line)
+                if match is None:
+                    raise ValueError("Invalid UXLC verse line.")
+                chapter, verse = int(match["chapter"]), int(match["verse"])
+                if (chapter, verse) <= previous or len(passages) >= MAX_PASSAGES:
+                    raise ValueError("Duplicate, out-of-order, or excess verse.")
+                previous = (chapter, verse)
+                passages.append(ImportedPassage(reference=f"{book} {chapter}:{verse}", text=match["text"]))
+            if previous == (0, 0):
+                raise ValueError("Missing UXLC book text.")
+        return passages
+    except ValueError as exc:
+        raise invalid_format() from exc
+
+
+def parse_sblgnt_snapshot(raw: bytes) -> list[ImportedPassage]:
+    members = [f"SBLGNT-{SBLGNT_COMMIT}/data/sblgnt/text/{code}.txt" for code in SBLGNT_BOOKS]
+    passages = []
+    try:
+        for (code, book), content in zip(SBLGNT_BOOKS.items(), original_archive_texts(raw, members), strict=True):
+            title, separator, text_rows = content.partition("\n")
+            if not separator or not title.strip():
+                raise ValueError("Missing SBLGNT title line.")
+            previous = (0, 0)
+            for raw_line in text_rows.split("\n"):
+                line = raw_line.removesuffix("\r")
+                if not line:
+                    continue
+                match = SBLGNT_VERSE_LINE.fullmatch(line)
+                if match is None or match["book"] != code:
+                    raise ValueError("Invalid SBLGNT verse line.")
+                chapter, verse = int(match["chapter"]), int(match["verse"])
+                if (chapter, verse) <= previous or len(passages) >= MAX_PASSAGES:
+                    raise ValueError("Duplicate, out-of-order, or excess verse.")
+                previous = (chapter, verse)
+                passages.append(ImportedPassage(reference=f"{book} {chapter}:{verse}", text=match["text"]))
+            if previous == (0, 0):
+                raise ValueError("Missing SBLGNT book text.")
+        return passages
+    except ValueError as exc:
+        raise invalid_format() from exc
+
+
 def parse_starter(starter: Starter, raw: bytes) -> CorpusImport:
     if hashlib.sha256(raw).hexdigest() != starter.sha256:
         raise APIError(
             502, "source_snapshot_changed",
             "The source has changed since verification. Import stopped; review the new edition first.",
         )
-    if starter.format == "tanzil-translation":
+    if starter.format in {"tanzil-translation", "tanzil-uthmani-text"}:
         passages = parse_tanzil_snapshot(raw)
     elif starter.format == "ebible-vpl-torah":
         passages = parse_ebible_torah_snapshot(raw)
+    elif starter.format in {"uxlc-full-accents-torah", "uxlc-full-accents-rest"}:
+        passages = parse_uxlc_snapshot(raw, torah_only=starter.format.endswith("torah"))
+    elif starter.format == "sblgnt-text-zip":
+        passages = parse_sblgnt_snapshot(raw)
     else:
         passages = parse_bible_snapshot(raw, torah_only=starter.format == "scrollmapper-torah")
     if len(passages) != starter.passage_count:
@@ -439,7 +707,7 @@ def parse_starter(starter: Starter, raw: bytes) -> CorpusImport:
     return CorpusImport(
         title=starter.title,
         url=starter.source_url,
-        source_type="translation",
+        source_type=starter.source_type,
         edition=ImportedEdition(
             title=starter.edition_title,
             language=starter.language,
@@ -447,15 +715,17 @@ def parse_starter(starter: Starter, raw: bytes) -> CorpusImport:
             collection_memberships=list(starter.collections),
         ),
         passages=passages,
-        use_limits=UseLimits(external_processing=True, rights_note=starter.rights_note),
+        use_limits=UseLimits(external_processing=starter.external_processing, rights_note=starter.rights_note),
         provenance={
             "starter_id": starter.id,
             "download_url": starter.download_url,
             "licence_url": starter.licence_url,
             "provenance_note": starter.provenance_note,
-            "verified_on": "2026-11-08",
+            "verified_on": starter.verified_on,
             "format": starter.format,
-            "selection": "Genesis–Deuteronomy only" if starter.format.endswith("torah") else "complete",
+            "selection": starter.selection or (
+                "Genesis–Deuteronomy only" if starter.format.endswith("torah") else "complete"
+            ),
         },
     )
 
@@ -570,6 +840,7 @@ def import_corpus(
         result = source_dto(session, existing)
         session.commit()
         return result
+    original_text = payload.source_type == "original_text"
     provenance = {
         **payload.provenance,
         "import_key": import_key,
@@ -578,7 +849,12 @@ def import_corpus(
         "snapshot_bytes": len(raw),
         "snapshot_format": "original_download" if snapshot is not None else "canonical_import_json",
         "imported_at": datetime.now(timezone.utc).isoformat(),
-        "search_normalization": "Unicode NFKC + casefold + whitespace; original text unchanged",
+        "search_normalization": (
+            "Unicode NFKC + casefold + whitespace, with additional ASCII hex search lexemes "
+            "from NFKD, mark and tatweel removal, alef-wasla folding, and casefold. "
+            "The original text is unchanged."
+            if original_text else "Unicode NFKC + casefold + whitespace; original text unchanged"
+        ),
         "source_assessment": "User-selected traceable source; authenticity is not a truth or authority rating.",
     }
     source = Source(
@@ -593,7 +869,7 @@ def import_corpus(
     for offset in range(0, len(payload.passages), 1000):
         session.execute(insert(Passage), [
             {"edition_id": edition.id, "reference": passage.reference, "text": passage.text,
-             "search_text": normalize_search_text(passage.text)}
+             "search_text": normalize_search_text(passage.text, with_original_lexemes=original_text)}
             for passage in payload.passages[offset:offset + 1000]
         ])
     result = source_dto(session, source)
@@ -612,6 +888,7 @@ def citation_dto(passage: Passage, edition: Edition, source: Source) -> dict:
         "reference": passage.reference,
         "quote": passage.text,
         "url": source.url,
+        "licence_url": source.provenance.get("licence_url"),
         "collection_memberships": edition.collection_memberships,
         "language": edition.language,
         "revision": edition.revision,
@@ -633,6 +910,26 @@ STOP_WORDS = frozenset(
     "me my of on or our should that the their them they this to was we were what when where "
     "which who why will with would you your".split()
 )
+BOOK_ALIASES = {
+    "gen": ("genesis",), "exo": ("exodus",), "lev": ("leviticus",),
+    "numeri": ("numbers",), "num": ("numbers",),
+    "deuteronomium": ("deuteronomy",), "deut": ("deuteronomy",),
+    "jozua": ("joshua",), "rechters": ("judges",),
+    "koningen": ("kings",), "kronieken": ("chronicles",),
+    "ps": ("psalms",), "psalm": ("psalms",), "psalmen": ("psalms",),
+    "spreuken": ("proverbs",), "prediker": ("ecclesiastes",),
+    "hooglied": ("song of songs", "song of solomon"),
+    "song of songs": ("song of solomon",), "song of solomon": ("song of songs",),
+    "jesaja": ("isaiah",), "jeremia": ("jeremiah",), "ezechiël": ("ezekiel",),
+    "matteüs": ("matthew",), "mattheüs": ("matthew",), "marcus": ("mark",),
+    "markus": ("mark",), "lucas": ("luke",), "lukas": ("luke",),
+    "johannes": ("john",), "joh": ("john",), "handelingen": ("acts",),
+    "romeinen": ("romans",), "korintiërs": ("corinthians",), "korinthiërs": ("corinthians",),
+    "petrus": ("peter",), "hebreeën": ("hebrews",), "jakobus": ("james",),
+    "openbaring": ("revelation", "revelation of john"),
+    "revelation": ("revelation of john",), "revelation of john": ("revelation",),
+}
+BOOK_PREFIXES = {"1": "i", "2": "ii", "3": "iii", "i": "1", "ii": "2", "iii": "3"}
 
 
 def reference_values(query: str) -> list[str] | None:
@@ -646,14 +943,13 @@ def reference_values(query: str) -> list[str] | None:
     book = match["book"]
     books = {book.strip()} if book else {""}
     if book:
-        names = {"psalm": "psalms", "revelation": "revelation of john",
-                 "song of songs": "song of solomon"}
-        books.add(names.get(book.strip(), book.strip()))
-        for numeric, roman in (("1", "i"), ("2", "ii"), ("3", "iii")):
-            if book.startswith(numeric + " "):
-                books.add(roman + book[len(numeric):])
-            if book.startswith(roman + " "):
-                books.add(numeric + book[len(roman):])
+        prefix, _, unprefixed_book = book.strip().partition(" ")
+        alternate_prefix = BOOK_PREFIXES.get(prefix)
+        if alternate_prefix and unprefixed_book:
+            for name in (unprefixed_book, *BOOK_ALIASES.get(unprefixed_book.removesuffix("."), ())):
+                books.update((f"{prefix} {name}", f"{alternate_prefix} {name}"))
+        else:
+            books.update(BOOK_ALIASES.get(book.strip().removesuffix("."), ()))
     return [f"{name + ' ' if name else ''}{chapter}:{number}"
             for name in sorted(books) for number in range(verse, end + 1)]
 
@@ -699,9 +995,10 @@ def retrieve_passages(
         statement = statement.where(func.lower(Passage.reference).in_(references))
     else:
         words = list(dict.fromkeys(
-            word for word in re.findall(r"[^\W_]+", normalize_search_text(query), re.UNICODE)
+            word for word in WORD.findall(normalize_search_text(query))
             if len(word) > 1 and word not in STOP_WORDS
         ))[:32]
+        words.extend(list(dict.fromkeys(original_search_lexemes(query)))[:32])
         if not words:
             return []
         # Only Unicode alphanumerics enter tsquery syntax. The expression is bound, never SQL.

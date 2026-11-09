@@ -20,8 +20,10 @@ a complete research conversation, neutrality or historical-script accuracy.
 4. In **Chat**, select an enabled connection, persona and answer language, then
    ask a question. Source selection restricts the editions used. The five personas
    change conversational method and share the same neutral evidence policy.
-5. Inspect citation wording, edition, source URL and snapshot metadata. Read
-   neighboring verses where available and distinguish quotation from interpretation.
+5. Open a citation to inspect the quoted edition and an available original-language
+   passage or published translation beside it. The cited edition stays the anchor.
+   A mapped reference may display a different verse number; an uncertain match is
+   labelled for comparison only. Source and licence links remain visible.
 6. Choose **Save conversation**, enter a title and optionally attach it to a
    dossier. Saving includes all validated temporary turns. Reopen the saved
    conversation to continue it in PostgreSQL.
@@ -66,14 +68,21 @@ and unmatched long explicit quotations are rejected. Visible ellipses may omit
 existing words in order, but cannot introduce new ones. After at most one repair,
 an invalid answer fails without saving a turn.
 
-Chat expands up to nine selected search passages with their immediate neighboring
-verses, within the same edition and chapter. It sends existing text only, capped
-at 27 passage items and 28,000 source-text characters. Citation inspection can also
+Chat expands up to nine selected search passages with eligible aligned editions
+and immediate neighbors within the same edition and chapter. A parallel is model
+evidence only if it passes source selection and cloud permissions and has an
+established reference alignment. Chat sends existing text only, capped at 27
+passage items and 28,000 source-text characters. Citation inspection can also
 fetch context with `GET /api/v1/passages/{id}/context?radius=1` (radius zero to two).
 Nearby context is not whole-book interpretation. Lexical matching, query rewriting,
 model selection and edition coverage can miss relevant passages; absence from
 retrieval does not establish agreement or disagreement. Response metadata keeps
 retrieved collections separate from collections actually cited in the answer.
+
+`GET /api/v1/passages/{id}/parallel` returns the cited edition and available
+parallel readings from local storage. The reader can show the local-only Tanzil
+Arabic text beside a Pickthall citation even when the remote model saw only the
+English translation. Opening the reader does not send text to a model.
 
 There is **no vector-embedding retrieval or dedicated local reranker worker yet**,
 despite the pgvector foundations. The current relevance selector is the selected

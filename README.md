@@ -17,7 +17,7 @@ The screenshots in **Design concepts** remain AI-generated explorations. Their e
 3. Choose **Start**, then **Open Web UI** when the local server is ready.
 4. Create a research dossier, attach your own photo and enter a manual reading. Saving a correction creates a new revision while preserving the original image and earlier text.
 5. For source-grounded Chat, add an account model in **Connections**, explicitly allow cloud processing if using a remote provider, and import selected editions in **Sources**. The recommended Mistral default is `mistral-large-4-0`; keys stay in private backend configuration.
-6. Ask a question in **Chat**, inspect its cited passages and choose **Save conversation** to preserve the temporary conversation. See the [grounded-chat guide](docs/development/grounded-chat.md).
+6. Look up a passage in **Sources** or open a citation in **Chat** to read the named source edition beside an available translation. Choose **Save conversation** to preserve a temporary chat. See the [grounded-chat guide](docs/development/grounded-chat.md).
 7. Use Pinokio's normal **Stop** control when finished. **Reset dependencies** targets generated environments/build files and preserves the separate personal data directory.
 
 The default data directory is per-user local application data, outside the checkout and OneDrive. An external PostgreSQL database can be configured explicitly. See [the development and API guide](docs/development/README.md) for configuration, local commands and model-worker setup. Pinokio Install, Start, Stop, dependency Reset and reinstall were exercised on Windows, including retained dossiers, readings and identical original image bytes. See the [verification record](docs/development/2026-11-08-skeleton-verification.md) for scope and limits.
@@ -32,8 +32,9 @@ The default data directory is per-user local application data, outside the check
 | Chat model connections | Real Mistral, OpenAI Responses, Anthropic Messages and compatible local/OpenRouter/Alibaba/MiniMax transports; private keys, explicit tests, cloud policy and frozen model selection |
 | Image-model execution | Requires separately installed/configured readers or endpoints; historical-script inference and accuracy remain unverified |
 | Workbench interface | Research, Sources, Chat and Connections workflows, five interface languages and RTL; AI-generated design concepts remain illustrative |
-| Corpus import and retrieval | Traceable JPS Torah, KJV Bible and Pickthall Quran translation starters, manual JSON import, immutable snapshots, PostgreSQL lexical search and nearby passage context |
-| Source-grounded chat | Multilingual query planning, relevance selection within each collection, verified reference lookups, nearby context, passage citations, five personas and explicit saving/reopening |
+| Corpus import and retrieval | UXLC Hebrew Bible, SBLGNT Greek New Testament and Tanzil Uthmani Quran; existing JPS, KJV and Pickthall translations; immutable source snapshots, lexical search and passage context |
+| Parallel reading | Named original-language editions and published English translations side by side from **Sources** and chat citations. Reference mappings and uncertain comparisons have distinct labels |
+| Source-grounded chat | Multilingual query planning, relevant passages and eligible parallel editions, exact edition citations, five personas and explicit saving/reopening |
 | Autonomous web research and AI Roundtable turns | Planned; no fabricated search results or model discussions |
 | Dossier export/import and complete backup UI | Planned; durable storage and migration foundations are present |
 | Temporary Chat image attachments | Planned; initial image uploads deliberately require a saved research dossier |
@@ -61,13 +62,14 @@ The earlier Research capture uses a neutral image-upload fixture and an explicit
 | [Development and API guide](docs/development/README.md) | Running the skeleton, private configuration, tests, API examples and remaining implementation |
 | [Source-grounded chat](docs/development/grounded-chat.md) | Connections, Mistral selection, source import, citations, private processing and conversation saving |
 | [Corpus imports](docs/development/corpus-imports.md) | Starter editions, provenance, original snapshots, lexical retrieval and source-use limits |
+| [Original-language editions](docs/development/original-text-sources.md) | Source releases, licensing, preserved scripts and import details |
 | [OCR/HTR and vision model research](docs/research/2026-11-08-ocr-htr-model-selection.md) | Local-first reading candidates for historical Hebrew, Greek and Arabic, optional cloud routes, and practical hardware/domain limits |
 | [Design concepts](docs/design/README.md) | UI explorations, saved images, prompts, and their limitations |
 | [Full-plan review — 8 November 2026](docs/reviews/2026-11-08-full-plan-review.md) | Historical review and two resolved inconsistencies; its former evaluation assumptions are superseded by the personal-use scope |
 
 ## Planned experience
 
-- Read named original-language editions alongside published translations.
+- Read further original-language editions and published translations alongside the initial parallel reader.
 - Use a focused **Chat** view for life questions and a flexible **Research** workspace with tabs, resizable panels, sources, and notes. Switch views without losing the conversation or evidence.
 - Ask focused passage questions or broader questions across the three collections.
 - Let the assistant search and read additional web sources when web research is enabled, with visible queries, provenance, and citations.

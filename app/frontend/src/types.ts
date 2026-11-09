@@ -86,17 +86,26 @@ export interface CorpusEdition {
 }
 export interface CorpusSource {
   id: string; title: string; url: string | null; source_type: string;
-  provenance: unknown; use_limits: { external_processing: boolean; rights_note?: string };
+  provenance: unknown; use_limits: SourceUseLimits;
   editions: CorpusEdition[];
 }
 export interface CorpusStarter {
-  id: string; title: string; language: string; collections: Collection[]; description?: string;
+  id: string; title: string; language: string; collections: Collection[]; description?: string; source_type?: string;
 }
-export interface Citation {
-  id: string; passage_id: string; source_id: string; source_title: string; edition_title: string;
+export interface PassageSnapshot {
+  passage_id: string; source_id: string; source_title: string; edition_title: string;
   reference: string; quote: string; url: string | null; collection_memberships: Collection[];
-  language: string; revision: string; content_sha256: string;
+  language: string; revision: string; content_sha256: string | null;
+  source_type?: string; edition_id?: string; quote_sha256?: string;
+  use_limits?: SourceUseLimits; licence_url?: string | null;
 }
+interface SourceUseLimits { external_processing: boolean; rights_note?: string | null; licence_url?: string | null }
+export interface Citation extends PassageSnapshot { id: string }
+export type PassageAlignment = 'same_reference' | 'mapped_reference' | 'compare_only';
+export interface ParallelPassage extends PassageSnapshot {
+  alignment: PassageAlignment; alignment_note: string;
+}
+export interface ParallelPassages { anchor: PassageSnapshot; parallels: ParallelPassage[]; warnings: string[] }
 export interface ChatResponse {
   answer: string; citations: Citation[]; warnings: string[]; connection_id: string; model_id: string;
   grounding: { mode: string; retrieved_count: number; collections: Collection[] }; turn_id?: string; session_id?: string;

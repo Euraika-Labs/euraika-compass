@@ -152,9 +152,9 @@ and `app/workers/` for the selected optional runtime profiles.
 
 ## Remaining implementation
 
-- Broader source-package formats, original-language editions, vector retrieval
-  and dedicated local reranker workers; the current import, lexical retrieval,
-  model-based relevance selection and cited chat are implemented.
+- Broader source-package formats, additional editions and translations, vector
+  retrieval and dedicated local reranker workers. The initial original-language
+  imports and parallel reader are described in [Original-language editions](original-text-sources.md).
 - Autonomous web search/extraction under the source policy.
 - AI-generated Roundtable turns and synthesis.
 - Model/runtime installation UI; actual historical-script quality trials.
