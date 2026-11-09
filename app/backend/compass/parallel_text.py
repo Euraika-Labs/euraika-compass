@@ -94,7 +94,9 @@ Rev|Revelation|Revelation of John|Apocalypse
 
 
 def _book_key(text: str) -> str:
-    return "".join(char for char in unicodedata.normalize("NFKC", text).casefold() if char.isalnum())
+    return "".join(
+        char for char in unicodedata.normalize("NFKC", text).casefold() if char.isalnum()
+    )
 
 
 def _book_aliases() -> tuple[dict[str, tuple[str, ...]], dict[str, str]]:
@@ -306,7 +308,9 @@ _KJV_BLOCKED = (
 )
 
 
-def _verse_maps() -> tuple[dict[VerseReference, VerseReference], dict[VerseReference, VerseReference]]:
+def _verse_maps() -> tuple[
+    dict[VerseReference, VerseReference], dict[VerseReference, VerseReference]
+]:
     hebrew_to_english = {}
     for line in _WLC_SPANS.splitlines():
         book, hebrew, english = line.split()
@@ -350,7 +354,9 @@ _GREEK_COMPARISONS = {
     VerseReference("Rev", 13, 1),
 }
 
-_SAME_NOTE = "The stored editions share this verse address. Wording and textual variants may differ."
+_SAME_NOTE = (
+    "The stored editions share this verse address. Wording and textual variants may differ."
+)
 _MAPPED_NOTE = "The Hebrew and English verse numbers differ here. A documented WLC/KJV map links these verse addresses."
 _COMPARE_NOTE = "Compare these readings independently. Their shared number does not establish a one-to-one textual correspondence."
 
@@ -375,9 +381,13 @@ def _alignment(
     ):
         return None
     if anchor_id in _QURAN_STARTERS:
-        return reference, "same_reference", (
-            "Both Tanzil editions use the same surah and ayah address. "
-            "The Arabic text and published translation retain their own wording."
+        return (
+            reference,
+            "same_reference",
+            (
+                "Both Tanzil editions use the same surah and ayah address. "
+                "The Arabic text and published translation retain their own wording."
+            ),
         )
     if "sblgnt-grc" in {anchor_id, target_id}:
         if reference in _GREEK_COMPARISONS:
@@ -499,15 +509,20 @@ def _parallel_lookup(session: Session, anchors: list[tuple]) -> dict[UUID, list[
                 continue
             edition, source, _ = profiles[edition_id]
             result[anchor_id].append(
-                {**citation_dto(matches[0], edition, source), "alignment": alignment,
-                 "alignment_note": note}
+                {
+                    **citation_dto(matches[0], edition, source),
+                    "alignment": alignment,
+                    "alignment_note": note,
+                }
             )
-        result[anchor_id].sort(key=lambda item: (
-            item["alignment"] == "compare_only",
-            item["language"] == "en",
-            item["edition_title"],
-            item["passage_id"],
-        ))
+        result[anchor_id].sort(
+            key=lambda item: (
+                item["alignment"] == "compare_only",
+                item["language"] == "en",
+                item["edition_title"],
+                item["passage_id"],
+            )
+        )
     return dict(result)
 
 
@@ -527,8 +542,14 @@ def parallel_passages(session: Session, passage_id: UUID) -> dict:
             "Coverage, an omitted verse or uncertain verse boundaries can leave a gap."
         )
     if any(item["alignment"] == "compare_only" for item in parallels):
-        warnings.append("Comparison-only passages need manual review before treating them as equivalents.")
-    return {"anchor": citation_dto(passage, edition, source), "parallels": parallels, "warnings": warnings}
+        warnings.append(
+            "Comparison-only passages need manual review before treating them as equivalents."
+        )
+    return {
+        "anchor": citation_dto(passage, edition, source),
+        "parallels": parallels,
+        "warnings": warnings,
+    }
 
 
 def parallel_evidence(
@@ -543,19 +564,18 @@ def parallel_evidence(
     limit = min(limit, _MAX_ANCHORS)
     if limit <= 0:
         return []
-    passage_ids = list(dict.fromkeys(UUID(str(item["passage_id"])) for item in anchors[:_MAX_ANCHORS]))
+    passage_ids = list(
+        dict.fromkeys(UUID(str(item["passage_id"])) for item in anchors[:_MAX_ANCHORS])
+    )
     if not passage_ids:
         return []
     rows = _passage_rows(session, passage_ids)
     allowed_ids = {str(value) for value in source_ids} if source_ids is not None else None
 
     def permitted(source_id, use_limits):
-        return (
-            (allowed_ids is None or str(source_id) in allowed_ids)
-            and (
-                not external_processing
-                or (isinstance(use_limits, dict) and use_limits.get("external_processing") is True)
-            )
+        return (allowed_ids is None or str(source_id) in allowed_ids) and (
+            not external_processing
+            or (isinstance(use_limits, dict) and use_limits.get("external_processing") is True)
         )
 
     allowed_rows = [
