@@ -42,6 +42,7 @@ function webEvidenceType(citation: WebCitation, t: (key: ChatKey) => string) {
 export function WebEvidenceCard({ citation, locale }: { citation: WebCitation; locale: Locale }) {
   const t = (key: ChatKey) => chatTranslate(locale, key);
   const sourceUrl = safeExternalUrl(citation.source_url, true);
+  const recordUrl = safeExternalUrl(citation.provenance?.record_url, true);
   const licenseUrl = safeExternalUrl(citation.license_url, true);
   const title = citation.title || citation.source_title || citation.edition_title || t('webEvidence');
   const publication = citation.publication || citation.edition_title;
@@ -68,6 +69,7 @@ export function WebEvidenceCard({ citation, locale }: { citation: WebCitation; l
     <h4>{t('webExcerpt')}</h4>
     <blockquote className="passage-quote" {...(citation.language ? passageLanguage(citation.language) : { dir: 'auto' })}>{citation.quote}</blockquote>
     {sourceUrl && <a href={sourceUrl} target="_blank" rel="noreferrer">{t('openSource')} ↗ <bdi>{new URL(sourceUrl).hostname}</bdi></a>}
+    {recordUrl && recordUrl !== sourceUrl && <a href={recordUrl} target="_blank" rel="noreferrer">{t('webIndexRecord')} ↗ <bdi>{new URL(recordUrl).hostname}</bdi></a>}
     {citation.content_sha256 && <details className="passage-hash">
       <summary>SHA-256</summary><code dir="ltr">{citation.content_sha256}</code>
     </details>}

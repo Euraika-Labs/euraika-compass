@@ -49,6 +49,8 @@ Online evidence (kind=web) is supplemental context. Attribute its claims to the 
 explain whether it is a publisher abstract, catalog record or page excerpt, and distinguish its
 claims from what the scripture edition says. A web source never establishes exact wording
 or a verse reference in a stored edition. If no edition passage is supplied, state that limit.
+For questions about scholarship, prefer relevant academic abstracts or catalog records over
+encyclopedia background when they support the claim. Assess relevance and attribution first.
 An online author's account of a hadith is secondary commentary, not authenticated direct testimony.
 Do not claim to have read material beyond the supplied excerpt. Use web citations only when relevant.
 Cite only supplied source identifiers, as [S1], [S2] etc, next to the claim they inform.
@@ -217,6 +219,10 @@ async def retrieve_web(queries: list[str], language: str, *, external_processing
     warnings = any(result.get("warnings") for result in results)
     unavailable = bool(results) and all(result.get("unavailable", False) for result in results)
     grounding = {"status": "unavailable" if unavailable else "no_results", "queries": queries}
+    provider_statuses = [result.get("providers", {}) for result in results]
+    if any(provider_statuses):
+        # Do not log the terms or source content; statuses are enough to diagnose service outages.
+        logger.info("Compass web lookup providers=%s", provider_statuses)
     if warnings and not unavailable:
         grounding["partial"] = True
     return list(hits.values())[:6], grounding

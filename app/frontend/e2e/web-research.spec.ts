@@ -13,6 +13,7 @@ const web: WebCitation = {
   evidence_type: 'publisher_abstract', retrieved_at: '2026-11-09T16:00:00Z', authors: ['Fixture Author'],
   issued_date: '2024-10-01', publication: 'Fixture Journal', provider: 'fixture-index',
   license: 'Fixture licence', license_url: 'https://example.org/licence', content_sha256: 'b'.repeat(64),
+  provenance: { record_url: 'https://example.org/index-record' },
 };
 const corpus: CorpusSource = {
   id: scripture.source_id, title: scripture.source_title, url: scripture.url, source_type: 'translation',
@@ -101,6 +102,7 @@ test('web research is a per-question opt-in and mixed citations open their own e
   await expect(webCard.getByText('Publisher abstract', { exact: true })).toBeVisible();
   await expect(webCard.getByText('Fixture Author', { exact: true })).toBeVisible();
   await expect(webCard.getByRole('link', { name: /Open original source/ })).toHaveAttribute('href', web.source_url);
+  await expect(webCard.getByRole('link', { name: /Open index record/ })).toHaveAttribute('href', web.provenance!.record_url!);
   await expect(webCard.getByRole('link', { name: /Fixture licence/ })).toHaveAttribute('href', web.license_url!);
   await expect(webCard.locator('img')).toHaveCount(0);
   expect(passageRequests).toEqual([]);

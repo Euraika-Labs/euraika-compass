@@ -107,6 +107,7 @@ export interface WebCitation {
   source_title?: string; edition_title?: string; publication?: string; language?: string;
   provider?: string; evidence_type?: string; authors?: string[]; issued_date?: string;
   license?: string; license_url?: string;
+  provenance?: { record_url?: string };
 }
 export type Citation = ScriptureCitation | WebCitation;
 export type PassageAlignment = 'same_reference' | 'mapped_reference' | 'compare_only';

@@ -14,7 +14,7 @@ test('live research cites both a stored edition and an online source', async ({ 
   await page.getByRole('button', { name: 'Chat', exact: true }).click();
   await page.getByRole('combobox', { name: 'Choose a connection', exact: true }).selectOption(connection!.id);
   await page.getByRole('textbox', { name: 'Research question', exact: true }).fill(
-    'Compare the Greek and English of John 1:1. Search for scholarly background on John 1:1 and the Logos. Distinguish what the verse says from how the authors of the online sources interpret it.',
+    'Compare the Greek and English of John 1:1. Search for scholarly background on John 1:1 and the Logos. Cite a relevant journal abstract if available, and distinguish what the verse says from how its authors interpret it.',
   );
   const webSwitch = page.getByRole('checkbox', { name: 'Web research for this question' });
   await expect(webSwitch).not.toBeChecked();
@@ -30,7 +30,9 @@ test('live research cites both a stored edition and an online source', async ({ 
   expect(reply.grounding.web_research?.queries?.length).toBeGreaterThan(0);
   const web = reply.citations.find(item => item.kind === 'web' && item.provider === 'doaj');
   const edition = reply.citations.find(item => item.kind !== 'web' && item.reference === 'John 1:1' && item.language === 'grc');
-  expect(web, 'The model should cite a retrieved publisher abstract.').toBeTruthy();
+  expect(web, 'The model should cite a retrieved publisher abstract. ' + JSON.stringify({
+    searches: reply.grounding.web_research, providers: reply.citations.filter(item => item.kind === 'web').map(item => item.provider),
+  })).toBeTruthy();
   expect(edition, 'The model should cite the stored Greek passage from John.').toBeTruthy();
   expect(reply.citations.some(item => item.kind !== 'web' && item.reference === 'John 1:1' && item.language === 'en')).toBeTruthy();
   if (!web || !edition || edition.kind === 'web') throw new Error('Missing mixed evidence');
