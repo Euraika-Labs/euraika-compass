@@ -32,7 +32,7 @@ class BlobStore:
             raise APIError(400, "invalid_asset", "The asset identifier is invalid.")
         return self.root / digest[:2] / digest
 
-    def store_image(self, data: bytes) -> ImageInfo:
+    def inspect_image(self, data: bytes) -> ImageInfo:
         if len(data) > self.max_bytes:
             raise APIError(413, "image_too_large", "The image exceeds the upload size limit.")
         if not data:
@@ -64,8 +64,13 @@ class BlobStore:
         ) as exc:
             raise APIError(422, "invalid_image", "The file is not a valid supported image.") from exc
 
-        digest = hashlib.sha256(data).hexdigest()
-        destination = self.path(digest)
+        return ImageInfo(hashlib.sha256(data).hexdigest(), media_type, width, height)
+
+    def store_image(self, data: bytes, *, expected: ImageInfo | None = None) -> ImageInfo:
+        info = self.inspect_image(data)
+        if expected is not None and info != expected:
+            raise APIError(502, "scan_metadata_mismatch", "The downloaded scan did not match its verified image metadata.")
+        destination = self.path(info.sha256)
         destination.parent.mkdir(parents=True, exist_ok=True)
         if not destination.exists():
             self.staging.mkdir(parents=True, exist_ok=True)
@@ -82,7 +87,7 @@ class BlobStore:
             finally:
                 if temp_path is not None:
                     temp_path.unlink(missing_ok=True)
-        return ImageInfo(digest, media_type, width, height)
+        return info
 
     def crop(self, digest: str, region: dict | None) -> tuple[Path, bool]:
         original = self.path(digest)

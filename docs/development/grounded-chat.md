@@ -88,8 +88,9 @@ English translation. Opening the reader does not send text to a model.
 
 There is **no vector-embedding retrieval or dedicated local reranker worker yet**,
 despite the pgvector foundations. The current relevance selector is the selected
-chat model. Autonomous manuscript acquisition and Roundtable generation remain
-future work. Starter imports are explicit catalog downloads.
+chat model. Manuscripts have a [separate catalog and reader workflow](manuscript-workflow.md);
+image-derived readings are not automatically admitted as chat passages.
+Roundtable generation remains future work. Starter imports are explicit catalog downloads.
 
 ## Optional web research
 

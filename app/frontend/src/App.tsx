@@ -3,11 +3,13 @@ import type { FormEvent, ReactNode } from 'react';
 import { api, ApiError, originalImageUrl } from './api';
 import { direction, locales, savedLocale, translate } from './i18n';
 import type { MessageKey } from './i18n';
-import type { ChatSettings, Connection, CorpusSource, CorpusStarter, Dossier, Health, ImageAsset, Job, Locale, ModelRoute, Persona, Region, Transcription, View } from './types';
+import type { ChatSettings, Connection, CorpusSource, CorpusStarter, Dossier, Health, ImageAsset, Job, Locale, ManuscriptProvenance, ModelRoute, Persona, Region, Transcription, View } from './types';
 import { jobFinished, validRegion } from './workspace';
 import { ChatPanel } from './ChatPanel';
 import { ConnectionsPanel } from './ConnectionsPanel';
 import { SourcesPanel } from './SourcesPanel';
+import { ManuscriptLinks, ManuscriptProcessingLimits, ManuscriptsPanel } from './ManuscriptsPanel';
+import { manuscriptTranslate } from './manuscript-i18n';
 import { chatTranslate } from './chat-i18n';
 import { RequestError } from './research-chat';
 
@@ -39,11 +41,22 @@ function JobState({ job, t }: { job: Job; t: Translator }) {
   return <span className={`pill ${key === 'failed' ? 'warning' : ''}`}>{t(key)}</span>;
 }
 
+function runsLocally(route: ModelRoute) {
+  return route.local ?? ['local', 'kraken', 'llama.cpp'].includes(route.provider);
+}
+
+function routeAllowedForScan(route: ModelRoute, scan: ManuscriptProvenance | null) {
+  if (!scan) return true;
+  return runsLocally(route) ? scan.use_limits.local_ocr === true : scan.use_limits.external_processing === true;
+}
+
 export default function App() {
   const [locale, setLocale] = useState<Locale>(savedLocale);
   const t: Translator = key => translate(locale, key);
   const c = (key: Parameters<typeof chatTranslate>[1]) => chatTranslate(locale, key);
+  const m = (key: Parameters<typeof manuscriptTranslate>[1]) => manuscriptTranslate(locale, key);
   const [view, setView] = useState<View>('research');
+  const [manuscriptsOpened, setManuscriptsOpened] = useState(false);
   const [health, setHealth] = useState<Health | null>(null);
   const [routes, setRoutes] = useState<ModelRoute[]>([]);
   const [personas, setPersonas] = useState<Persona[]>([]);
@@ -82,10 +95,13 @@ export default function App() {
   const dbReady = health?.database.ready === true;
   const unsaved = !!dossier && (formTitle !== dossier.title || formQuestion !== (dossier.question ?? '') || formNotes !== (dossier.notes ?? ''));
   const currentReading = transcriptions.find(item => item.id === readingId);
+  const manuscriptScan = image?.provenance?.kind === 'manuscript' ? image.provenance : null;
+  const unsavedReading = !!image && readingText !== (currentReading?.text ?? '');
   const activeJob = job?.image_id === image?.id ? job : null;
   const jobRunning = !!activeJob && !jobFinished(activeJob.status);
   const readingRoutes = routes.filter(route => route.kind !== 'chat');
   const selectedRoute = readingRoutes.find(route => route.id === readingRoute);
+  const canRunReadingRoute = !!selectedRoute?.available && routeAllowedForScan(selectedRoute, manuscriptScan);
   const regionValid = !useRegion || (!!image && validRegion(region, image.width, image.height));
 
   useEffect(() => {
@@ -149,11 +165,15 @@ export default function App() {
     setTranscriptions([]);
     setReadingId('');
     updateReadingText('');
+    if (asset.provenance?.kind === 'manuscript') {
+      setReadingRoute('');
+      setSourceLanguage(asset.provenance.language ?? '');
+    }
     setNotice(null);
     try { await loadReadings(asset); } catch (problem) { if (selectedImage.current === asset.id) setError(problem); }
   }
 
-  async function openDossier(id: string) {
+  async function openDossier(id: string, initialImageId?: string) {
     const version = ++selectionVersion.current;
     selectedDossier.current = id;
     selectedImage.current = '';
@@ -168,15 +188,29 @@ export default function App() {
       const [record, imageList] = await Promise.all([api<Dossier>(`/dossiers/${id}`), api<List<ImageAsset>>(`/dossiers/${id}/images`)]);
       if (selectionVersion.current !== version) return;
       if (selectedDossier.current !== record.id) return;
+      const firstImage = initialImageId ? imageList.items.find(item => item.id === initialImageId) : imageList.items[0];
+      if (initialImageId && !firstImage) throw new ApiError('asset_unavailable', 'The attached image could not be opened.', 404);
       setDossier(record);
       setFormTitle(record.title);
       setFormQuestion(record.question ?? '');
       setFormNotes(record.notes ?? '');
       setImages(imageList.items);
       setView('research');
-      if (imageList.items[0]) await selectImage(imageList.items[0]);
+      if (firstImage) await selectImage(firstImage);
     } catch (problem) { if (selectionVersion.current === version) setError(problem); }
     finally { if (selectionVersion.current === version) setBusy(''); }
+  }
+
+  async function openManuscriptImage(asset: ImageAsset) {
+    if (!dbReady || busy || unsaved || unsavedReading) return;
+    if (dossier?.id !== asset.dossier_id) {
+      await openDossier(asset.dossier_id, asset.id);
+      return;
+    }
+    setImages(items => items.some(item => item.id === asset.id) ? items : [...items, asset]);
+    setError(null);
+    setView('research');
+    await selectImage(asset);
   }
 
   async function createDossier(event: FormEvent) {
@@ -221,7 +255,7 @@ export default function App() {
   }
 
   async function startReading() {
-    if (!image || !selectedRoute?.available || !regionValid) return;
+    if (!image || !canRunReadingRoute || !regionValid) return;
     setBusy('read'); setError(null); setNotice(null);
     try {
       setJob(await api<Job>('/transcription-jobs', { method: 'POST', body: JSON.stringify({
@@ -312,7 +346,7 @@ export default function App() {
           <div className="button-row"><button className="button primary" disabled={!!busy || !newTitle.trim()}>{busy === 'create' ? t('working') : t('create')}</button><button className="button quiet" type="button" onClick={() => setCreateOpen(false)}>{t('cancel')}</button></div>
         </form>}
         <div className="dossier-list">{dossiers.length ? dossiers.map(item => <button key={item.id} className={`dossier-item ${dossier?.id === item.id ? 'selected' : ''}`} onClick={() => void openDossier(item.id)} disabled={!dbReady || !!busy}><span className="dossier-symbol" aria-hidden="true">▤</span><span><strong dir="auto">{item.title}</strong><small>{new Date(item.updated_at).toLocaleDateString(locale)}</small></span></button>) : <p className="muted empty-small">{t('noDossiers')}</p>}</div>
-        <div className="sidebar-bottom"><button className={`sidebar-link ${view === 'sources' ? 'selected' : ''}`} aria-current={view === 'sources' ? 'page' : undefined} onClick={() => setView('sources')}><span aria-hidden="true">▤</span>{c('sources')}</button><button className={`sidebar-link ${view === 'models' ? 'selected' : ''}`} aria-current={view === 'models' ? 'page' : undefined} onClick={() => setView('models')}><span aria-hidden="true">⚙</span>{t('models')}</button><div className="connection-note"><span className={`status-dot ${health ? 'online' : ''}`} />{health ? t('online') : t('offline')}</div><div className="connection-note"><span className={`status-dot ${dbReady ? 'online' : ''}`} />{dbReady ? t('dbReady') : t('dbUnavailable')}</div><button className="text-button" onClick={() => void refreshConnection()}>{t('retry')}</button></div>
+        <div className="sidebar-bottom"><button className={`sidebar-link ${view === 'sources' ? 'selected' : ''}`} aria-current={view === 'sources' ? 'page' : undefined} onClick={() => setView('sources')}><span aria-hidden="true">▤</span>{c('sources')}</button><button className={`sidebar-link ${view === 'manuscripts' ? 'selected' : ''}`} aria-current={view === 'manuscripts' ? 'page' : undefined} onClick={() => { setManuscriptsOpened(true); setView('manuscripts'); }}><span aria-hidden="true">▧</span>{m('manuscripts')}</button><button className={`sidebar-link ${view === 'models' ? 'selected' : ''}`} aria-current={view === 'models' ? 'page' : undefined} onClick={() => setView('models')}><span aria-hidden="true">⚙</span>{t('models')}</button><div className="connection-note"><span className={`status-dot ${health ? 'online' : ''}`} />{health ? t('online') : t('offline')}</div><div className="connection-note"><span className={`status-dot ${dbReady ? 'online' : ''}`} />{dbReady ? t('dbReady') : t('dbUnavailable')}</div><button className="text-button" onClick={() => void refreshConnection()}>{t('retry')}</button></div>
       </aside>
       <main id="workspace" className="main-workspace" tabIndex={-1}>
         {!!error && <Notice tone="warning"><span>{errorMessage(error, t)}</span>{error instanceof ApiError && <code>{error.code}</code>}</Notice>}
@@ -321,7 +355,10 @@ export default function App() {
 
         {view !== 'research' && <RequestError error={setupError} locale={locale} />}
         <div hidden={view !== 'chat'}><ChatPanel locale={locale} connections={connections} settings={chatSettings} sources={sources} personas={personas} ready={dbReady} webResearchAvailable={health?.features?.web_research === true} draft={chatDraft} setDraft={setChatDraft} openConnections={() => setView('models')} openSources={() => setView('sources')} openResearch={() => setView('research')} /></div>
-        {view === 'chat' ? null : view === 'sources' ? <SourcesPanel locale={locale} sources={sources} starters={starters} ready={dbReady} refresh={refreshSetup} /> : view === 'models' ? <section className="models-view">
+        {manuscriptsOpened && <div hidden={view !== 'manuscripts'}><ManuscriptsPanel locale={locale} dossiers={dossiers} ready={dbReady}
+          openBlocked={unsaved || unsavedReading} opening={!!busy} onCreateDossier={() => setCreateOpen(true)}
+          onOpen={asset => void openManuscriptImage(asset)} /></div>}
+        {view === 'chat' || view === 'manuscripts' ? null : view === 'sources' ? <SourcesPanel locale={locale} sources={sources} starters={starters} ready={dbReady} refresh={refreshSetup} /> : view === 'models' ? <section className="models-view">
           <ConnectionsPanel locale={locale} connections={connections} settings={chatSettings} ready={dbReady} refresh={refreshSetup} />
           <div className="section-heading"><div><p className="eyebrow">Euraika Compass</p><h1>{t('connectedModels')}</h1></div><button className="button secondary" onClick={() => void refreshConnection()}>{t('retry')}</button></div>
           <p className="lead">{t('modelIntro')}</p><Notice>{t('configurationHint')}</Notice><p className="helper">{t('connectionNotProbed')}</p>
@@ -332,9 +369,23 @@ export default function App() {
             <div className="dossier-details"><label className="title-field">{t('dossierTitle')}<input value={formTitle} onChange={event => setFormTitle(event.target.value)} maxLength={200} dir="auto" /></label><label className="question-field">{t('question')}<textarea value={formQuestion} onChange={event => setFormQuestion(event.target.value)} placeholder={t('questionPlaceholder')} rows={2} dir="auto" /></label><details className="notes-disclosure"><summary>{t('notes')}</summary><textarea aria-label={t('notes')} value={formNotes} onChange={event => setFormNotes(event.target.value)} placeholder={t('notesPlaceholder')} rows={5} dir="auto" /></details></div>
             <div className="research-grid"><section className="image-panel panel"><div className="panel-heading"><h2>{t('images')}</h2><label className={`button secondary file-label ${busy ? 'is-disabled' : ''}`}>{busy === 'upload' ? t('working') : t('addImage')}<input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" disabled={!dbReady || !!busy} onChange={event => void uploadImage(event.target.files?.[0])} /></label></div><p className="helper">{t('imageHint')}</p>
               {images.length > 0 && <div className="image-tabs" role="group" aria-label={t('images')}>{images.map(asset => <button className={image?.id === asset.id ? 'active' : ''} key={asset.id} disabled={!!busy} onClick={() => void selectImage(asset)}><bdi>{asset.filename}</bdi></button>)}</div>}
-              {image ? <><div className="image-meta"><span className="pill">{t('original')}</span><span className="muted">{t('dimensions')}: <bdi>{image.width} × {image.height}</bdi></span></div><div className="image-viewport"><div className="scan-frame"><img src={originalImageUrl(image.id)} alt={image.filename} onError={() => setImageFailed(true)} />{useRegion && regionValid && <div className="region-overlay" style={{ left: `${100 * region.x / image.width}%`, top: `${100 * region.y / image.height}%`, width: `${100 * region.width / image.width}%`, height: `${100 * region.height / image.height}%` }} />}</div></div>{imageFailed && <Notice tone="warning">{t('imageFailed')}</Notice>}<p className="source-caption">{t('unknownOrigin')} · <code dir="ltr">SHA-256 {image.sha256.slice(0, 16)}…</code></p><details className="region-controls"><summary>{t('region')} · {useRegion ? `${region.width} × ${region.height}` : t('fullImage')}</summary><label className="checkbox-label"><input type="checkbox" checked={useRegion} onChange={event => setUseRegion(event.target.checked)} />{t('useRegion')}</label>{useRegion && <div className="coordinate-grid" dir="ltr">{(['x', 'y', 'width', 'height'] as const).map(key => <label key={key}>{key === 'x' || key === 'y' ? key.toUpperCase() : t(key)}<input type="number" min={key === 'x' || key === 'y' ? 0 : 1} step={1} value={region[key]} onChange={event => setRegion(value => ({ ...value, [key]: event.target.value === '' ? 0 : Number(event.target.value) }))} /></label>)}</div>}{!regionValid && <p className="inline-warning">{t('invalidRegion')}</p>}</details></> : <div className="image-empty"><span aria-hidden="true">▧</span><p>{t('noImages')}</p></div>}
+              {image ? <><div className="image-meta"><span className="pill">{manuscriptScan ? m('manuscriptScan') : t('original')}</span><span className="muted">{t('dimensions')}: <bdi>{image.width} × {image.height}</bdi></span></div><div className="image-viewport"><div className="scan-frame"><img src={originalImageUrl(image.id)} alt={image.filename} onError={() => setImageFailed(true)} />{useRegion && regionValid && <div className="region-overlay" style={{ left: `${100 * region.x / image.width}%`, top: `${100 * region.y / image.height}%`, width: `${100 * region.width / image.width}%`, height: `${100 * region.height / image.height}%` }} />}</div></div>{imageFailed && <Notice tone="warning">{t('imageFailed')}</Notice>}<p className="source-caption">{manuscriptScan ? <><bdi>{manuscriptScan.institution}</bdi> · <bdi>{manuscriptScan.shelfmark}</bdi> · <bdi>{manuscriptScan.folio_label}</bdi></> : t('unknownOrigin')} · <code dir="ltr">SHA-256 {image.sha256.slice(0, 16)}…</code></p>
+                {manuscriptScan && <div className="manuscript-scan-record">
+                  <strong dir="auto">{manuscriptScan.manuscript_title}</strong>
+                  {manuscriptScan.attribution && <p className="helper" dir="auto">{manuscriptScan.attribution}</p>}
+                  <ManuscriptLinks locale={locale} catalogUrl={manuscriptScan.catalog_url} manifestUrl={manuscriptScan.manifest_url}
+                    rightsUrl={manuscriptScan.rights_url} folioUrl={manuscriptScan.source_url} />
+                  <ManuscriptProcessingLimits limits={manuscriptScan.use_limits} locale={locale} />
+                </div>}<details className="region-controls"><summary>{t('region')} · {useRegion ? `${region.width} × ${region.height}` : t('fullImage')}</summary><label className="checkbox-label"><input type="checkbox" checked={useRegion} onChange={event => setUseRegion(event.target.checked)} />{t('useRegion')}</label>{useRegion && <div className="coordinate-grid" dir="ltr">{(['x', 'y', 'width', 'height'] as const).map(key => <label key={key}>{key === 'x' || key === 'y' ? key.toUpperCase() : t(key)}<input type="number" min={key === 'x' || key === 'y' ? 0 : 1} step={1} value={region[key]} onChange={event => setRegion(value => ({ ...value, [key]: event.target.value === '' ? 0 : Number(event.target.value) }))} /></label>)}</div>}{!regionValid && <p className="inline-warning">{t('invalidRegion')}</p>}</details></> : <div className="image-empty"><span aria-hidden="true">▧</span><p>{t('noImages')}</p></div>}
             </section>
-              <section className="reading-panel panel"><div className="panel-heading"><h2>{t('transcription')}</h2><span className="pill">{currentReading?.kind === 'automatic' ? t('automatic') : currentReading ? t('userCorrected') : t('manualReading')}</span></div><label>{t('readingRoute')}<select value={readingRoute} onChange={event => setReadingRoute(event.target.value)}><option value="">{t('chooseRoute')}</option>{readingRoutes.map(route => <option key={route.id} value={route.id} disabled={!route.available}>{route.title}{!route.available ? ` — ${t('unavailable')}` : ''}</option>)}</select></label>{!readingRoutes.some(route => route.available) && <p className="helper">{t('noAvailableRoutes')}</p>}<label>{t('languageScript')}<input value={sourceLanguage} onChange={event => setSourceLanguage(event.target.value)} placeholder={t('languageScriptPlaceholder')} /></label><div className="button-row"><button className="button primary" disabled={!dbReady || !image || !selectedRoute?.available || !!busy || jobRunning || !regionValid} onClick={() => void startReading()}>{busy === 'read' ? t('working') : t('readText')}</button>{jobRunning && <button className="button secondary" disabled={!!busy} onClick={() => void cancelReading()}>{t('cancelJob')}</button>}</div><p className="helper">{t('routeDisclosure')}</p>{activeJob && <div className="job-state" role="status"><span>{t('jobStatus')}</span><JobState job={activeJob} t={t} /></div>}
+              <section className="reading-panel panel"><div className="panel-heading"><h2>{t('transcription')}</h2><span className="pill">{currentReading?.kind === 'automatic' ? t('automatic') : currentReading ? t('userCorrected') : t('manualReading')}</span></div><label>{t('readingRoute')}<select value={readingRoute} onChange={event => setReadingRoute(event.target.value)}><option value="">{t('chooseRoute')}</option>{readingRoutes.map(route => {
+                  const permitted = routeAllowedForScan(route, manuscriptScan);
+                  return <option key={route.id} value={route.id} disabled={!route.available || !permitted}>
+                    {route.title}{manuscriptScan && ` · ${m(runsLocally(route) ? 'localRoute' : 'cloudRoute')}`}
+                    {!permitted ? ` — ${m('routeRestricted')}` : !route.available ? ` — ${t('unavailable')}` : ''}
+                  </option>;
+                })}</select></label>{!readingRoutes.some(route => route.available && routeAllowedForScan(route, manuscriptScan)) && <p className="helper">{t('noAvailableRoutes')}</p>}<label>{t('languageScript')}<input value={sourceLanguage} onChange={event => setSourceLanguage(event.target.value)} placeholder={t('languageScriptPlaceholder')} /></label><div className="button-row"><button className="button primary" disabled={!dbReady || !image || !canRunReadingRoute || !!busy || jobRunning || !regionValid} onClick={() => void startReading()}>{busy === 'read' ? t('working') : t('readText')}</button>{jobRunning && <button className="button secondary" disabled={!!busy} onClick={() => void cancelReading()}>{t('cancelJob')}</button>}</div><p className="helper">{manuscriptScan ? m('readingRights') : t('routeDisclosure')}</p>
+                {manuscriptScan && selectedRoute && !runsLocally(selectedRoute) && <p className="helper">{t('routeDisclosure')}</p>}{activeJob && <div className="job-state" role="status"><span>{t('jobStatus')}</span><JobState job={activeJob} t={t} /></div>}
                 {transcriptions.length > 0 && <label>{t('revisions')}<select value={readingId} onChange={event => selectReading(event.target.value)}><option value="">{t('manualReading')}</option>{transcriptions.map((item, index) => <option value={item.id} key={item.id}>{index + 1} · {item.kind === 'automatic' ? t('automatic') : t('userCorrected')} · {new Date(item.created_at).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}</option>)}</select></label>}
                 <label className="reading-editor-label"><span className="sr-only">{t('transcription')}</span><textarea className="reading-editor" value={readingText} onChange={event => { updateReadingText(event.target.value); setNotice(null); }} disabled={!image || !dbReady} placeholder={t('readingPlaceholder')} dir="auto" spellCheck={false} rows={11} /></label><div className="reading-footer"><span className="muted">{t('notReviewed')}</span><button className="button secondary" disabled={!image || !dbReady || !!busy || !readingText.trim() || readingText === currentReading?.text} onClick={() => void saveReading()}>{busy === 'reading-save' ? t('working') : currentReading ? t('saveCorrection') : t('saveReading')}</button></div>{currentReading && <p className="engine-note"><code dir="ltr">{currentReading.engine} · {currentReading.model_id}</code></p>}<p className="helper">{t('uncertaintyNote')}</p><div className="translation-placeholder"><h3>{t('translation')}</h3><p>{t('translationPending')}</p></div>
               </section></div>

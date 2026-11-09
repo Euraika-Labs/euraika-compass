@@ -13,7 +13,7 @@ from compass.adapters.base import AdapterError
 from compass.errors import APIError
 from compass.jobs import TERMINAL
 from compass.models import Dossier, ImageAsset, Source, Transcription, TranscriptionJob
-from compass.routing import require_route
+from compass.routing import image_route_is_local, require_image_processing
 from compass.schemas import (
     DossierCreate,
     DossierPatch,
@@ -55,6 +55,7 @@ def health(request: Request):
         "features": {
             "dossiers": ready,
             "image_import": ready,
+            "manuscripts": ready,
             "manual_transcription": ready,
             "configured_model_adapters": True,
             "grounded_chat": ready,
@@ -66,13 +67,17 @@ def health(request: Request):
 
 @router.get("/models")
 def models(request: Request):
-    return {"items": request.app.state.registry.list_routes()}
+    return {"items": [
+        {**route, "local": image_route_is_local(route)}
+        for route in request.app.state.registry.list_routes()
+    ]}
 
 
 @router.patch("/models/{route_id}")
 def update_model(route_id: str, body: RoutePatch, request: Request):
     try:
-        return request.app.state.registry.set_enabled(route_id, body.enabled)
+        route = request.app.state.registry.set_enabled(route_id, body.enabled)
+        return {**route, "local": image_route_is_local(route)}
     except AdapterError as exc:
         raise adapter_error(exc) from exc
 
@@ -192,7 +197,7 @@ async def create_transcription_job(
         route = request.app.state.registry.get_route(body.route_id)
     except AdapterError as exc:
         raise adapter_error(exc) from exc
-    require_route(route, request.app.state.settings.local_only)
+    require_image_processing(image.provenance, route, request.app.state.connections.settings()["local_only"])
     region = body.region.model_dump() if body.region else None
     if region and (
         region["x"] + region["width"] > image.width

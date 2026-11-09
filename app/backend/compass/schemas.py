@@ -54,6 +54,7 @@ class ImageRead(ReadModel):
     height: int
     sha256: str
     created_at: datetime
+    provenance: dict | None = None
 
 
 class Region(BaseModel):

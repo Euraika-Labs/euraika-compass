@@ -14,7 +14,7 @@ from .http_readers import (
     transcribe_mistral,
     transcribe_qwen,
 )
-from .kraken_reader import transcribe_kraken
+from .kraken_reader import transcribe_kraken, wsl_kraken_prefix
 
 
 class ModelRegistry:
@@ -112,6 +112,20 @@ class ModelRegistry:
                     "Local HTR worker is configured; its installed profiles have not been probed.",
                 )
             executable = self._environ.get("COMPASS_KRAKEN_EXECUTABLE", "")
+            distribution = self._environ.get("COMPASS_KRAKEN_WSL_DISTRO", "")
+            model = self._environ.get(route["model_path_env"], "")
+            segmenter = self._environ.get("COMPASS_KRAKEN_SEGMENTATION_MODEL", "")
+            if distribution:
+                if not model or not segmenter or not executable:
+                    return (
+                        False, "missing_model",
+                        f"Configure the local WSL executable, segmenter and {route['model_path_env']}.",
+                    )
+                try:
+                    wsl_kraken_prefix(distribution, executable, model, segmenter)
+                except AdapterError as exc:
+                    return False, exc.code, exc.message
+                return True, "configured", "Kraken in WSL is configured; the selected weights are checked when reading."
             if (
                 not executable
                 or not shutil.which(executable)
@@ -124,8 +138,6 @@ class ModelRegistry:
                     "not_installed",
                     "Configure COMPASS_KRAKEN_EXECUTABLE with the installed reader executable.",
                 )
-            model = self._environ.get(route["model_path_env"], "")
-            segmenter = self._environ.get("COMPASS_KRAKEN_SEGMENTATION_MODEL", "")
             if not model or not Path(model).is_file():
                 return (
                     False,
@@ -276,9 +288,11 @@ class ModelRegistry:
             return await transcribe_kraken(
                 path,
                 self._environ["COMPASS_KRAKEN_EXECUTABLE"],
-                Path(self._environ[route["model_path_env"]]),
+                self._environ[route["model_path_env"]],
                 route["model_id"],
-                segmentation_model=Path(self._environ["COMPASS_KRAKEN_SEGMENTATION_MODEL"]),
+                segmentation_model=self._environ["COMPASS_KRAKEN_SEGMENTATION_MODEL"],
+                wsl_distribution=self._environ.get("COMPASS_KRAKEN_WSL_DISTRO", ""),
+                language=language,
             )
         if route["adapter"] == "qwen_local":
             return await transcribe_qwen(

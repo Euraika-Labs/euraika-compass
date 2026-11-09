@@ -15,7 +15,7 @@ The screenshots in **Design concepts** remain AI-generated explorations. Their e
 1. Download/import `https://github.com/Euraika-Labs/euraika-compass` as a Pinokio app.
 2. Choose **Install**. The launcher installs Python 3.12, compatible PostgreSQL 16.15/pgvector 0.8.6 binaries, locked backend dependencies and the frontend build. It does not download model weights or configure API keys.
 3. Choose **Start**, then **Open Web UI** when the local server is ready.
-4. Create a research dossier, attach your own photo and enter a manual reading. Saving a correction creates a new revision while preserving the original image and earlier text.
+4. Create a research dossier and attach your own photo, or open **Manuscripts** to find a folio from a scientific collection. Where the source allows it, attach the folio to your dossier and choose a configured OCR route in **Research**. Saving a correction creates a new revision while preserving the original image and earlier text. See the [manuscript workflow](docs/development/manuscript-workflow.md).
 5. For source-grounded Chat, add an account model in **Connections**, explicitly allow cloud processing if using a remote provider, and import selected editions in **Sources**. The recommended Mistral default is `mistral-large-4-0`; keys stay in private backend configuration.
 6. Look up a passage in **Sources** or open a citation in **Chat** to read the named source edition beside an available translation. Turn on **Web research** for a question to include separately labelled online evidence. Choose **Save conversation** to preserve a temporary chat. See the [grounded-chat guide](docs/development/grounded-chat.md).
 7. Use Pinokio's normal **Stop** control when finished. **Reset dependencies** targets generated environments/build files and preserves the separate personal data directory.
@@ -34,6 +34,7 @@ The default data directory is per-user local application data, outside the check
 | Workbench interface | Research, Sources, Chat and Connections workflows, five interface languages and RTL; AI-generated design concepts remain illustrative |
 | Corpus import and retrieval | UXLC Hebrew Bible, SBLGNT Greek New Testament and Tanzil Uthmani Quran; existing JPS, KJV and Pickthall translations; immutable source snapshots, lexical search and passage context |
 | Parallel reading | Named original-language editions and published English translations side by side from **Sources** and chat citations. Reference mappings and uncertain comparisons have distinct labels |
+| Institutional manuscript scans | Search five verified holdings across Hebrew, Greek and Arabic, view live folios, and save eligible image renditions with provenance for local OCR |
 | Source-grounded chat | Multilingual query planning, relevant passages and eligible parallel editions, exact edition citations, five personas and explicit saving/reopening |
 | Web research in Chat | Per-question online lookup with disclosed queries, publisher abstracts and page excerpts, separate clickable web citations and provenance snapshots |
 | AI Roundtable turns | Planned |
@@ -82,7 +83,7 @@ The earlier Research capture uses a neutral image-upload fixture and an explicit
 - Open the exact edition and passage behind an answer's citation.
 - Inspect translation alternatives and available linguistic annotations.
 - View genuine historical manuscript scans, including Quran manuscripts, with traceable provenance and separate transcription/translation layers. Original collection catalogs are useful anchors; verified authentic copies from other online hosts are also usable.
-- Import a photo/scan or select a consulted source image, choose a page or region, and read its text with an OCR, handwriting or image-capable model route. Inspect uncertain characters beside the image, correct the reading, compare available transcriptions, and translate or research the selected reading separately. This is a core planned feature.
+- Import a photo/scan or select an eligible folio, choose a page or region, and read its text with an OCR, handwriting or image-capable model route. Correct and save the reading in the dossier. Aligned scholarly transcriptions and a manuscript-specific translation flow are further work.
 - Compare interpretations through primary-text context, historical/linguistic evidence, counterevidence, and explicit limits, using the same method for all three collections.
 - Moderate a **Roundtable** of AI personas and analytical perspectives, with a shared evidence dossier and control over speaking turns and synthesis.
 - Save research dossiers with source, model, and policy versions.

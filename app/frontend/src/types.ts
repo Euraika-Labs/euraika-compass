@@ -1,5 +1,5 @@
 export type Mode = 'research' | 'chat';
-export type View = Mode | 'models' | 'sources';
+export type View = Mode | 'models' | 'sources' | 'manuscripts';
 export type Locale = 'en' | 'nl' | 'ar' | 'fr' | 'de';
 
 export interface Health {
@@ -13,6 +13,7 @@ export interface ModelRoute {
   title: string;
   model_id: string;
   provider: string;
+  local?: boolean;
   kind: 'htr' | 'vision' | 'ocr' | 'chat';
   enabled: boolean;
   configured: boolean;
@@ -40,6 +41,7 @@ export interface ImageAsset {
   height: number;
   sha256: string;
   created_at: string;
+  provenance?: ManuscriptProvenance | null;
 }
 export interface Region { x: number; y: number; width: number; height: number }
 export interface Transcription {
@@ -80,6 +82,31 @@ export interface Connection {
 }
 export interface ChatSettings { local_only: boolean }
 export type Collection = 'torah' | 'bible' | 'quran';
+export interface ManuscriptUseLimits {
+  preview: boolean;
+  local_storage: boolean;
+  local_ocr: boolean;
+  external_processing: boolean;
+}
+export interface Manuscript {
+  id: string; title: string; institution: string; shelfmark: string;
+  language: string; collections: Collection[]; date?: string | null; description?: string | null;
+  catalog_url: string; manifest_url: string; attribution: string; rights_url?: string | null;
+  use_limits: ManuscriptUseLimits;
+}
+export interface ManuscriptFolio {
+  id: string; label: string; index: number; canvas_id: string;
+  width: number; height: number; source_url?: string | null; preview_url: string | null;
+  use_limits: ManuscriptUseLimits;
+}
+export interface ManuscriptFolios { manuscript: Manuscript; items: ManuscriptFolio[]; manifest_sha256: string }
+export interface ManuscriptProvenance {
+  kind: 'manuscript'; manuscript_id: string; manuscript_title: string;
+  institution: string; shelfmark: string | null; language: string | null; date?: string | null;
+  catalog_url: string | null; manifest_url: string | null; manifest_sha256: string;
+  folio_id: string; folio_label: string; canvas_id: string; image_url: string; source_url?: string | null;
+  attribution: string | null; rights_url?: string | null; use_limits: ManuscriptUseLimits; retrieved_at: string;
+}
 export interface CorpusEdition {
   id: string; title: string; language: string; revision: string;
   collection_memberships: Collection[]; passage_count: number;

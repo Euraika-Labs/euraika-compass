@@ -1,5 +1,6 @@
 import asyncio
 import contextlib
+from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import UUID
@@ -10,16 +11,18 @@ from compass.adapters.base import AdapterError
 from compass.db import Database
 from compass.errors import APIError
 from compass.models import ImageAsset, Transcription, TranscriptionJob
+from compass.routing import require_image_processing
 from compass.storage import BlobStore
 
 TERMINAL = {"complete", "failed", "cancelled", "interrupted"}
 
 
 class JobService:
-    def __init__(self, database: Database, registry, blobs: BlobStore):
+    def __init__(self, database: Database, registry, blobs: BlobStore, local_only: Callable[[], bool]):
         self.database = database
         self.registry = registry
         self.blobs = blobs
+        self.local_only = local_only
         self.tasks: dict[UUID, asyncio.Task] = {}
         self.semaphore = asyncio.Semaphore(1)
 
@@ -87,6 +90,9 @@ class JobService:
                     image = session.get(ImageAsset, job.image_id)
                     if image is None:
                         raise APIError(404, "not_found", "The source image was not found.")
+                    registry = self.registry
+                    route = registry.get_route(job.route_id)
+                    require_image_processing(image.provenance, route, self.local_only())
                     digest, region = image.sha256, job.region
                     route_id, language, image_id = job.route_id, job.language, image.id
                     job.status = "running"
@@ -95,7 +101,7 @@ class JobService:
                     session.commit()
 
                 working_path, temporary = self.blobs.crop(digest, region)
-                result = await self.registry.transcribe(route_id, working_path, language)
+                result = await registry.transcribe(route_id, working_path, language)
                 with self.database.sessions() as session:
                     job = session.get(TranscriptionJob, job_id, with_for_update=True)
                     if job is None or job.status in TERMINAL:

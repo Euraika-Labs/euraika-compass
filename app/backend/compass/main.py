@@ -21,6 +21,7 @@ from compass.corpus import router as corpus_router
 from compass.db import Database
 from compass.errors import error_response, install_error_handlers
 from compass.jobs import JobService
+from compass.manuscripts import router as manuscripts_router
 from compass.middleware import UploadBodyLimitMiddleware
 from compass.parallel_text import router as parallel_text_router
 from compass.storage import BlobStore
@@ -64,7 +65,7 @@ def create_app(settings: Settings | None = None, registry=None) -> FastAPI:
             settings.data_dir / "routes.json",
             environ={**os.environ, **connections.reader_environ()},
         )
-    jobs = JobService(database, registry, blobs)
+    jobs = JobService(database, registry, blobs, lambda: connections.settings()["local_only"])
     chat_service = ChatService(database, connections)
 
     @asynccontextmanager
@@ -131,6 +132,7 @@ def create_app(settings: Settings | None = None, registry=None) -> FastAPI:
     application.include_router(connections_router)
     application.include_router(corpus_router)
     application.include_router(parallel_text_router)
+    application.include_router(manuscripts_router)
     application.include_router(chat_router)
     frontend = settings.frontend_dir
     if (frontend / "assets").is_dir():
