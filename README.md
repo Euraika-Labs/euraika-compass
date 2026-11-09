@@ -43,6 +43,10 @@ This is the actual source-grounded Chat view, using Mistral Large 4.0 and the im
 
 ![Actual Chat view with a stored source passage beside the answer](docs/development/images/grounded-chat.png)
 
+The parallel reader shows both named editions, with their own text, verse number and attribution. [Live parallel-reading checks](docs/development/2026-11-09-parallel-reading-verification.md)
+
+![Actual parallel reader with SBLGNT and KJV for John 1:1](docs/development/images/parallel-greek-kjv.png)
+
 The earlier Research capture uses a neutral image-upload fixture and an explicitly manual test reading. It is not manuscript evidence or model output.
 
 ![Running Research workspace with a saved manual test reading](docs/development/images/skeleton-research.png)
@@ -63,6 +67,7 @@ The earlier Research capture uses a neutral image-upload fixture and an explicit
 | [Source-grounded chat](docs/development/grounded-chat.md) | Connections, Mistral selection, source import, citations, private processing and conversation saving |
 | [Corpus imports](docs/development/corpus-imports.md) | Starter editions, provenance, original snapshots, lexical retrieval and source-use limits |
 | [Original-language editions](docs/development/original-text-sources.md) | Source releases, licensing, preserved scripts and import details |
+| [Parallel reading](docs/development/parallel-reading.md) | Edition pairing, verse-number mapping and evidence boundaries |
 | [OCR/HTR and vision model research](docs/research/2026-11-08-ocr-htr-model-selection.md) | Local-first reading candidates for historical Hebrew, Greek and Arabic, optional cloud routes, and practical hardware/domain limits |
 | [Design concepts](docs/design/README.md) | UI explorations, saved images, prompts, and their limitations |
 | [Full-plan review — 8 November 2026](docs/reviews/2026-11-08-full-plan-review.md) | Historical review and two resolved inconsistencies; its former evaluation assumptions are superseded by the personal-use scope |

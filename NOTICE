@@ -1,6 +1,11 @@
 Euraika Compass
 Copyright 2026 Euraika Labs
 
-This repository contains project documentation and AI-generated UI design concepts.
-It does not include third-party model weights, scripture corpora, translations, or
-linguistic datasets. Such materials retain their own rights and license conditions.
+This repository contains application code, documentation and UI design concepts.
+Downloaded scripture editions and model weights are stored separately and retain
+their own rights and license conditions.
+
+The Hebrew verse reference ranges adapt the Open Scriptures Hebrew Bible VerseMap
+under CC BY 4.0. Original work of the Open Scriptures Hebrew Bible available at
+https://github.com/openscriptures/morphhb. See docs/development/parallel-reading.md
+for the source revision, license link and modifications.
