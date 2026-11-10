@@ -67,14 +67,6 @@ export interface Job {
   updated_at: string;
   transcription_id?: string | null;
 }
-export interface Participant {
-  id: number;
-  persona: string;
-  perspective: string;
-  routeId: string;
-  pinned: boolean;
-}
-
 export type Provider = 'local' | 'mistral' | 'openrouter' | 'alibaba' | 'anthropic' | 'openai' | 'minimax';
 export interface Connection {
   id: string; title: string; provider: Provider; model_id: string; base_url: string | null;
@@ -173,4 +165,23 @@ export interface ChatTurn extends ChatResponse { question: string; id: string }
 export interface ConversationSummary { id: string; title: string; dossier_id: string | null; created_at: string }
 export interface ConversationRecord extends ConversationSummary {
   turns: { id: string; question: string; answer: string; citations: Citation[]; warnings: string[]; connection_id: string; model_id: string; created_at: string; grounding?: Partial<ChatGrounding> | null }[];
+}
+
+export interface RoundtableParticipant {
+  id: string; name: string; perspective: string; persona_id: string; connection_id: string;
+  model_id: string; provider: Provider; local: boolean; pinned: boolean;
+  status: 'ready' | 'speaking' | 'paused'; last_error?: { code: string; message: string } | null;
+}
+export interface RoundtableScope {
+  collection_filter: Collection[]; source_ids?: string[] | null; web_research?: boolean;
+  manuscript_dossier_id?: string | null; manuscript_revision_ids?: string[];
+}
+export interface RoundtableTurn extends Pick<ChatResponse, 'answer' | 'citations' | 'warnings' | 'connection_id' | 'model_id' | 'grounding'> {
+  id: string; participant_id: string; moderator_note?: string | null; synthesis?: boolean; created_at: string;
+}
+export interface RoundtableRoom {
+  id: string; topic: string; language: string; participants: RoundtableParticipant[]; turns: RoundtableTurn[];
+  scope: RoundtableScope; status: 'awaiting_moderator' | 'running' | 'stopped'; revision: number;
+  evidence: Citation[]; evidence_version: number | null; evidence_sha256?: string | null;
+  active_participant_id?: string | null; grounding?: ChatGrounding | null;
 }

@@ -189,6 +189,20 @@ def checked_answer(text: str, evidence: list[dict]) -> tuple[str, list[dict], li
     return answer.strip(), [supplied[label] for label in used], warnings
 
 
+def model_sources(evidence: list[dict]) -> list[dict]:
+    fields = ("id", "title", "edition_title", "language", "reference", "quote", "source_type",
+              "collection_memberships", "evidence_role", "alignment", "alignment_note",
+              "kind", "evidence_type", "publication", "authors", "issued_date")
+    labels = {item["passage_id"]: item["id"] for item in evidence if "passage_id" in item}
+    sources = []
+    for item in evidence:
+        source = {key: item[key] for key in fields if key in item}
+        if related := [labels[key] for key in item.get("parallel_for", []) if key in labels]:
+            source["parallel_to"] = related
+        sources.append(source)
+    return sources
+
+
 def web_queries(proposed: object) -> list[str]:
     """Accept short topic terms only. No fallback to raw user text or chat history."""
     if not isinstance(proposed, list):
@@ -324,18 +338,100 @@ class ChatService:
         finally:
             self.active.discard(key)
 
-    async def _answer(self, body: ChatRequest) -> dict:
+    async def prepare_roundtable_evidence(
+        self, scope: dict, participant: dict, *, external_processing: bool,
+        expected_signature: str, allow_manuscript_cloud: bool,
+    ) -> dict:
+        request = ChatRequest.model_validate({
+            **scope, "message": scope["topic"], "connection_id": participant["connection_id"],
+            "persona_id": participant["persona_id"], "allow_manuscript_cloud": allow_manuscript_cloud,
+            "history": [], "session_id": None, "conversation_id": None,
+        })
+        async with self.gate:
+            return await self._answer(
+                request, prepare_only=True, shared_external_processing=external_processing,
+                expected_signature=expected_signature,
+            )
+
+    async def roundtable_reply(
+        self, scope: dict, participant: dict, *, evidence: list[dict], history: list[dict],
+        moderator_note: str, expected_signature: str, allow_manuscript_cloud: bool,
+    ) -> dict:
+        connection_id = participant["connection_id"]
+        route = self.connections.get(connection_id)
+        if not route["local"]:
+            if any(item.get("use_limits", {}).get("external_processing") is not True for item in evidence):
+                raise APIError(403, "roundtable_source_restricted", "At least one shared source requires local processing.")
+            if not allow_manuscript_cloud and any(item.get("kind") == "manuscript" for item in evidence):
+                raise APIError(403, "manuscript_cloud_consent_required", "Confirm sending the shared transcript excerpts to this cloud model.")
+        language = scope.get("resolved_language") or scope.get("language", "auto")
+        action = (
+            "Synthesize the discussion. Identify agreements, objections, differing interpretations and open "
+            "questions. Distinguish shared evidence from participant opinions. Preserve disagreements with "
+            "reasons and do not declare a winning side."
+            if scope.get("synthesis") else
+            "Contribute only the selected participant's turn. Engage relevant earlier contributions by name, "
+            "including a disagreement or alternative when warranted. Follow the moderator's note as the "
+            "focus of this turn. Treat earlier contributions as arguments to examine, not as source evidence."
+        )
+        prompt = json.dumps({
+            "question": scope["topic"], "answer_language": language,
+            "participant": participant.get("name"), "persona_method": PERSONAS[participant["persona_id"]],
+            "perspective": participant.get("perspective"), "moderator_note": moderator_note,
+            "earlier_contributions": [{
+                "speaker": item.get("name") or item.get("participant_name") or item.get("participant_id"),
+                "text": item["answer"][:3200],
+            } for item in history[-8:]],
+            "evidence": model_sources(evidence),
+        }, ensure_ascii=False)
+        messages = [
+            {"role": "system", "content": SYSTEM + "\nThis is a human-moderated discussion. " + action
+             + " Use only the shared frozen evidence IDs for citations. Keep the turn under 240 words. "
+             "You have no authority to assign speakers or change the evidence."},
+            {"role": "user", "content": prompt},
+        ]
+        large4 = route.get("provider") == "mistral" and route.get("model_id", "").startswith("mistral-large-4")
+        options = {"reasoning_effort": "low"} if large4 else {}
+
+        async def complete(inputs):
+            return await self.connections.complete(
+                connection_id, inputs, expected_signature=expected_signature,
+                max_tokens=3200 if large4 else 1800, **options,
+            )
+
+        async with self.gate:
+            result = await complete(messages)
+            try:
+                answer, citations, warnings = checked_answer(result["text"], evidence)
+            except APIError as exc:
+                result = await complete([
+                    *messages,
+                    {"role": "user", "content": "Return the same requested contribution as JSON with answer and limitations. "
+                     f"The previous draft failed the {exc.code} check. Paraphrase without quotation marks and cite only "
+                     "the supplied source markers, with at least one citation next to a relevant claim."},
+                ])
+                answer, citations, warnings = checked_answer(result["text"], evidence)
+                warnings.append("The selected model regenerated the contribution to correct its citation format.")
+        return {"answer": answer, "citations": citations, "warnings": warnings, "model_id": result["model_id"]}
+
+    async def _answer(
+        self, body: ChatRequest, *, prepare_only: bool = False, shared_external_processing: bool = False,
+        expected_signature: str | None = None,
+    ) -> dict:
         from compass.corpus import context_passages, retrieve_passages
         from compass.manuscript_evidence import manuscript_candidates, selected_manuscript_readings
         from compass.parallel_text import parallel_evidence
 
         signature = self.connections.signature(body.connection_id)
         route = self.connections.get(body.connection_id)
-        if self.connections.signature(body.connection_id) != signature:
+        if self.connections.signature(body.connection_id) != signature or (
+            expected_signature is not None and signature != expected_signature
+        ):
             raise APIError(409, "connection_changed", "The selected connection changed. Submit the question again.")
         if not route["enabled"] or not route["configured"]:
             raise APIError(409, "connection_unavailable", "Configure and enable this connection before starting chat.")
         remote = not route["local"]
+        external_processing = remote or shared_external_processing
         large4 = route.get("provider") == "mistral" and route.get("model_id", "").startswith("mistral-large-4")
         planner_options = {"reasoning_effort": "low"} if large4 else {}
         answer_options = {"reasoning_effort": "high"} if large4 else {}
@@ -365,9 +461,9 @@ class ChatService:
             if body.manuscript_dossier_id is not None:
                 manuscript_readings, blocked_readings = selected_manuscript_readings(
                     session, body.manuscript_dossier_id, body.manuscript_revision_ids,
-                    external_processing=remote,
+                    external_processing=external_processing,
                 )
-                if remote and not body.allow_manuscript_cloud:
+                if external_processing and not body.allow_manuscript_cloud:
                     raise APIError(403, "manuscript_cloud_consent_required", "Confirm that matching manuscript transcript excerpts may be sent to the selected cloud model.")
             if body.conversation_id:
                 conversation = session.get(Conversation, body.conversation_id)
@@ -377,13 +473,18 @@ class ChatService:
                     raise APIError(422, "manuscript_dossier_conflict", "Choose a reading from the dossier linked to this conversation.")
                 previous = list(session.scalars(select(ChatTurn).where(ChatTurn.conversation_id == body.conversation_id).order_by(ChatTurn.created_at.desc(), ChatTurn.id.desc()).limit(4)))
                 previous_turns = [turn_json(turn) for turn in reversed(previous)]
-            else:
+            elif not prepare_only:
                 temporary_id, temporary = self.session(body.session_id)
                 if temporary["turns"]:
                     previous_turns = temporary["turns"][-4:]
             editions = list(session.execute(select(Edition, Source).join(Source, Edition.source_id == Source.id)))
-            allowed = [(edition, source) for edition, source in editions if (not remote or source.use_limits.get("external_processing") is True) and (body.source_ids is None or source.id in body.source_ids)]
-            if not allowed and not manuscript_readings:
+            allowed = [(edition, source) for edition, source in editions if (not external_processing or source.use_limits.get("external_processing") is True) and (body.source_ids is None or source.id in body.source_ids)]
+            if prepare_only and (blocked_readings or (
+                external_processing and body.source_ids is not None and
+                set(body.source_ids) - {source.id for _, source in allowed}
+            )):
+                raise APIError(403, "roundtable_source_restricted", "The selected sources cannot all be shared with this roster. Choose eligible sources or a local roster.")
+            if not allowed and not manuscript_readings and not (prepare_only and use_web):
                 if blocked_readings:
                     raise APIError(403, "manuscript_processing_blocked", "The selected reading cannot be processed by this model. Choose a local model or a permitted reading.")
                 raise APIError(409, "corpus_empty", "Import text sources and permit the selected processing route before asking a source-grounded question.")
@@ -464,7 +565,7 @@ class ChatService:
             if self.connections.settings()["local_only"]:
                 web_grounding = {"status": "restricted"}
             else:
-                web_items, web_grounding = await retrieve_web(online_queries, "en", external_processing=remote)
+                web_items, web_grounding = await retrieve_web(online_queries, "en", external_processing=external_processing)
         queries = queries or [body.message[:240]]
         folio_candidates = {
             f"M{index + 1}": item for index, item in enumerate(manuscript_candidates(manuscript_readings, manuscript_queries))
@@ -475,10 +576,10 @@ class ChatService:
                 candidates = OrderedDict()
                 for reference in references:
                     if reference["collection"] == collection:
-                        for item in retrieve_passages(session, reference["reference"], collection_filter=[collection], source_ids=body.source_ids, limit=6, external_processing=remote):
+                        for item in retrieve_passages(session, reference["reference"], collection_filter=[collection], source_ids=body.source_ids, limit=6, external_processing=external_processing):
                             candidates.setdefault(str(item["passage_id"]), item)
                 for query in queries:
-                    for item in retrieve_passages(session, query, collection_filter=[collection], source_ids=body.source_ids, limit=4, external_processing=remote):
+                    for item in retrieve_passages(session, query, collection_filter=[collection], source_ids=body.source_ids, limit=4, external_processing=external_processing):
                         candidates.setdefault(str(item["passage_id"]), item)
                 buckets.append(list(candidates.values()))
         gathered = OrderedDict()
@@ -537,7 +638,7 @@ class ChatService:
         if centers:
             with self.database.sessions() as session:
                 contextual = context_passages(session, [UUID(str(item["passage_id"])) for item in centers], radius=1)
-                parallels = parallel_evidence(session, centers, source_ids=body.source_ids, external_processing=remote)
+                parallels = parallel_evidence(session, centers, source_ids=body.source_ids, external_processing=external_processing)
         expanded = OrderedDict((str(item["passage_id"]), item) for item in centers)
         for item in [*parallels, *contextual]:
             expanded.setdefault(str(item["passage_id"]), item)
@@ -557,21 +658,20 @@ class ChatService:
             evidence.append(web_citation(item, len(evidence) + 1))
         if not evidence:
             raise APIError(422, "no_evidence", "No matching stored passages were found. Try a concrete topic or passage reference, import more sources, or change your source selection.")
-        # The model sees the relevant text and edition, while URLs, hashes and local
-        # source metadata remain in the complete citation snapshot shown to the reader.
-        model_fields = ("id", "title", "edition_title", "language", "reference", "quote", "source_type",
-                        "collection_memberships", "evidence_role", "alignment", "alignment_note",
-                        "kind", "evidence_type", "publication", "authors", "issued_date")
-        labels_by_passage = {item["passage_id"]: item["id"] for item in evidence if "passage_id" in item}
-        model_evidence = []
-        for item in evidence:
-            model_passage = {key: item[key] for key in model_fields if key in item}
-            if related := [labels_by_passage[key] for key in item.get("parallel_for", []) if key in labels_by_passage]:
-                model_passage["parallel_to"] = related
-            model_evidence.append(model_passage)
+        covered = sorted({value for item in evidence for value in item["collection_memberships"]})
+        missing = sorted(set(collections) - set(covered))
+        source_warnings = []
+        if missing:
+            source_warnings.append("No matching passages were found for: " + ", ".join(missing) + ". No agreement or disagreement can be inferred from that absence.")
+        if prepare_only:
+            if body.web_research and web_items:
+                web_grounding.update(status="used", source_count=len(web_items), retrieved_count=len(web_items))
+            return {"evidence": evidence, "language": response_language, "warnings": source_warnings,
+                    "grounding": {"mode": "roundtable", "retrieved_count": len(evidence), "collections": covered,
+                                  "retrieved_collections": covered, "web_research": web_grounding}}
         prompt = json.dumps({"question": body.message, "answer_language": response_language,
                              "persona_method": PERSONAS[body.persona_id],
-                             "evidence": model_evidence},
+                             "evidence": model_sources(evidence)},
                             ensure_ascii=False)
         answer_messages = [
             {"role": "system", "content": SYSTEM + "\nResponse language for this entire turn, including any repair: " + response_language}, *history[-8:], {"role": "user", "content": prompt},
@@ -588,10 +688,7 @@ class ChatService:
             ], max_tokens=8192 if large4 else 2400, **answer_options)
             answer, citations, warnings = checked_answer(completion["text"], evidence)
             warnings.append("An initial draft was regenerated on the same model to correct its response format or references.")
-        covered = sorted({value for item in evidence for value in item["collection_memberships"]})
-        missing = sorted(set(collections) - set(covered))
-        if missing:
-            warnings.append("No matching passages were found for: " + ", ".join(missing) + ". No agreement or disagreement can be inferred from that absence.")
+        warnings.extend(source_warnings)
         if omitted_history:
             warnings.append("Earlier source-derived answers were omitted from cloud context because their source processing permissions or current selection do not allow them.")
         if omitted_manuscript_history:

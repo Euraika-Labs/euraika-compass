@@ -60,7 +60,7 @@ def health(request: Request):
             "configured_model_adapters": True,
             "grounded_chat": ready,
             "web_research": ready,
-            "roundtable_generation": False,
+            "roundtable_generation": ready,
         },
     }
 
@@ -325,11 +325,9 @@ def sources(session: Session = Depends(session_dependency)):
 
 
 @router.post("/research-runs")
-@router.post("/roundtables/{roundtable_id}/commands")
 def generation_not_implemented():
     raise APIError(
         501,
         "not_implemented",
-        "Grounded conversation, research generation and Roundtable turns are not implemented yet. "
-        "No model call was started.",
+        "Research generation is not implemented yet. No model call was started.",
     )

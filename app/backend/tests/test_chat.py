@@ -145,6 +145,7 @@ def add_test_source(application, external_processing=True, content=None):
         passage = Passage(edition_id=edition.id, reference="Fixture 1:1", text=content or "The fixture mentions mourning and comfort.", search_text="mourning comfort")
         session.add(passage)
         session.commit()
+        return str(source.id)
 
 
 def configure_chat(application, invalid=False):
@@ -152,6 +153,48 @@ def configure_chat(application, invalid=False):
     application.state.connections = connection
     application.state.chat = ChatService(application.state.database, connection)
     return connection
+
+
+@pytest.mark.postgres
+@pytest.mark.asyncio
+async def test_roundtable_freezes_common_evidence_with_local_planner_and_cloud_speaker(postgres_app):
+    _, application, _ = postgres_app
+    connection = configure_chat(application)
+    chat = application.state.chat
+    add_test_source(application)
+    restricted = add_test_source(application, external_processing=False, content="mourning comfort PRIVATE_ROUND_TABLE")
+    participant = {"name": "Textual", "persona_id": "textual", "connection_id": "actual-test-boundary"}
+    scope = {"topic": "Discuss mourning and comfort", "language": "en"}
+    signature = connection.signature(participant["connection_id"])
+
+    with pytest.raises(APIError) as exc:
+        await chat.prepare_roundtable_evidence({**scope, "source_ids": [restricted]}, participant,
+                                              external_processing=True, expected_signature=signature,
+                                              allow_manuscript_cloud=False)
+    assert exc.value.code == "roundtable_source_restricted"
+    assert not connection.calls
+
+    prepared = await chat.prepare_roundtable_evidence(scope, participant, external_processing=True,
+                                                      expected_signature=signature, allow_manuscript_cloud=False)
+    assert len(connection.calls) == 2
+    assert prepared["evidence"] and all(source["use_limits"]["external_processing"] for source in prepared["evidence"])
+    assert "PRIVATE_ROUND_TABLE" not in json.dumps(connection.calls)
+    assert not chat.temporary
+
+    # Adding another eligible edition after preparation must not change either participant's evidence.
+    add_test_source(application, content="mourning comfort NEW_EDITION_AFTER_FREEZE")
+    first = await chat.roundtable_reply(scope, participant, evidence=prepared["evidence"], history=[],
+                                       moderator_note="", expected_signature=signature, allow_manuscript_cloud=False)
+    connection.remote = True
+    second = await chat.roundtable_reply(scope, {**participant, "name": "Critical", "persona_id": "critical"},
+                                        evidence=prepared["evidence"], history=[{"name": "Textual", "answer": first["answer"]}],
+                                        moderator_note="Respond to the first contribution", expected_signature=signature,
+                                        allow_manuscript_cloud=False)
+    first_payload, second_payload = [json.loads(messages[-1]["content"]) for _, messages in connection.calls[-2:]]
+    assert first_payload["evidence"] == second_payload["evidence"]
+    assert second_payload["earlier_contributions"] == [{"speaker": "Textual", "text": first["answer"]}]
+    assert first["citations"] == second["citations"]
+    assert "NEW_EDITION_AFTER_FREEZE" not in json.dumps(connection.calls)
 
 
 MANUSCRIPT_TEXT = "Mourning comfort in this PRIVATE_FOLIO_MARKER reading."

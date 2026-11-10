@@ -38,10 +38,9 @@ def test_cross_origin_and_dns_rebinding_host_are_rejected(tmp_path):
 
 def test_generation_is_explicitly_unimplemented_not_a_fake_answer(tmp_path):
     with client(tmp_path) as api:
-        for path in ["research-runs", "roundtables/example/commands"]:
-            response = api.post(f"/api/v1/{path}", json={"message": "What is written here?"})
-            assert response.status_code == 501
-            assert response.json()["error"]["code"] == "not_implemented"
+        response = api.post("/api/v1/research-runs", json={"message": "What is written here?"})
+        assert response.status_code == 501
+        assert response.json()["error"]["code"] == "not_implemented"
 
 
 def test_chat_requires_storage_and_a_selected_connection(tmp_path):

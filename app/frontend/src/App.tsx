@@ -354,7 +354,7 @@ export default function App() {
         {!dbReady && view !== 'models' && <Notice tone="warning">{t('errorDb')}</Notice>}
 
         {view !== 'research' && <RequestError error={setupError} locale={locale} />}
-        <div hidden={view !== 'chat'}><ChatPanel locale={locale} connections={connections} settings={chatSettings} sources={sources} dossiers={dossiers} personas={personas} ready={dbReady} webResearchAvailable={health?.features?.web_research === true} draft={chatDraft} setDraft={setChatDraft} openConnections={() => setView('models')} openSources={() => setView('sources')} openResearch={() => setView('research')} /></div>
+        <div hidden={view !== 'chat'}><ChatPanel locale={locale} connections={connections} settings={chatSettings} sources={sources} dossiers={dossiers} personas={personas} ready={dbReady} webResearchAvailable={health?.features?.web_research === true} roundtableAvailable={health?.features?.roundtable_generation === true} draft={chatDraft} setDraft={setChatDraft} openConnections={() => setView('models')} openSources={() => setView('sources')} openResearch={() => setView('research')} /></div>
         {manuscriptsOpened && <div hidden={view !== 'manuscripts'}><ManuscriptsPanel locale={locale} dossiers={dossiers} ready={dbReady}
           openBlocked={unsaved || unsavedReading} opening={!!busy} onCreateDossier={() => setCreateOpen(true)}
           onOpen={asset => void openManuscriptImage(asset)} /></div>}

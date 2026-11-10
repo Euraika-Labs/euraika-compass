@@ -90,7 +90,28 @@ There is **no vector-embedding retrieval or dedicated local reranker worker yet*
 despite the pgvector foundations. The current relevance selector is the selected
 chat model. Manuscripts have a [catalog and reader workflow](manuscript-workflow.md).
 Chat uses saved reading revisions when you explicitly include them.
-Roundtable generation remains future work. Starter imports are explicit catalog downloads.
+Starter imports are explicit catalog downloads.
+
+## Moderate a Roundtable
+
+In **Chat**, switch to **Roundtable**. Set a topic and choose two to four
+AI participants. Assign a persona and a connected model to each participant.
+Set the source scope before opening the room. Choose a participant to give
+them the floor. You can add a moderator note to direct their contribution.
+You can also start a round that gives each available participant one turn
+in the displayed order. After two contributions, you can request a synthesis
+from the next speaker. Cancel an active generation to return to moderator
+control, or end the room.
+
+The first speaking request prepares a shared evidence snapshot. Every
+participant receives the same excerpts and citation IDs. A room with cloud
+participants uses evidence that all of its chosen routes can process.
+Manuscript excerpts require explicit cloud consent when applicable.
+
+Participant replies refer to the earlier contributions as arguments and
+cite the shared evidence for claims about sources. The chosen route is
+checked before each request. A route failure leaves the assignment in place
+and waits for a moderator decision. Each session is temporary.
 
 ## Manuscript readings in Chat
 

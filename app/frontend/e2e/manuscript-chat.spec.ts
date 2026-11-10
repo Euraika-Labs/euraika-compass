@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import type { ChatResponse, Dossier, ManuscriptCitation, ManuscriptReadingChoice } from '../src/types';
+import type { ChatResponse, Dossier, ManuscriptCitation, ManuscriptReadingChoice, RoundtableRoom } from '../src/types';
 
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAACAAAAAYCAIAAAAUMWhjAAAAM0lEQVR4nO3RwQ0AMAjDQMr+O6cjmE9+vgGCZF6Sadrq+njgwB8gEyETIRMhEyEToXqiDwu6Ay07tmdtAAAAAElFTkSuQmCC', 'base64');
 const time = '2026-11-10T16:00:00Z';
@@ -140,4 +140,82 @@ test('chat uses selected manuscript revisions and preserves image coordinates an
   await page.getByRole('combobox', { name: 'Interface language', exact: true }).selectOption('ar');
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
   await expectRegion(region);
+});
+
+test('a local first speaker needs shared manuscript consent in a mixed roundtable', async ({ page }) => {
+  const topic = 'How do manuscript witnesses change this reading?';
+  const room: RoundtableRoom = {
+    id: 'roundtable-fixture', topic, language: 'auto', status: 'awaiting_moderator', revision: 0,
+    evidence_version: null, evidence: [], turns: [],
+    scope: { collection_filter: [], source_ids: [], manuscript_dossier_id: dossier.id, manuscript_revision_ids: [reading.id] },
+    participants: [
+      { id: 'local-speaker', name: 'Text analyst', persona_id: 'textual', perspective: '', connection_id: 'local-fixture',
+        model_id: reply.model_id, provider: 'local', local: true, pinned: false, status: 'ready' },
+      { id: 'cloud-speaker', name: 'Critical reader', persona_id: 'critical', perspective: '', connection_id: 'cloud-fixture',
+        model_id: 'cloud-fixture-model', provider: 'mistral', local: false, pinned: true, status: 'ready' },
+    ],
+  };
+  const firstAnswer = 'The folio records a particular reading [S1].';
+  const submitted: unknown[] = [];
+  await page.route('**/api/v1/**', async route => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname.replace('/api/v1', '');
+    let body: unknown = { items: [] };
+    if (path === '/health') body = { status: 'ok', version: 'test', database: { ready: true, message: '' }, features: { roundtable_generation: true } };
+    else if (path === '/connections') body = { items: room.participants.map(participant => ({
+      id: participant.connection_id, title: participant.name, provider: participant.provider, model_id: participant.model_id,
+      base_url: null, local: participant.local, enabled: true, configured: true, api_key_set: !participant.local,
+    })) };
+    else if (path === '/chat-settings') body = { local_only: false };
+    else if (path === '/dossiers') body = { items: [dossier] };
+    else if (path === `/dossiers/${dossier.id}/manuscript-readings`) body = { items: [reading], truncated: false };
+    else if (path === '/roundtables') {
+      expect(request.postDataJSON()).toMatchObject({ topic, manuscript_revision_ids: [reading.id], participants: [
+        { name: 'Text analyst', connection_id: 'local-fixture' },
+        { name: 'Critical reader', connection_id: 'cloud-fixture', pinned: true },
+      ] });
+      body = room;
+    } else if (path === `/roundtables/${room.id}/turns`) {
+      submitted.push(request.postDataJSON());
+      body = { room: { ...room, revision: 2, evidence_version: 1, evidence: [citation], grounding: reply.grounding, turns: [{
+        ...reply, id: 'local-turn', participant_id: 'local-speaker', created_at: time, answer: firstAnswer, citations: [citation],
+      }] } };
+    }
+    await route.fulfill({ json: body });
+  });
+
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Chat', exact: true }).click();
+  await page.getByRole('button', { name: 'Roundtable', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Roundtable topic' }).fill(topic);
+  const forms = page.locator('.roundtable-participant-form');
+  await forms.nth(0).getByRole('textbox', { name: 'Participant label' }).fill('Text analyst');
+  await forms.nth(0).getByRole('combobox', { name: 'Model route' }).selectOption('local-fixture');
+  await forms.nth(1).getByRole('textbox', { name: 'Participant label' }).fill('Critical reader');
+  await forms.nth(1).getByRole('combobox', { name: 'Model route' }).selectOption('cloud-fixture');
+  await forms.nth(1).getByRole('checkbox', { name: /pin/i }).check();
+  await page.getByRole('checkbox', { name: 'Include manuscript readings from a dossier' }).check();
+  await page.getByRole('combobox', { name: 'Manuscript source dossier' }).selectOption(dossier.id);
+  await page.getByRole('checkbox', { name: /Catalogue manuscript fixture/ }).check();
+  await page.getByRole('button', { name: 'Start roundtable' }).click();
+
+  const localFloor = page.getByRole('button', { name: 'Give the floor · Text analyst' });
+  const cloudFloor = page.getByRole('button', { name: 'Give the floor · Critical reader' });
+  const consent = page.getByRole('checkbox', { name: 'Allow cloud speakers in this turn or round to receive permitted reading excerpts' });
+  await expect(localFloor).toBeDisabled();
+  await expect(cloudFloor).toBeDisabled();
+  expect(submitted).toHaveLength(0);
+  await consent.check();
+  await localFloor.click();
+  const transcript = page.getByRole('region', { name: 'Roundtable transcript' });
+  await expect(transcript.getByText(firstAnswer.split(' [S1]')[0])).toBeVisible();
+  expect(submitted).toEqual([expect.objectContaining({ participant_id: 'local-speaker', expected_revision: 0, allow_manuscript_cloud: true })]);
+  await expect(consent).not.toBeChecked();
+  await expect(localFloor).toBeEnabled();
+  await expect(cloudFloor).toBeDisabled();
+
+  await page.getByRole('button', { name: 'One-to-one', exact: true }).click();
+  await expect(transcript).toBeHidden();
+  await page.getByRole('button', { name: 'Roundtable', exact: true }).click();
+  await expect(transcript.getByText(firstAnswer.split(' [S1]')[0])).toBeVisible();
 });

@@ -20,9 +20,9 @@ export const emptyManuscriptSelection: ManuscriptSelection = {
 type ReadingList = { items: ManuscriptReadingChoice[]; truncated?: boolean };
 const maximumRevisions = 6;
 
-export function ManuscriptChatSources({ locale, dossiers, selection, onChange, remote, disabled, hasCorpus }: {
+export function ManuscriptChatSources({ locale, dossiers, selection, onChange, remote, disabled, hasCorpus, showCloudConsent = true }: {
   locale: Locale; dossiers: Dossier[]; selection: ManuscriptSelection; onChange: (selection: ManuscriptSelection) => void;
-  remote: boolean; disabled: boolean; hasCorpus: boolean;
+  remote: boolean; disabled: boolean; hasCorpus: boolean; showCloudConsent?: boolean;
 }) {
   const t = (key: ManuscriptKey) => manuscriptTranslate(locale, key);
   const dossierId = selection.enabled ? selection.dossierId : '';
@@ -94,12 +94,12 @@ export function ManuscriptChatSources({ locale, dossiers, selection, onChange, r
         {t('manuscriptOnly')}
       </label>}
       {remote && selection.readings.length > 0 && <>
-        {blocked ? <p role="status" className="inline-warning">{t('removeRestricted')}</p> : <label className="checkbox-label">
+        {blocked ? <p role="status" className="inline-warning">{t('removeRestricted')}</p> : showCloudConsent && <label className="checkbox-label">
           <input type="checkbox" checked={selection.cloudConsent} disabled={disabled}
             onChange={event => onChange({ ...selection, cloudConsent: event.target.checked })} />
           {t('manuscriptCloudConsent')}
         </label>}
-        <p className="helper">{t('manuscriptCloudHint')}</p>
+        {showCloudConsent && <p className="helper">{t('manuscriptCloudHint')}</p>}
       </>}
     </>}
   </div>;

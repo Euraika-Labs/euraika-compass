@@ -6,7 +6,7 @@ readings, real model connections, traceable text imports, lexical retrieval and
 source-grounded chat with optional web research and explicitly saved conversations.
 The [manuscript workflow](manuscript-workflow.md) adds institutional folio previews
 and provenance-preserving dossier attachments for OCR.
-AI Roundtable generation remains unfinished. See the [grounded-chat guide](grounded-chat.md)
+Moderator-controlled AI Roundtables use a fixed set of shared source excerpts. See the [grounded-chat guide](grounded-chat.md)
 and [corpus-import guide](corpus-imports.md) for the current flow and its limits.
 
 ## Layout
@@ -158,7 +158,7 @@ and `app/workers/` for the selected optional runtime profiles.
   retrieval and dedicated local reranker workers. The initial original-language
   imports and parallel reader are described in [Original-language editions](original-text-sources.md).
 - Expanded web and institutional manuscript catalog coverage.
-- AI-generated Roundtable turns and synthesis.
+- Durable saving and reopening of Roundtables.
 - Model/runtime installation UI; actual historical-script quality trials.
 - Full dossier export/import and consistent backup/restore UI.
 - Temporary Chat image uploads (initial images require an explicit dossier).

@@ -25,6 +25,8 @@ from compass.manuscript_evidence import router as manuscript_evidence_router
 from compass.manuscripts import router as manuscripts_router
 from compass.middleware import UploadBodyLimitMiddleware
 from compass.parallel_text import router as parallel_text_router
+from compass.roundtable import RoundtableService
+from compass.roundtable import router as roundtable_router
 from compass.storage import BlobStore
 
 logger = logging.getLogger("compass")
@@ -93,6 +95,7 @@ def create_app(settings: Settings | None = None, registry=None) -> FastAPI:
     application.state.jobs = jobs
     application.state.connections = connections
     application.state.chat = chat_service
+    application.state.roundtable = RoundtableService(chat_service, connections)
 
     def refresh_readers():
         if owns_registry:
@@ -136,6 +139,7 @@ def create_app(settings: Settings | None = None, registry=None) -> FastAPI:
     application.include_router(manuscripts_router)
     application.include_router(manuscript_evidence_router)
     application.include_router(chat_router)
+    application.include_router(roundtable_router)
     frontend = settings.frontend_dir
     if (frontend / "assets").is_dir():
         application.mount("/assets", StaticFiles(directory=frontend / "assets"), name="static-assets")

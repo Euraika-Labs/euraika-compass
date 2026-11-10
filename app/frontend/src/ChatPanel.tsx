@@ -8,7 +8,8 @@ import { WebEvidenceCard, WebResearchStatus } from './WebEvidenceCard';
 import { emptyManuscriptSelection, ManuscriptChatSources } from './ManuscriptChatSources';
 import { ManuscriptEvidenceCard, ManuscriptReadingStatus } from './ManuscriptEvidenceCard';
 import { manuscriptTranslate } from './manuscript-i18n';
-import type { ChatResponse, ChatSettings, ChatTurn, Citation, Collection, Connection, ConversationRecord, ConversationSummary, CorpusSource, Dossier, Locale, Participant, Persona } from './types';
+import { RoundtablePanel } from './RoundtablePanel';
+import type { ChatResponse, ChatSettings, ChatTurn, Citation, Collection, Connection, ConversationRecord, ConversationSummary, CorpusSource, Dossier, Locale, Persona } from './types';
 
 const personaIds = ['supportive', 'wisdom', 'textual', 'comparative', 'critical'] as const;
 function citationClass(kind: Citation['kind']) {
@@ -17,10 +18,11 @@ function citationClass(kind: Citation['kind']) {
   return '';
 }
 
-export function ChatPanel({ locale, connections, settings, sources, dossiers, personas, ready, webResearchAvailable, draft, setDraft, openConnections, openSources, openResearch }: {
+export function ChatPanel({ locale, connections, settings, sources, dossiers, personas, ready, webResearchAvailable, roundtableAvailable, draft, setDraft, openConnections, openSources, openResearch }: {
   locale: Locale; connections: Connection[]; settings: ChatSettings | null; sources: CorpusSource[]; personas: Persona[]; ready: boolean;
   dossiers: Dossier[];
   webResearchAvailable: boolean;
+  roundtableAvailable: boolean;
   draft: string; setDraft: (value: string) => void; openConnections: () => void; openSources: () => void; openResearch: () => void;
 }) {
   const c = (key: Parameters<typeof chatTranslate>[1]) => chatTranslate(locale, key);
@@ -45,11 +47,6 @@ export function ChatPanel({ locale, connections, settings, sources, dossiers, pe
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [saveOpen, setSaveOpen] = useState(false);
   const [saveTitle, setSaveTitle] = useState('');
-  const [participants, setParticipants] = useState<Participant[]>([
-    { id: 1, persona: 'textual', perspective: '', routeId: '', pinned: false },
-    { id: 2, persona: 'critical', perspective: '', routeId: '', pinned: false },
-  ]);
-  const nextParticipant = useRef(3);
   const request = useRef<AbortController | null>(null);
   const requestVersion = useRef(0);
   const citationPanel = useRef<HTMLElement>(null);
@@ -139,16 +136,16 @@ export function ChatPanel({ locale, connections, settings, sources, dossiers, pe
     finally { setBusy(''); }
   }
   function showCitation(value: Citation) { citationTrigger.current = document.activeElement as HTMLElement; setCitation(value); }
-  function updateParticipant(id: number, patch: Partial<Participant>) { setParticipants(items => items.map(item => item.id === id ? { ...item, ...patch } : item)); }
 
   return <section className="chat-view real-chat">
     <div className="section-heading"><div><p className="eyebrow">{conversation ? conversation.title : c('ephemeral')}</p><h1>{t('chat')}</h1></div><div className="segmented-control"><button className={mode === 'one' ? 'active' : ''} disabled={!!busy} onClick={() => setMode('one')}>{t('oneToOne')}</button><button className={mode === 'roundtable' ? 'active' : ''} disabled={!!busy} onClick={() => setMode('roundtable')}>{t('roundtable')}</button></div></div>
+    <div hidden={mode !== 'roundtable'}><RoundtablePanel locale={locale} connections={connections} settings={settings}
+      sources={sources} dossiers={dossiers} personas={personas} ready={ready} available={roundtableAvailable}
+      webResearchAvailable={webResearchAvailable} openConnections={openConnections} openSources={openSources} /></div>
+    {mode === 'one' && <>
     <RequestError error={error} locale={locale} manuscriptSearch={manuscripts.enabled} />{stopped && <div className="notice warning" role="status">{c('cancelled')}</div>}
     <div className="chat-tools"><label>{c('chooseConnection')}<select value={connectionId} disabled={!!busy} onChange={event => { setConnectionId(event.target.value); setManuscripts(value => ({ ...value, cloudConsent: false })); }}><option value="">{c('chooseConnection')}</option>{connections.map(item => <option key={item.id} value={item.id} disabled={!allowed(item)}>{item.title} · {item.model_id}{!allowed(item) ? ` · ${!item.local && settings?.local_only !== false ? c('cloudBlocked') : t('unavailable')}` : ''}</option>)}</select></label><label>{t('persona')}<select value={persona} disabled={!!busy} onChange={event => setPersona(event.target.value)}>{personaOptions.map(id => <option key={id} value={id}>{name(id)}</option>)}</select></label><label>{c('answerLanguage')}<select value={answerLanguage} disabled={!!busy} onChange={event => setAnswerLanguage(event.target.value)}><option value="auto">{c('questionLanguage')}</option>{locales.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label><button className="text-button" onClick={openConnections}>{c('connections')}</button></div>
     {!connections.some(allowed) && <div className="notice"><span>{c(connections.length ? 'noReadyConnections' : 'noConnections')}</span><button className="text-button" onClick={openConnections}>{c('connections')}</button></div>}
-    {mode === 'roundtable' ? <div className="roundtable-setup"><div className="notice">{t('roundtablePending')}</div><div className="panel-heading"><h2>{t('participants')}</h2><button className="button secondary" disabled={participants.length >= 4} onClick={() => setParticipants(items => [...items, { id: nextParticipant.current++, persona: 'comparative', perspective: '', routeId: '', pinned: false }])}>{t('addParticipant')}</button></div>{participants.map((participant, index) => {
-      const connection = connections.find(item => item.id === participant.routeId);
-      return <article className="participant-card" key={participant.id}><div className="participant-number">{index + 1}</div><div className="participant-fields"><label>{t('persona')}<select value={participant.persona} onChange={event => updateParticipant(participant.id, { persona: event.target.value })}>{personaOptions.map(id => <option key={id} value={id}>{name(id)}</option>)}</select></label><label>{t('perspective')}<input value={participant.perspective} placeholder={t('perspectivePlaceholder')} onChange={event => updateParticipant(participant.id, { perspective: event.target.value })} /></label><label>{t('model')}<select value={participant.routeId} onChange={event => updateParticipant(participant.id, { routeId: event.target.value })}><option value="">{c('chooseConnection')}</option>{connections.map(item => <option key={item.id} value={item.id} disabled={!allowed(item)}>{item.title} · {item.model_id}</option>)}</select></label><label className="checkbox-label"><input type="checkbox" checked={participant.pinned} onChange={event => updateParticipant(participant.id, { pinned: event.target.checked })} />{t('pin')}</label>{participant.pinned && participant.routeId && (!connection || !allowed(connection)) && <p className="inline-warning">{t('pinnedUnavailable')}</p>}</div><button className="text-button" onClick={() => setParticipants(items => items.filter(item => item.id !== participant.id))}>{t('remove')}</button></article>})}<button className="button primary" disabled title={t('roundtablePending')}>{t('askRound')}</button></div> : <>
       <details className="panel grounding-controls" open={!hasCorpus || undefined}>
         <summary>{c('grounding')}</summary>
         {useCorpus && <><fieldset disabled={!!busy}><legend>{c('collections')}</legend><div className="collection-options">{collections.map(id => <label className="checkbox-label" key={id}><input type="checkbox" checked={filter.includes(id)} onChange={event => setFilter(items => event.target.checked ? [...items, id] : items.filter(item => item !== id))} />{c(id)}</label>)}</div></fieldset>{!filter.length && <p className="inline-warning">{c('noCollections')}</p>}
