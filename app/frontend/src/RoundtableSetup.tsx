@@ -85,6 +85,9 @@ export function RoundtableSetup({ locale, connections, settings, sources, dossie
   const remote = assigned.some(connection => connection?.local === false);
   const hasAutomatic = participants.some(participant => !participant.connection_id);
   const names = participantNames(participants, personas, locale);
+  const defaultPerspectives = participants.map(({ persona_id }) => roundtableProfile(locale, persona_id)?.perspective
+    ?? personas.find(item => item.id === persona_id)?.description ?? '');
+  const perspectives = participants.map((participant, index) => participant.perspective.trim() || defaultPerspectives[index]);
   const distinct = new Set(names.map(name => name.toLocaleLowerCase(locale))).size === names.length;
   const validManuscripts = manuscripts.enabled && dossiers.some(dossier => dossier.id === manuscripts.dossierId)
     && manuscripts.readings.length > 0 && manuscripts.readings.length <= 6
@@ -128,8 +131,8 @@ export function RoundtableSetup({ locale, connections, settings, sources, dossie
     try {
       const room = await api<RoundtableRoom>('/roundtables', { method: 'POST', body: JSON.stringify({
         topic: topic.trim(), language, ...scope,
-        participants: participants.map(({ persona_id, connection_id, perspective, pinned }, index) => ({
-          name: names[index], persona_id, connection_id: connection_id || null, perspective: perspective.trim(), pinned,
+        participants: participants.map(({ persona_id, connection_id, pinned }, index) => ({
+          name: names[index], persona_id, connection_id: connection_id || null, perspective: perspectives[index], pinned,
         })),
       }) });
       onCreated(room);
@@ -148,12 +151,6 @@ export function RoundtableSetup({ locale, connections, settings, sources, dossie
         {locales.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
       </select></label>
     </div>
-    <div className="panel-heading"><h2>{t('participants')}</h2><button className="button secondary" type="button" disabled={busy || participants.length >= 4}
-      onClick={() => {
-        const participant = newParticipant(nextId.current++, 'comparative');
-        setParticipants(items => [...items, participant]);
-        setRosterEdited(true);
-      }}>{t('addParticipant')}</button></div>
     <section className="panel roundtable-teams" aria-label={r('teams')}>
       <h3>{r('teams')}</h3><p className="helper">{r('teamsHint')}</p>
       <div className="button-row">{(Object.keys(teams) as Team[]).map(team => <button className="button secondary" type="button" key={team}
@@ -166,46 +163,74 @@ export function RoundtableSetup({ locale, connections, settings, sources, dossie
         </div>
       </div>}
     </section>
+    <section className="roundtable-preview" aria-label={t('participants')}>
+      <h2>{t('participants')}</h2>
+      <p className="helper">{r('quickStartHint')}</p>
+      <div className="roundtable-roster">
+        {participants.map((participant, index) => {
+          const route = assigned[index];
+          return <article className="panel roundtable-speaker" key={participant.id}>
+            <h3 dir="auto">{names[index]}</h3>
+            <p className="muted" dir="auto">{perspectives[index]}</p>
+            {route && <p className="helper"><bdi>{route.title} · {route.model_id}</bdi></p>}
+            {!participant.connection_id && <p className="helper">{r('automaticModelOnStart')}</p>}
+            {participant.connection_id && (!route || !canUseConnection(route, settings)) &&
+              <p className="inline-warning">{participant.pinned ? t('pinnedUnavailable') : t('unavailable')}</p>}
+          </article>;
+        })}
+      </div>
+    </section>
     {readyConnections.length === 0 && <div className="notice"><span>{c('noReadyConnections')}</span>
       <button type="button" className="text-button" onClick={openConnections}>{c('connections')}</button></div>}
-    {hasAutomatic && <p className="helper">{r('automaticHint')}</p>}
     {!distinct && <p className="inline-warning" role="status">{r('duplicateNames')}</p>}
-    {participants.map((participant, index) => {
-      const description = roundtableProfile(locale, participant.persona_id)?.method
-        ?? personas.find(item => item.id === participant.persona_id)?.description;
-      const profileDescriptionId = `${descriptionId}-${participant.id}`;
-      return <fieldset className="participant-card roundtable-participant-form" key={participant.id} disabled={busy}>
-        <legend><bdi>{names[index]}</bdi></legend>
-        <div className="participant-fields">
-          <label>{r('participantName')}<input maxLength={80} value={participant.name} placeholder={names[index]} dir="auto"
-            onChange={event => updateParticipant(participant.id, { name: event.target.value })} /></label>
-          <div>
-            <label>{t('persona')}<select value={participant.persona_id} aria-describedby={description ? profileDescriptionId : undefined}
-              onChange={event => updateParticipant(participant.id, { persona_id: event.target.value })}>
-              {personaOptions.map(id => <option key={id} value={id}>{roundtablePersonaName(id, personas, locale)}</option>)}
-            </select></label>
-            {description && <p id={profileDescriptionId} className="helper roundtable-profile-description" dir="auto">{description}</p>}
-          </div>
-          <label>{t('perspective')}<input maxLength={300} value={participant.perspective} placeholder={t('perspectivePlaceholder')} dir="auto"
-            onChange={event => updateParticipant(participant.id, { perspective: event.target.value })} /></label>
-          <label>{t('model')}<select value={participant.connection_id} disabled={participant.pinned}
-            onChange={event => updateParticipant(participant.id, { connection_id: event.target.value })}>
-            <option value="">{r('chooseAutomatically')}</option>
-            {connections.map(connection => <option key={connection.id} value={connection.id} disabled={!canUseConnection(connection, settings)}>
-              {connection.title} · {connection.model_id} · {r(connection.local ? 'localRoute' : 'cloudRoute')}
-            </option>)}
-          </select></label>
-          <label className="checkbox-label"><input type="checkbox" checked={participant.pinned} disabled={!participant.connection_id}
-            onChange={event => updateParticipant(participant.id, { pinned: event.target.checked })} />{t('pin')}</label>
-          {!!participant.connection_id && (!assigned[index] || !canUseConnection(assigned[index], settings)) &&
-            <p className="inline-warning">{participant.pinned ? t('pinnedUnavailable') : t('unavailable')}</p>}
-        </div>
-        {participants.length > 2 && <button type="button" className="text-button" onClick={() => {
-          setParticipants(items => items.filter(item => item.id !== participant.id));
-          setRosterEdited(true);
-        }}>{t('remove')}</button>}
-      </fieldset>;
-    })}
+    <button className="button primary" disabled={!canStart}>{busy ? t('working') : r('start')}</button>
+    <details className="panel roundtable-customize">
+      <summary>{r('customizeParticipants')}</summary>
+      <div className="roundtable-customize-fields">
+        <button className="button secondary" type="button" disabled={busy || participants.length >= 4}
+          onClick={() => {
+            const participant = newParticipant(nextId.current++, 'comparative');
+            setParticipants(items => [...items, participant]);
+            setRosterEdited(true);
+          }}>{t('addParticipant')}</button>
+        {participants.map((participant, index) => {
+          const description = roundtableProfile(locale, participant.persona_id)?.method
+            ?? personas.find(item => item.id === participant.persona_id)?.description;
+          const profileDescriptionId = `${descriptionId}-${participant.id}`;
+          return <fieldset className="participant-card roundtable-participant-form" key={participant.id} disabled={busy}>
+            <legend><bdi>{names[index]}</bdi></legend>
+            <div className="participant-fields">
+              <label>{r('participantName')}<input maxLength={80} value={participant.name} placeholder={names[index]} dir="auto"
+                onChange={event => updateParticipant(participant.id, { name: event.target.value })} /></label>
+              <div>
+                <label>{t('persona')}<select value={participant.persona_id} aria-describedby={description ? profileDescriptionId : undefined}
+                  onChange={event => updateParticipant(participant.id, { persona_id: event.target.value })}>
+                  {personaOptions.map(id => <option key={id} value={id}>{roundtablePersonaName(id, personas, locale)}</option>)}
+                </select></label>
+                {description && <p id={profileDescriptionId} className="helper roundtable-profile-description" dir="auto">{description}</p>}
+              </div>
+              <label>{t('perspective')}<input maxLength={300} value={participant.perspective} placeholder={defaultPerspectives[index]} dir="auto"
+                onChange={event => updateParticipant(participant.id, { perspective: event.target.value })} /></label>
+              <label>{t('model')}<select value={participant.connection_id} disabled={participant.pinned}
+                onChange={event => updateParticipant(participant.id, { connection_id: event.target.value })}>
+                <option value="">{r('chooseAutomatically')}</option>
+                {connections.map(connection => <option key={connection.id} value={connection.id} disabled={!canUseConnection(connection, settings)}>
+                  {connection.title} · {connection.model_id} · {r(connection.local ? 'localRoute' : 'cloudRoute')}
+                </option>)}
+              </select></label>
+              <label className="checkbox-label"><input type="checkbox" checked={participant.pinned} disabled={!participant.connection_id}
+                onChange={event => updateParticipant(participant.id, { pinned: event.target.checked })} />{t('pin')}</label>
+              {!!participant.connection_id && (!assigned[index] || !canUseConnection(assigned[index], settings)) &&
+                <p className="inline-warning">{participant.pinned ? t('pinnedUnavailable') : t('unavailable')}</p>}
+            </div>
+            {participants.length > 2 && <button type="button" className="text-button" onClick={() => {
+              setParticipants(items => items.filter(item => item.id !== participant.id));
+              setRosterEdited(true);
+            }}>{t('remove')}</button>}
+          </fieldset>;
+        })}
+      </div>
+    </details>
     <section className="panel grounding-controls roundtable-grounding" aria-label={r('fixedScope')}>
       <h2>{r('fixedScope')}</h2>
       {hasCorpus && !manuscripts.only && <>
@@ -233,6 +258,5 @@ export function RoundtableSetup({ locale, connections, settings, sources, dossie
       {!hasEvidence && <p className="inline-warning">{r('chooseSources')}</p>}
       <button className="text-button" type="button" onClick={openSources}>{c('sources')}</button>
     </section>
-    <button className="button primary" disabled={!canStart}>{busy ? t('working') : r('start')}</button>
   </form>;
 }

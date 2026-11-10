@@ -1,13 +1,16 @@
 import type { Locale } from './types';
 
 const catalog = {
-  introduction: ['Set the topic, participants and source scope. Give the floor to an AI participant when you are ready.', 'Kies het onderwerp, de deelnemers en de bronnen. Geef een AI-deelnemer het woord zodra je klaar bent.', 'حدّد الموضوع والمشاركين ونطاق المصادر. أعطِ الكلمة لمشارك من الذكاء الاصطناعي عندما تكون مستعدًا.', 'Définissez le sujet, les participants et les sources. Donnez la parole à un participant IA quand vous le souhaitez.', 'Legen Sie Thema, Teilnehmende und Quellen fest. Erteilen Sie einem KI-Teilnehmenden das Wort, wenn Sie bereit sind.'],
+  introduction: ['Enter a topic to start with the team below. You decide who speaks once the roundtable opens.', 'Vul een onderwerp in om met het onderstaande team te starten. Jij bepaalt wie het woord krijgt zodra de rondetafel open is.', 'أدخل موضوعًا للبدء بالفريق أدناه. أنت تختار من يتحدث بعد فتح حلقة النقاش.', 'Saisissez un sujet pour démarrer avec l’équipe ci-dessous. Une fois la table ronde ouverte, vous décidez qui prend la parole.', 'Geben Sie ein Thema ein, um mit dem unten gezeigten Team zu starten. Sobald die Runde eröffnet ist, bestimmen Sie, wer spricht.'],
   topic: ['Roundtable topic', 'Onderwerp van de rondetafel', 'موضوع حلقة النقاش', 'Sujet de la table ronde', 'Thema der Gesprächsrunde'],
   participantName: ['Participant label', 'Naam van de deelnemer', 'اسم المشارك', 'Nom du participant', 'Name des Teilnehmenden'],
   participant: ['AI participant', 'AI-deelnemer', 'مشارك بالذكاء الاصطناعي', 'Participant IA', 'KI-Teilnehmende Person'],
   duplicateNames: ['Give each participant a distinct label.', 'Geef elke deelnemer een eigen naam.', 'أعطِ كل مشارك اسمًا مميزًا.', 'Donnez à chaque participant un nom distinct.', 'Geben Sie jeder teilnehmenden Person einen eindeutigen Namen.'],
   teams: ['Starter teams', 'Vooraf ingestelde teams', 'فرق جاهزة', 'Équipes prédéfinies', 'Vorgeschlagene Teams'],
-  teamsHint: ['Choose a team to start with editable participant profiles.', 'Kies een team met deelnemersprofielen die je kunt aanpassen.', 'اختر فريقًا بملفات مشاركين يمكنك تعديلها.', 'Choisissez une équipe dont vous pourrez modifier les profils.', 'Wählen Sie ein Team mit Teilnehmerprofilen, die Sie anpassen können.'],
+  teamsHint: ['Optionally switch to a ready-made team for your topic.', 'Kies desgewenst een kant-en-klaar team voor je onderwerp.', 'يمكنك اختيار فريق جاهز يناسب موضوعك.', 'Si vous le souhaitez, choisissez une équipe prête pour votre sujet.', 'Bei Bedarf können Sie ein vorbereitetes Team für Ihr Thema wählen.'],
+  customizeParticipants: ['Customize participants', 'Deelnemers aanpassen', 'تخصيص المشاركين', 'Personnaliser les participants', 'Teilnehmende anpassen'],
+  quickStartHint: ['Profiles, labels and perspectives are already set. Compass assigns models for automatic roles when you start.', 'Profielen, namen en perspectieven zijn al ingesteld. Compass wijst bij de start modellen toe aan de automatische rollen.', 'الملفات والأسماء والمنظورات معدّة مسبقًا. عند البدء، يعيّن Compass النماذج للأدوار ذات التعيين التلقائي.', 'Les profils, les noms et les perspectives sont déjà définis. Compass affecte les modèles aux rôles automatiques au démarrage.', 'Profile, Namen und Perspektiven sind bereits festgelegt. Beim Start weist Compass den automatischen Rollen Modelle zu.'],
+  automaticModelOnStart: ['Automatic model at start', 'Automatisch model bij start', 'اختيار النموذج تلقائيًا عند البدء', 'Modèle choisi au démarrage', 'Automatische Modellwahl beim Start'],
   textContext: ['Text & context', 'Tekst en context', 'النص والسياق', 'Texte et contexte', 'Text und Kontext'],
   compareInterpretations: ['Compare interpretations', 'Interpretaties vergelijken', 'مقارنة التأويلات', 'Comparer les interprétations', 'Auslegungen vergleichen'],
   manuscriptStudy: ['Manuscript study', 'Handschriftonderzoek', 'دراسة المخطوطات', 'Étude des manuscrits', 'Handschriftenstudium'],
@@ -69,45 +72,56 @@ const indexes: Record<Locale, number> = { en: 0, nl: 1, ar: 2, fr: 3, de: 4 };
 export const roundtableTranslate = (locale: Locale, key: RoundtableKey) => catalog[key][indexes[locale]];
 
 type Localized = readonly [string, string, string, string, string];
-const profiles: Record<string, { name?: Localized; method: Localized }> = {
+const profiles: Record<string, { name?: Localized; method: Localized; perspective: Localized }> = {
   supportive: {
     method: ['Listens with care and offers gentle reflection on loss and uncertainty.', 'Luistert met aandacht en biedt ruimte voor reflectie bij verlies en onzekerheid.', 'يصغي بتعاطف ويفسح مجالًا للتأمل في الفقد وعدم اليقين.', 'Écoute avec attention et invite à réfléchir avec douceur à la perte et à l’incertitude.', 'Hört aufmerksam zu und lädt zur behutsamen Reflexion über Verlust und Unsicherheit ein.'],
+    perspective: ['What might offer comfort or room to reflect?', 'Wat kan troost of ruimte voor reflectie bieden?', 'ما الذي قد يمنح بعض العزاء أو يتيح مجالًا للتأمل؟', 'Qu’est-ce qui pourrait apporter du réconfort ou aider à prendre du recul ?', 'Was könnte Trost spenden oder Raum zum Nachdenken geben?'],
   },
   wisdom: {
     method: ['Explores life choices and practical ethical questions through the sources.', 'Verkent levenskeuzes en praktische ethische vragen aan de hand van de bronnen.', 'يستكشف خيارات الحياة والأسئلة الأخلاقية العملية في ضوء المصادر.', 'Explore les choix de vie et les questions éthiques concrètes à partir des sources.', 'Erkundet Lebensentscheidungen und praktische ethische Fragen anhand der Quellen.'],
+    perspective: ['What values and practical choices are at stake?', 'Welke waarden en praktische keuzes staan hier op het spel?', 'ما القيم والخيارات العملية المطروحة هنا؟', 'Quels choix concrets et quelles valeurs sont en jeu ?', 'Welche Werte und praktischen Entscheidungen stehen hier auf dem Spiel?'],
   },
   textual: {
     method: ['Examines the wording, edition and immediate context of a passage.', 'Onderzoekt de bewoording, de editie en de directe context van een passage.', 'يفحص صياغة المقطع وطبعته وسياقه المباشر.', 'Examine la formulation, l’édition et le contexte immédiat d’un passage.', 'Untersucht Wortlaut, Ausgabe und unmittelbaren Kontext einer Passage.'],
+    perspective: ['What does the passage say in its immediate context?', 'Wat zegt de passage in haar directe context?', 'ماذا يقول المقطع في سياقه المباشر؟', 'Que dit le passage dans son contexte immédiat ?', 'Was sagt die Passage in ihrem unmittelbaren Zusammenhang?'],
   },
   comparative: {
     method: ['Compares readings across traditions and identifies meaningful differences.', 'Vergelijkt lezingen uit verschillende tradities en benoemt betekenisvolle verschillen.', 'يقارن القراءات بين التقاليد ويبيّن الفروق المهمة بينها.', 'Compare les lectures de différentes traditions et relève les différences significatives.', 'Vergleicht Lesarten verschiedener Traditionen und benennt wesentliche Unterschiede.'],
+    perspective: ['Where do the traditions converge, and what differences matter?', 'Waar komen de tradities overeen en welke verschillen zijn van belang?', 'أين تتلاقى التقاليد، وما الفروق التي تؤثر في الفهم؟', 'Où les traditions se rejoignent-elles, et quelles différences comptent ?', 'Wo stimmen die Traditionen überein, und welche Unterschiede sind wesentlich?'],
   },
   critical: {
     method: ['Tests assumptions, considers counterarguments and identifies gaps in the evidence.', 'Toetst aannames, bekijkt tegenargumenten en benoemt hiaten in het bronmateriaal.', 'يختبر الافتراضات وينظر في الحجج المضادة ويبيّن الثغرات في الأدلة.', 'Met les hypothèses à l’épreuve, examine les objections et relève les lacunes des sources.', 'Prüft Annahmen, wägt Gegenargumente ab und benennt Lücken in den Belegen.'],
+    perspective: ['Which assumptions or counterarguments could change the conclusion?', 'Welke aannames of tegenargumenten kunnen de conclusie veranderen?', 'ما الافتراضات أو الحجج المضادة التي قد تغيّر الاستنتاج؟', 'Quelles hypothèses ou objections pourraient modifier la conclusion ?', 'Welche Annahmen oder Gegenargumente könnten die Schlussfolgerung ändern?'],
   },
   historical: {
     name: ['Historical context researcher', 'Historisch contextonderzoeker', 'باحث في السياق التاريخي', 'Spécialiste du contexte historique', 'Forscher zum historischen Kontext'],
     method: ['Places passages in their historical setting and marks uncertain dates or claims.', 'Plaatst passages in hun historische context en benoemt onzekerheid over dateringen of beweringen.', 'يضع المقاطع في سياقها التاريخي ويبيّن مواضع الشك في التواريخ أو الادعاءات.', 'Replace les passages dans leur contexte historique et signale les datations ou affirmations incertaines.', 'Ordnet Passagen historisch ein und kennzeichnet unsichere Datierungen oder Aussagen.'],
+    perspective: ['What can the evidence establish about time, place and audience?', 'Wat tonen de bronnen aan over tijd, plaats en publiek?', 'ما الذي تثبته الأدلة عن الزمان والمكان والجمهور؟', 'Que permettent d’établir les sources sur l’époque, le lieu et le public ?', 'Was belegen die Quellen über Zeit, Ort und Publikum?'],
   },
   philology: {
     name: ['Language and translation analyst', 'Taal- en vertaalanalist', 'محلل اللغة والترجمة', 'Analyste des langues et des traductions', 'Analyst für Sprache und Übersetzung'],
     method: ['Uses available originals to assess word meanings and translation choices.', 'Onderzoekt woordbetekenissen en vertaalkeuzes aan de hand van beschikbare bronteksten.', 'يستعين بالنصوص الأصلية المتاحة لفحص معاني الكلمات وخيارات الترجمة.', 'S’appuie sur les textes originaux disponibles pour étudier le sens des mots et les choix de traduction.', 'Untersucht Wortbedeutungen und Übersetzungsentscheidungen anhand verfügbarer Originaltexte.'],
+    perspective: ['Which wording or translation choices could affect the reading?', 'Welke bewoordingen of vertaalkeuzes kunnen de lezing beïnvloeden?', 'ما الألفاظ أو خيارات الترجمة التي قد تؤثر في القراءة؟', 'Quels choix de formulation ou de traduction pourraient influer sur la lecture ?', 'Welche Formulierungen oder Übersetzungsentscheidungen könnten die Lesart beeinflussen?'],
   },
   manuscripts: {
     name: ['Manuscript and transmission analyst', 'Analist van handschriften en tekstoverlevering', 'محلل المخطوطات ونقل النصوص', 'Analyste des manuscrits et de la transmission', 'Analyst für Handschriften und Textüberlieferung'],
     method: ['Distinguishes manuscript witnesses, transcriptions and editions when assessing variants.', 'Maakt bij tekstvarianten onderscheid tussen handschriften, transcripties en edities.', 'يميّز بين شواهد المخطوطات والتفريغات والطبعات عند تقييم اختلافات النص.', 'Distingue les témoins manuscrits, les transcriptions et les éditions pour étudier les variantes.', 'Unterscheidet Handschriften, Transkriptionen und Ausgaben bei der Prüfung von Textvarianten.'],
+    perspective: ['What can the surviving witnesses tell us about the history of this reading?', 'Wat vertellen de bewaarde tekstgetuigen over de geschiedenis van deze lezing?', 'ماذا تخبرنا الشواهد الباقية عن تاريخ هذه القراءة؟', 'Que révèlent les témoins conservés sur l’histoire de cette leçon ?', 'Was verraten die erhaltenen Textzeugen über die Geschichte dieser Lesart?'],
   },
   literary: {
     name: ['Literary context analyst', 'Analist van literaire context', 'محلل السياق الأدبي', 'Analyste du contexte littéraire', 'Analyst für literarischen Kontext'],
     method: ['Reads genre, structure and recurring themes in the available wider text.', 'Bekijkt genre, opbouw en terugkerende thema’s in de beschikbare ruimere tekst.', 'يدرس النوع الأدبي والبنية والموضوعات المتكررة في السياق النصي الأوسع المتاح.', 'Étudie le genre, la structure et les thèmes récurrents dans le contexte textuel disponible.', 'Untersucht Gattung, Aufbau und wiederkehrende Themen im verfügbaren größeren Textzusammenhang.'],
+    perspective: ['How do genre, structure and recurring themes shape the passage?', 'Hoe geven genre, opbouw en terugkerende thema’s vorm aan de passage?', 'كيف يؤثر النوع الأدبي والبنية والموضوعات المتكررة في فهم المقطع؟', 'Comment le genre, la structure et les thèmes récurrents éclairent-ils le passage ?', 'Wie prägen Gattung, Aufbau und wiederkehrende Themen die Passage?'],
   },
   reception: {
     name: ['History of interpretation researcher', 'Onderzoeker van interpretatiegeschiedenis', 'باحث في تاريخ التأويل', 'Spécialiste de l’histoire des interprétations', 'Forscher zur Auslegungsgeschichte'],
     method: ['Traces how named authors and communities have interpreted a text over time.', 'Volgt hoe benoemde auteurs en gemeenschappen een tekst door de tijd heen hebben uitgelegd.', 'يتتبع كيف فهم النص مؤلفون وجماعات محددة عبر الزمن.', 'Retrace l’évolution des interprétations chez des auteurs et communautés identifiés.', 'Verfolgt die Auslegungen eines Textes durch benannte Autoren und Gemeinschaften im Lauf der Zeit.'],
+    perspective: ['Who interpreted this passage in different ways, and what reasons did they give?', 'Wie legde deze passage anders uit en welke redenen gaven zij?', 'من فسّر هذا المقطع بطرق مختلفة، وما الأسباب التي ذكرها؟', 'Qui a interprété ce passage autrement, et quelles raisons ont été avancées ?', 'Wer hat diese Passage unterschiedlich ausgelegt, und welche Gründe wurden dafür genannt?'],
   },
   source_verification: {
     name: ['Source verifier', 'Broncontroleur', 'مدقق المصادر', 'Vérificateur de sources', 'Quellenprüfer'],
     method: ['Checks provenance and how directly each source supports a claim.', 'Controleert de herkomst en hoe direct elke bron een bewering onderbouwt.', 'يتحقق من منشأ المصادر ومدى دعم كل مصدر للادعاء مباشرةً.', 'Vérifie la provenance des sources et dans quelle mesure chacune étaye directement une affirmation.', 'Prüft die Herkunft von Quellen und wie unmittelbar sie eine Aussage stützen.'],
+    perspective: ['Which sources support each claim, and what still needs verification?', 'Welke bronnen onderbouwen elke bewering en wat moet nog worden gecontroleerd?', 'ما المصادر التي تدعم كل ادعاء، وما الذي لا يزال يحتاج إلى تحقق؟', 'Quelles sources étayent chaque affirmation, et que reste-t-il à vérifier ?', 'Welche Quellen stützen die einzelnen Aussagen, und was bleibt zu prüfen?'],
   },
 };
 
@@ -115,5 +129,5 @@ export function roundtableProfile(locale: Locale, id: string) {
   if (!Object.hasOwn(profiles, id)) return undefined;
   const profile = profiles[id];
   const index = indexes[locale];
-  return { name: profile.name?.[index], method: profile.method[index] };
+  return { name: profile.name?.[index], method: profile.method[index], perspective: profile.perspective[index] };
 }

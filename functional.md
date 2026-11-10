@@ -65,7 +65,7 @@ De Roundtable biedt deze vijf profielen en zes extra onderzoeksmethoden.
 | Onderzoeker interpretatiegeschiedenis | Schrijft gedocumenteerde lezingen toe aan hun auteurs, scholen of tradities |
 | Bronnencontroleur | Onderzoekt herkomst, bronsoort en welke bewering het materiaal daadwerkelijk kan dragen |
 
-Een profiel vult de standaardnaam en onderzoeksmethode van de deelnemer in. De moderator kan de naam, het perspectief en de modeltoewijzing apart aanpassen. Een gevraagde religieuze lezing wordt nauwkeurig toegeschreven. Iedere AI-deelnemer heeft een eigen analytische rol en past hetzelfde bronbeleid, dezelfde routeringsgrenzen en dezelfde gedeelde bewijsregels toe. Wisselen behoudt context en start geen ander gesprek. De gebruiker kiest zelf of een gesprek een debat wordt.
+Het standaardteam is klaar zodra de moderator een onderwerp invult. Een profiel bepaalt de standaardnaam, onderzoeksmethode en het analytische perspectief van de deelnemer. Compass wijst bij het openen van de tafel geschikte modellen toe. Via **Deelnemers aanpassen** kan de moderator de naam, het perspectief en de modeltoewijzing apart wijzigen. Een gevraagde religieuze lezing wordt nauwkeurig toegeschreven. Iedere AI-deelnemer heeft een eigen analytische rol en past hetzelfde bronbeleid, dezelfde routeringsgrenzen en dezelfde gedeelde bewijsregels toe. Wisselen behoudt context en start geen ander gesprek. De gebruiker kiest zelf of een gesprek een debat wordt.
 
 Startteams vullen drie plaatsen voor tekst en context, interpretatievergelijking, handschriftonderzoek of een levensvraag. De moderator bevestigt het vervangen van een aangepaste deelnemerslijst. Onderwerp en bronselectie horen bij de tafel.
 

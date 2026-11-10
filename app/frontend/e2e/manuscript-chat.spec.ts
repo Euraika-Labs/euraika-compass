@@ -204,6 +204,7 @@ test('a local first speaker needs shared manuscript consent in a mixed roundtabl
   await page.getByRole('button', { name: 'Chat', exact: true }).click();
   await page.getByRole('button', { name: 'Roundtable', exact: true }).click();
   await page.getByRole('textbox', { name: 'Roundtable topic' }).fill(topic);
+  await page.getByText('Customize participants', { exact: true }).click();
   const forms = page.locator('.roundtable-participant-form');
   await forms.nth(0).getByRole('textbox', { name: 'Participant label' }).fill('Text analyst');
   await expect(forms.nth(0).getByRole('combobox', { name: 'Model route' })).toHaveValue('');
