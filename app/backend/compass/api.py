@@ -13,6 +13,7 @@ from compass.adapters.base import AdapterError
 from compass.errors import APIError
 from compass.jobs import TERMINAL
 from compass.models import Dossier, ImageAsset, Source, Transcription, TranscriptionJob
+from compass.personas import persona_catalog
 from compass.routing import image_route_is_local, require_image_processing
 from compass.schemas import (
     DossierCreate,
@@ -83,12 +84,8 @@ def update_model(route_id: str, body: RoutePatch, request: Request):
 
 
 @router.get("/personas")
-def personas(request: Request):
-    path = request.app.state.settings.config_dir / "personas.json"
-    if not path.is_file():
-        return {"items": []}
-    value = json.loads(path.read_text(encoding="utf-8"))
-    return {"items": value.get("items", []) if isinstance(value, dict) else value}
+def personas():
+    return {"items": persona_catalog()}
 
 
 @router.get("/source-policy")

@@ -12,8 +12,9 @@ from fastapi import APIRouter, Request
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, model_validator
 
 from compass.adapters.base import AdapterError
-from compass.chat import COLLECTIONS, PERSONAS, while_connected
+from compass.chat import COLLECTIONS, while_connected
 from compass.errors import APIError
+from compass.personas import ROUNDTABLE_PERSONAS
 from compass.roundtable_allocation import rank_roundtable_routes
 
 router = APIRouter(prefix="/api/v1/roundtables", tags=["roundtable"])
@@ -49,7 +50,7 @@ class RoundtableCreate(BaseModel):
 
     @model_validator(mode="after")
     def validate_scope(self):
-        if any(item.persona_id not in PERSONAS for item in self.participants):
+        if any(item.persona_id not in ROUNDTABLE_PERSONAS for item in self.participants):
             raise ValueError("Choose a known persona for each participant.")
         names = [item.name or f"AI participant {i}" for i, item in enumerate(self.participants, 1)]
         if len({name.casefold() for name in names}) != len(names):

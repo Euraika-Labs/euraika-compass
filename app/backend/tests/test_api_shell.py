@@ -50,6 +50,22 @@ def test_chat_requires_storage_and_a_selected_connection(tmp_path):
         assert response.json()["error"]["code"] == "database_unavailable"
 
 
+def test_persona_catalog_keeps_chat_profiles_and_advertises_roundtable_specialists(tmp_path):
+    with client(tmp_path) as api:
+        profiles = api.get("/api/v1/personas").json()["items"]
+        assert {item["id"] for item in profiles if not item.get("roundtable_only")} == {
+            "supportive", "wisdom", "textual", "comparative", "critical",
+        }
+        assert {item["id"] for item in profiles if item.get("roundtable_only")} == {
+            "historical", "philology", "manuscripts", "literary", "reception", "source_verification",
+        }
+        assert len({item["description"] for item in profiles}) == len(profiles) == 11
+        specialist = api.post("/api/v1/chat", json={
+            "message": "What does this wording mean?", "connection_id": "unused", "persona_id": "philology",
+        })
+        assert specialist.status_code == 422
+
+
 def test_api_fallback_does_not_serve_index_as_success(tmp_path):
     with client(tmp_path) as api:
         assert api.get("/api/v1/unknown").status_code == 404

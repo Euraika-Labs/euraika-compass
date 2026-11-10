@@ -6,6 +6,14 @@ const catalog = {
   participantName: ['Participant label', 'Naam van de deelnemer', 'اسم المشارك', 'Nom du participant', 'Name des Teilnehmenden'],
   participant: ['AI participant', 'AI-deelnemer', 'مشارك بالذكاء الاصطناعي', 'Participant IA', 'KI-Teilnehmende Person'],
   duplicateNames: ['Give each participant a distinct label.', 'Geef elke deelnemer een eigen naam.', 'أعطِ كل مشارك اسمًا مميزًا.', 'Donnez à chaque participant un nom distinct.', 'Geben Sie jeder teilnehmenden Person einen eindeutigen Namen.'],
+  teams: ['Starter teams', 'Vooraf ingestelde teams', 'فرق جاهزة', 'Équipes prédéfinies', 'Vorgeschlagene Teams'],
+  teamsHint: ['Choose a team to start with editable participant profiles.', 'Kies een team met deelnemersprofielen die je kunt aanpassen.', 'اختر فريقًا بملفات مشاركين يمكنك تعديلها.', 'Choisissez une équipe dont vous pourrez modifier les profils.', 'Wählen Sie ein Team mit Teilnehmerprofilen, die Sie anpassen können.'],
+  textContext: ['Text & context', 'Tekst en context', 'النص والسياق', 'Texte et contexte', 'Text und Kontext'],
+  compareInterpretations: ['Compare interpretations', 'Interpretaties vergelijken', 'مقارنة التأويلات', 'Comparer les interprétations', 'Auslegungen vergleichen'],
+  manuscriptStudy: ['Manuscript study', 'Handschriftonderzoek', 'دراسة المخطوطات', 'Étude des manuscrits', 'Handschriftenstudium'],
+  lifeQuestion: ['Life question', 'Levensvraag', 'سؤال حياتي', 'Question de vie', 'Lebensfrage'],
+  replaceRoster: ['Replace participants', 'Deelnemers vervangen', 'استبدال المشاركين', 'Remplacer les participants', 'Teilnehmende ersetzen'],
+  replaceRosterHint: ['Replace the current participants and their model assignments with this team?', 'Wil je de huidige deelnemers en hun modeltoewijzingen door dit team vervangen?', 'هل تريد استبدال المشاركين الحاليين وتعيينات نماذجهم بهذا الفريق؟', 'Remplacer les participants actuels et leurs modèles assignés par cette équipe ?', 'Die aktuellen Teilnehmenden und ihre Modellzuweisungen durch dieses Team ersetzen?'],
   start: ['Start roundtable', 'Rondetafel starten', 'بدء حلقة النقاش', 'Démarrer la table ronde', 'Gesprächsrunde starten'],
   unavailable: ['Roundtable generation is unavailable in this Compass installation.', 'Rondetafelgesprekken zijn niet beschikbaar in deze Compass-installatie.', 'توليد النقاش غير متاح في تثبيت Compass الحالي.', 'La génération de la table ronde est indisponible dans cette installation de Compass.', 'Die Gesprächsrunden sind in dieser Compass-Installation nicht verfügbar.'],
   chooseSources: ['Choose a collection or a permitted manuscript reading.', 'Kies een collectie of een toegestane handschriftlezing.', 'اختر مجموعة أو قراءة مخطوط مسموحًا بها.', 'Choisissez une collection ou une lecture de manuscrit autorisée.', 'Wählen Sie eine Sammlung oder eine zulässige Handschriftenlesung.'],
@@ -59,3 +67,53 @@ const catalog = {
 export type RoundtableKey = keyof typeof catalog;
 const indexes: Record<Locale, number> = { en: 0, nl: 1, ar: 2, fr: 3, de: 4 };
 export const roundtableTranslate = (locale: Locale, key: RoundtableKey) => catalog[key][indexes[locale]];
+
+type Localized = readonly [string, string, string, string, string];
+const profiles: Record<string, { name?: Localized; method: Localized }> = {
+  supportive: {
+    method: ['Listens with care and offers gentle reflection on loss and uncertainty.', 'Luistert met aandacht en biedt ruimte voor reflectie bij verlies en onzekerheid.', 'يصغي بتعاطف ويفسح مجالًا للتأمل في الفقد وعدم اليقين.', 'Écoute avec attention et invite à réfléchir avec douceur à la perte et à l’incertitude.', 'Hört aufmerksam zu und lädt zur behutsamen Reflexion über Verlust und Unsicherheit ein.'],
+  },
+  wisdom: {
+    method: ['Explores life choices and practical ethical questions through the sources.', 'Verkent levenskeuzes en praktische ethische vragen aan de hand van de bronnen.', 'يستكشف خيارات الحياة والأسئلة الأخلاقية العملية في ضوء المصادر.', 'Explore les choix de vie et les questions éthiques concrètes à partir des sources.', 'Erkundet Lebensentscheidungen und praktische ethische Fragen anhand der Quellen.'],
+  },
+  textual: {
+    method: ['Examines the wording, edition and immediate context of a passage.', 'Onderzoekt de bewoording, de editie en de directe context van een passage.', 'يفحص صياغة المقطع وطبعته وسياقه المباشر.', 'Examine la formulation, l’édition et le contexte immédiat d’un passage.', 'Untersucht Wortlaut, Ausgabe und unmittelbaren Kontext einer Passage.'],
+  },
+  comparative: {
+    method: ['Compares readings across traditions and identifies meaningful differences.', 'Vergelijkt lezingen uit verschillende tradities en benoemt betekenisvolle verschillen.', 'يقارن القراءات بين التقاليد ويبيّن الفروق المهمة بينها.', 'Compare les lectures de différentes traditions et relève les différences significatives.', 'Vergleicht Lesarten verschiedener Traditionen und benennt wesentliche Unterschiede.'],
+  },
+  critical: {
+    method: ['Tests assumptions, considers counterarguments and identifies gaps in the evidence.', 'Toetst aannames, bekijkt tegenargumenten en benoemt hiaten in het bronmateriaal.', 'يختبر الافتراضات وينظر في الحجج المضادة ويبيّن الثغرات في الأدلة.', 'Met les hypothèses à l’épreuve, examine les objections et relève les lacunes des sources.', 'Prüft Annahmen, wägt Gegenargumente ab und benennt Lücken in den Belegen.'],
+  },
+  historical: {
+    name: ['Historical context researcher', 'Historisch contextonderzoeker', 'باحث في السياق التاريخي', 'Spécialiste du contexte historique', 'Forscher zum historischen Kontext'],
+    method: ['Places passages in their historical setting and marks uncertain dates or claims.', 'Plaatst passages in hun historische context en benoemt onzekerheid over dateringen of beweringen.', 'يضع المقاطع في سياقها التاريخي ويبيّن مواضع الشك في التواريخ أو الادعاءات.', 'Replace les passages dans leur contexte historique et signale les datations ou affirmations incertaines.', 'Ordnet Passagen historisch ein und kennzeichnet unsichere Datierungen oder Aussagen.'],
+  },
+  philology: {
+    name: ['Language and translation analyst', 'Taal- en vertaalanalist', 'محلل اللغة والترجمة', 'Analyste des langues et des traductions', 'Analyst für Sprache und Übersetzung'],
+    method: ['Uses available originals to assess word meanings and translation choices.', 'Onderzoekt woordbetekenissen en vertaalkeuzes aan de hand van beschikbare bronteksten.', 'يستعين بالنصوص الأصلية المتاحة لفحص معاني الكلمات وخيارات الترجمة.', 'S’appuie sur les textes originaux disponibles pour étudier le sens des mots et les choix de traduction.', 'Untersucht Wortbedeutungen und Übersetzungsentscheidungen anhand verfügbarer Originaltexte.'],
+  },
+  manuscripts: {
+    name: ['Manuscript and transmission analyst', 'Analist van handschriften en tekstoverlevering', 'محلل المخطوطات ونقل النصوص', 'Analyste des manuscrits et de la transmission', 'Analyst für Handschriften und Textüberlieferung'],
+    method: ['Distinguishes manuscript witnesses, transcriptions and editions when assessing variants.', 'Maakt bij tekstvarianten onderscheid tussen handschriften, transcripties en edities.', 'يميّز بين شواهد المخطوطات والتفريغات والطبعات عند تقييم اختلافات النص.', 'Distingue les témoins manuscrits, les transcriptions et les éditions pour étudier les variantes.', 'Unterscheidet Handschriften, Transkriptionen und Ausgaben bei der Prüfung von Textvarianten.'],
+  },
+  literary: {
+    name: ['Literary context analyst', 'Analist van literaire context', 'محلل السياق الأدبي', 'Analyste du contexte littéraire', 'Analyst für literarischen Kontext'],
+    method: ['Reads genre, structure and recurring themes in the available wider text.', 'Bekijkt genre, opbouw en terugkerende thema’s in de beschikbare ruimere tekst.', 'يدرس النوع الأدبي والبنية والموضوعات المتكررة في السياق النصي الأوسع المتاح.', 'Étudie le genre, la structure et les thèmes récurrents dans le contexte textuel disponible.', 'Untersucht Gattung, Aufbau und wiederkehrende Themen im verfügbaren größeren Textzusammenhang.'],
+  },
+  reception: {
+    name: ['History of interpretation researcher', 'Onderzoeker van interpretatiegeschiedenis', 'باحث في تاريخ التأويل', 'Spécialiste de l’histoire des interprétations', 'Forscher zur Auslegungsgeschichte'],
+    method: ['Traces how named authors and communities have interpreted a text over time.', 'Volgt hoe benoemde auteurs en gemeenschappen een tekst door de tijd heen hebben uitgelegd.', 'يتتبع كيف فهم النص مؤلفون وجماعات محددة عبر الزمن.', 'Retrace l’évolution des interprétations chez des auteurs et communautés identifiés.', 'Verfolgt die Auslegungen eines Textes durch benannte Autoren und Gemeinschaften im Lauf der Zeit.'],
+  },
+  source_verification: {
+    name: ['Source verifier', 'Broncontroleur', 'مدقق المصادر', 'Vérificateur de sources', 'Quellenprüfer'],
+    method: ['Checks provenance and how directly each source supports a claim.', 'Controleert de herkomst en hoe direct elke bron een bewering onderbouwt.', 'يتحقق من منشأ المصادر ومدى دعم كل مصدر للادعاء مباشرةً.', 'Vérifie la provenance des sources et dans quelle mesure chacune étaye directement une affirmation.', 'Prüft die Herkunft von Quellen und wie unmittelbar sie eine Aussage stützen.'],
+  },
+};
+
+export function roundtableProfile(locale: Locale, id: string) {
+  if (!Object.hasOwn(profiles, id)) return undefined;
+  const profile = profiles[id];
+  const index = indexes[locale];
+  return { name: profile.name?.[index], method: profile.method[index] };
+}

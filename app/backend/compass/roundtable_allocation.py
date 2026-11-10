@@ -5,9 +5,10 @@ import json
 import re
 
 from compass.adapters.base import AdapterError
-from compass.chat import PERSONAS, json_object
+from compass.chat import json_object
 from compass.connections import MISTRAL_LARGE_4_MODELS
 from compass.errors import APIError
+from compass.personas import ROUNDTABLE_PERSONAS
 
 SYSTEM = (
     "Allocate a language model to each requested persona for neutral theological research. "
@@ -38,7 +39,7 @@ async def rank_roundtable_routes(
     """Return (connection ID, selection basis) for each distinct requested persona."""
     if not candidates or not persona_ids:
         return {}
-    personas = {persona_id: PERSONAS[persona_id] for persona_id in persona_ids}
+    personas = {persona_id: ROUNDTABLE_PERSONAS[persona_id] for persona_id in persona_ids}
     first = candidates[0]
     if len(candidates) == 1:
         return dict.fromkeys(personas, (first["connection_id"], "single_candidate"))

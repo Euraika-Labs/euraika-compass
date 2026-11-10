@@ -1,20 +1,43 @@
-import { useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { api, ApiError } from './api';
 import { chatTranslate } from './chat-i18n';
 import { locales, translate } from './i18n';
 import { emptyManuscriptSelection, ManuscriptChatSources } from './ManuscriptChatSources';
 import { canUseConnection, collections, RequestError } from './research-chat';
-import { roundtableTranslate } from './roundtable-i18n';
+import { roundtableProfile, roundtableTranslate } from './roundtable-i18n';
 import type { RoundtableKey } from './roundtable-i18n';
 import type { ChatSettings, Collection, Connection, CorpusSource, Dossier, Locale, Persona, RoundtableRoom, RoundtableScope } from './types';
 
 const personaIds = ['supportive', 'wisdom', 'textual', 'comparative', 'critical'] as const;
+const teams = {
+  textContext: ['textual', 'historical', 'literary'],
+  compareInterpretations: ['comparative', 'reception', 'critical'],
+  manuscriptStudy: ['manuscripts', 'philology', 'source_verification'],
+  lifeQuestion: ['supportive', 'wisdom', 'comparative'],
+} satisfies Partial<Record<RoundtableKey, string[]>>;
+type Team = keyof typeof teams;
 type ParticipantDraft = { id: number; name: string; persona_id: string; connection_id: string; perspective: string; pinned: boolean };
 const newParticipant = (id: number, persona_id: string): ParticipantDraft => ({ id, name: '', persona_id, connection_id: '', perspective: '', pinned: false });
 
 export function roundtablePersonaName(id: string, personas: Persona[], locale: Locale) {
   const known = personaIds.find(item => item === id);
-  return known ? translate(locale, known) : personas.find(item => item.id === id)?.name ?? id;
+  return known ? translate(locale, known) : roundtableProfile(locale, id)?.name ?? personas.find(item => item.id === id)?.name ?? id;
+}
+
+function participantNames(participants: ParticipantDraft[], personas: Persona[], locale: Locale) {
+  const used = new Set(participants.flatMap(participant => {
+    const label = participant.name.trim().toLocaleLowerCase(locale);
+    return label ? [label] : [];
+  }));
+  return participants.map(participant => {
+    if (participant.name.trim()) return participant.name.trim();
+    const profile = roundtablePersonaName(participant.persona_id, personas, locale);
+    let label = profile;
+    let suffix = 2;
+    while (used.has(label.toLocaleLowerCase(locale))) label = `${profile} ${suffix++}`;
+    used.add(label.toLocaleLowerCase(locale));
+    return label;
+  });
 }
 
 const routingErrorKeys: Partial<Record<string, RoundtableKey>> = {
@@ -41,6 +64,8 @@ export function RoundtableSetup({ locale, connections, settings, sources, dossie
   const [topic, setTopic] = useState('');
   const [language, setLanguage] = useState('auto');
   const [participants, setParticipants] = useState(() => [newParticipant(1, 'textual'), newParticipant(2, 'critical')]);
+  const [rosterEdited, setRosterEdited] = useState(false);
+  const [pendingTeam, setPendingTeam] = useState<Team | null>(null);
   const [filter, setFilter] = useState<Collection[]>([...collections]);
   const [restrictSources, setRestrictSources] = useState(false);
   const [sourceIds, setSourceIds] = useState<string[]>([]);
@@ -50,6 +75,7 @@ export function RoundtableSetup({ locale, connections, settings, sources, dossie
   const [error, setError] = useState<unknown>(null);
   const creating = useRef(false);
   const nextId = useRef(3);
+  const descriptionId = useId();
   const hasCorpus = sources.length > 0;
   const useCorpus = hasCorpus && filter.length > 0 && !(manuscripts.enabled && manuscripts.only);
   const canWeb = webResearchAvailable && settings?.local_only === false;
@@ -58,8 +84,7 @@ export function RoundtableSetup({ locale, connections, settings, sources, dossie
   const assigned = participants.map(participant => connections.find(connection => connection.id === participant.connection_id));
   const remote = assigned.some(connection => connection?.local === false);
   const hasAutomatic = participants.some(participant => !participant.connection_id);
-  const label = (participant: ParticipantDraft, index: number) => participant.name.trim() || `${r('participant')} ${index + 1}`;
-  const names = participants.map(label);
+  const names = participantNames(participants, personas, locale);
   const distinct = new Set(names.map(name => name.toLocaleLowerCase(locale))).size === names.length;
   const validManuscripts = manuscripts.enabled && dossiers.some(dossier => dossier.id === manuscripts.dossierId)
     && manuscripts.readings.length > 0 && manuscripts.readings.length <= 6
@@ -77,7 +102,16 @@ export function RoundtableSetup({ locale, connections, settings, sources, dossie
   const personaOptions = personas.length ? personas.map(item => item.id) : [...personaIds];
 
   function updateParticipant(id: number, patch: Partial<ParticipantDraft>) {
+    setRosterEdited(true);
     setParticipants(items => items.map(item => item.id === id ? { ...item, ...patch } : item));
+  }
+
+  function applyTeam(team: Team) {
+    const roster = teams[team].map(persona => newParticipant(nextId.current++, persona));
+    setParticipants(roster);
+    setRosterEdited(false);
+    setPendingTeam(null);
+    setError(null);
   }
 
   async function createRoom() {
@@ -115,35 +149,63 @@ export function RoundtableSetup({ locale, connections, settings, sources, dossie
       </select></label>
     </div>
     <div className="panel-heading"><h2>{t('participants')}</h2><button className="button secondary" type="button" disabled={busy || participants.length >= 4}
-      onClick={() => setParticipants(items => [...items, newParticipant(nextId.current++, 'comparative')])}>{t('addParticipant')}</button></div>
+      onClick={() => {
+        const participant = newParticipant(nextId.current++, 'comparative');
+        setParticipants(items => [...items, participant]);
+        setRosterEdited(true);
+      }}>{t('addParticipant')}</button></div>
+    <section className="panel roundtable-teams" aria-label={r('teams')}>
+      <h3>{r('teams')}</h3><p className="helper">{r('teamsHint')}</p>
+      <div className="button-row">{(Object.keys(teams) as Team[]).map(team => <button className="button secondary" type="button" key={team}
+        disabled={busy || teams[team].some(persona => !personaOptions.includes(persona))}
+        onClick={() => rosterEdited ? setPendingTeam(team) : applyTeam(team)}>{r(team)}</button>)}</div>
+      {pendingTeam && <div className="notice" role="group" aria-label={r('replaceRoster')}>
+        <p>{r('replaceRosterHint')}</p><div className="button-row">
+          <button className="button secondary" type="button" disabled={busy} onClick={() => applyTeam(pendingTeam)}>{r('replaceRoster')}</button>
+          <button className="text-button" type="button" onClick={() => setPendingTeam(null)}>{t('cancel')}</button>
+        </div>
+      </div>}
+    </section>
     {readyConnections.length === 0 && <div className="notice"><span>{c('noReadyConnections')}</span>
       <button type="button" className="text-button" onClick={openConnections}>{c('connections')}</button></div>}
     {hasAutomatic && <p className="helper">{r('automaticHint')}</p>}
     {!distinct && <p className="inline-warning" role="status">{r('duplicateNames')}</p>}
-    {participants.map((participant, index) => <fieldset className="participant-card roundtable-participant-form" key={participant.id} disabled={busy}>
-      <legend><bdi>{names[index]}</bdi></legend>
-      <div className="participant-fields">
-        <label>{r('participantName')}<input maxLength={80} value={participant.name} placeholder={`${r('participant')} ${index + 1}`} dir="auto"
-          onChange={event => updateParticipant(participant.id, { name: event.target.value })} /></label>
-        <label>{t('persona')}<select value={participant.persona_id} onChange={event => updateParticipant(participant.id, { persona_id: event.target.value })}>
-          {personaOptions.map(id => <option key={id} value={id}>{roundtablePersonaName(id, personas, locale)}</option>)}
-        </select></label>
-        <label>{t('perspective')}<input maxLength={300} value={participant.perspective} placeholder={t('perspectivePlaceholder')} dir="auto"
-          onChange={event => updateParticipant(participant.id, { perspective: event.target.value })} /></label>
-        <label>{t('model')}<select value={participant.connection_id} disabled={participant.pinned}
-          onChange={event => updateParticipant(participant.id, { connection_id: event.target.value })}>
-          <option value="">{r('chooseAutomatically')}</option>
-          {connections.map(connection => <option key={connection.id} value={connection.id} disabled={!canUseConnection(connection, settings)}>
-            {connection.title} · {connection.model_id} · {r(connection.local ? 'localRoute' : 'cloudRoute')}
-          </option>)}
-        </select></label>
-        <label className="checkbox-label"><input type="checkbox" checked={participant.pinned} disabled={!participant.connection_id}
-          onChange={event => updateParticipant(participant.id, { pinned: event.target.checked })} />{t('pin')}</label>
-        {!!participant.connection_id && (!assigned[index] || !canUseConnection(assigned[index], settings)) &&
-          <p className="inline-warning">{participant.pinned ? t('pinnedUnavailable') : t('unavailable')}</p>}
-      </div>
-      {participants.length > 2 && <button type="button" className="text-button" onClick={() => setParticipants(items => items.filter(item => item.id !== participant.id))}>{t('remove')}</button>}
-    </fieldset>)}
+    {participants.map((participant, index) => {
+      const description = roundtableProfile(locale, participant.persona_id)?.method
+        ?? personas.find(item => item.id === participant.persona_id)?.description;
+      const profileDescriptionId = `${descriptionId}-${participant.id}`;
+      return <fieldset className="participant-card roundtable-participant-form" key={participant.id} disabled={busy}>
+        <legend><bdi>{names[index]}</bdi></legend>
+        <div className="participant-fields">
+          <label>{r('participantName')}<input maxLength={80} value={participant.name} placeholder={names[index]} dir="auto"
+            onChange={event => updateParticipant(participant.id, { name: event.target.value })} /></label>
+          <div>
+            <label>{t('persona')}<select value={participant.persona_id} aria-describedby={description ? profileDescriptionId : undefined}
+              onChange={event => updateParticipant(participant.id, { persona_id: event.target.value })}>
+              {personaOptions.map(id => <option key={id} value={id}>{roundtablePersonaName(id, personas, locale)}</option>)}
+            </select></label>
+            {description && <p id={profileDescriptionId} className="helper roundtable-profile-description" dir="auto">{description}</p>}
+          </div>
+          <label>{t('perspective')}<input maxLength={300} value={participant.perspective} placeholder={t('perspectivePlaceholder')} dir="auto"
+            onChange={event => updateParticipant(participant.id, { perspective: event.target.value })} /></label>
+          <label>{t('model')}<select value={participant.connection_id} disabled={participant.pinned}
+            onChange={event => updateParticipant(participant.id, { connection_id: event.target.value })}>
+            <option value="">{r('chooseAutomatically')}</option>
+            {connections.map(connection => <option key={connection.id} value={connection.id} disabled={!canUseConnection(connection, settings)}>
+              {connection.title} · {connection.model_id} · {r(connection.local ? 'localRoute' : 'cloudRoute')}
+            </option>)}
+          </select></label>
+          <label className="checkbox-label"><input type="checkbox" checked={participant.pinned} disabled={!participant.connection_id}
+            onChange={event => updateParticipant(participant.id, { pinned: event.target.checked })} />{t('pin')}</label>
+          {!!participant.connection_id && (!assigned[index] || !canUseConnection(assigned[index], settings)) &&
+            <p className="inline-warning">{participant.pinned ? t('pinnedUnavailable') : t('unavailable')}</p>}
+        </div>
+        {participants.length > 2 && <button type="button" className="text-button" onClick={() => {
+          setParticipants(items => items.filter(item => item.id !== participant.id));
+          setRosterEdited(true);
+        }}>{t('remove')}</button>}
+      </fieldset>;
+    })}
     <section className="panel grounding-controls roundtable-grounding" aria-label={r('fixedScope')}>
       <h2>{r('fixedScope')}</h2>
       {hasCorpus && !manuscripts.only && <>

@@ -95,8 +95,19 @@ Starter imports are explicit catalog downloads.
 ## Moderate a Roundtable
 
 In **Chat**, switch to **Roundtable**. Set a topic and choose two to four
-AI participants. Select a persona for each. Compass assigns a connected
-model by default, and you can choose a specific route instead.
+AI participants from eleven built-in profiles. In addition to the five chat
+profiles, the library covers historical context, language and translation,
+manuscript transmission, literary context, interpretation history, and
+source verification. Each profile fills in a default label and brings a
+distinct research method. You can customize the participant's label and
+perspective. Compass assigns a connected model by default, and you can
+choose a specific route instead.
+
+**Starter teams** fill three seats for common tasks. Choose **Text & context**,
+**Compare interpretations**, **Manuscript study**, or **Life question**.
+Confirm before replacing a roster you have edited. The topic and selected
+sources carry over when you use a starter team.
+
 Set the source scope before opening the room. Choose a participant to give
 them the floor. You can add a moderator note to direct their contribution.
 You can also start a round that gives each available participant one turn

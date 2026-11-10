@@ -54,7 +54,20 @@ Deze instellingen zijn onafhankelijk. Een **persona** bepaalt gespreksstijl en m
 | Vergelijkende geleerde | Overeenkomsten, verschillen, interpretaties en corpusdekking zichtbaar vergelijken |
 | Kritische gesprekspartner | Aannames en argumenten met dezelfde zorgvuldigheid onderzoeken en respectvol tegenspreken |
 
-Een historische of taalkundige onderzoekshoek kan als perspectief/taakrol worden ingesteld. Een gevraagde religieuze lezing wordt nauwkeurig toegeschreven; geen AI-deelnemer spreekt namens een gehele religie. Persona's kunnen het bronbeleid, de routeringsgrenzen en de gedeelde bewijsregels niet veranderen. Wisselen behoudt context en start geen ander gesprek. De app verandert niet ongevraagd van een betrokken gesprek in een confronterend debat.
+De Roundtable biedt deze vijf profielen en zes extra onderzoeksmethoden.
+
+| Roundtable-profiel | Gewenst gedrag |
+| --- | --- |
+| Onderzoeker historische context | Scheidt gedocumenteerde feiten, reconstructies en onzekerheid over tijd, plaats en publiek |
+| Taal- en vertaalanalist | Vergelijkt woordkeuze, grammatica en vertaling aan de hand van beschikbare brontaal en edities |
+| Handschrift- en overleveringsanalist | Onderscheidt manuscript, folio, transcriptie, editie en variant en vermeldt onzekerheid |
+| Analist literaire context | Leest passages in hun genre, structuur en bredere tekstverband voor zover de bronnen dat toelaten |
+| Onderzoeker interpretatiegeschiedenis | Schrijft gedocumenteerde lezingen toe aan hun auteurs, scholen of tradities |
+| Bronnencontroleur | Onderzoekt herkomst, bronsoort en welke bewering het materiaal daadwerkelijk kan dragen |
+
+Een profiel vult de standaardnaam en onderzoeksmethode van de deelnemer in. De moderator kan de naam, het perspectief en de modeltoewijzing apart aanpassen. Een gevraagde religieuze lezing wordt nauwkeurig toegeschreven. Iedere AI-deelnemer heeft een eigen analytische rol en past hetzelfde bronbeleid, dezelfde routeringsgrenzen en dezelfde gedeelde bewijsregels toe. Wisselen behoudt context en start geen ander gesprek. De gebruiker kiest zelf of een gesprek een debat wordt.
+
+Startteams vullen drie plaatsen voor tekst en context, interpretatievergelijking, handschriftonderzoek of een levensvraag. De moderator bevestigt het vervangen van een aangepaste deelnemerslijst. Onderwerp en bronselectie horen bij de tafel.
 
 ## Weergaven en bediening
 

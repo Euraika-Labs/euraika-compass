@@ -22,7 +22,7 @@ export interface ModelRoute {
   message: string;
   capabilities: string[];
 }
-export interface Persona { id: string; name: string; description: string }
+export interface Persona { id: string; name: string; description: string; roundtable_only?: boolean }
 export interface Dossier {
   id: string;
   title: string;

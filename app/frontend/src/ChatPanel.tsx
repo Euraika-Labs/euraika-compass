@@ -65,7 +65,8 @@ export function ChatPanel({ locale, connections, settings, sources, dossiers, pe
   const corpusReady = useCorpus && filter.length > 0 && (!restrictSources || sourceIds.length > 0);
   const canSend = ready && !busy && !!draft.trim() && !!selected && allowed(selected)
     && (!useCorpus || corpusReady) && (corpusReady || manuscriptPermitted) && (!manuscripts.enabled || manuscriptPermitted);
-  const personaOptions = personas.length ? personas.map(item => item.id) : [...personaIds];
+  const chatPersonas = personas.filter(item => !item.roundtable_only);
+  const personaOptions = chatPersonas.length ? chatPersonas.map(item => item.id) : [...personaIds];
   const name = (id: string) => { const known = personaIds.find(item => item === id); return known ? t(known) : personas.find(item => item.id === id)?.name ?? id; };
 
   useEffect(() => {

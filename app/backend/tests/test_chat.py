@@ -173,7 +173,7 @@ async def test_roundtable_freezes_common_evidence_with_local_planner_and_cloud_s
     chat = application.state.chat
     add_test_source(application)
     restricted = add_test_source(application, external_processing=False, content="mourning comfort PRIVATE_ROUND_TABLE")
-    participant = {"name": "Textual", "persona_id": "textual", "connection_id": "actual-test-boundary"}
+    participant = {"name": "Language analyst", "persona_id": "philology", "connection_id": "actual-test-boundary"}
     scope = {"topic": "Discuss mourning and comfort", "language": "en"}
     signature = connection.signature(participant["connection_id"])
 
@@ -196,13 +196,17 @@ async def test_roundtable_freezes_common_evidence_with_local_planner_and_cloud_s
     first = await chat.roundtable_reply(scope, participant, evidence=prepared["evidence"], history=[],
                                        moderator_note="", expected_signature=signature, allow_manuscript_cloud=False)
     connection.remote = True
-    second = await chat.roundtable_reply(scope, {**participant, "name": "Critical", "persona_id": "critical"},
-                                        evidence=prepared["evidence"], history=[{"name": "Textual", "answer": first["answer"]}],
+    second = await chat.roundtable_reply(scope, {**participant, "name": "Manuscript analyst", "persona_id": "manuscripts"},
+                                        evidence=prepared["evidence"],
+                                        history=[{"name": participant["name"], "answer": first["answer"]}],
                                         moderator_note="Respond to the first contribution", expected_signature=signature,
                                         allow_manuscript_cloud=False)
     first_payload, second_payload = [json.loads(messages[-1]["content"]) for _, messages in connection.calls[-2:]]
     assert first_payload["evidence"] == second_payload["evidence"]
-    assert second_payload["earlier_contributions"] == [{"speaker": "Textual", "text": first["answer"]}]
+    assert "translation" in first_payload["persona_method"].lower()
+    assert "transcription" in second_payload["persona_method"].lower()
+    assert first_payload["persona_method"] != second_payload["persona_method"]
+    assert second_payload["earlier_contributions"] == [{"speaker": participant["name"], "text": first["answer"]}]
     assert first["citations"] == second["citations"]
     assert "NEW_EDITION_AFTER_FREEZE" not in json.dumps(connection.calls)
 

@@ -241,8 +241,11 @@ def test_orchestrated_assignment_is_private_and_moderator_pin_survives_failure(p
                           local["id"], cloud["id"], expected_signature):
             assert forbidden not in prompt
         payload = json.loads(messages[-1]["content"])
+        assert "source_verification" in payload["personas"]
         aliases = {model["model_id"]: alias for alias, model in payload["candidates"].items()}
-        return {"text": json.dumps({"textual": aliases[cloud["model_id"]], "critical": aliases[local["model_id"]]})}
+        return {"text": json.dumps({
+            "textual": aliases[cloud["model_id"]], "source_verification": aliases[local["model_id"]],
+        })}
 
     monkeypatch.setattr(connections, "complete", complete)
     response = client.post("/api/v1/roundtables", json={
@@ -251,7 +254,7 @@ def test_orchestrated_assignment_is_private_and_moderator_pin_survives_failure(p
         "source_ids": [source_id],
         "participants": [
             {"persona_id": "textual", "name": "Private reader name", "perspective": "Private perspective"},
-            {"persona_id": "critical"},
+            {"persona_id": "source_verification"},
         ],
     })
     assert response.status_code == 201, response.text

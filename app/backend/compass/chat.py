@@ -20,17 +20,11 @@ from compass.adapters.base import AdapterError
 from compass.db import Database
 from compass.errors import APIError
 from compass.models import ChatTurn, Conversation, Dossier, Edition, Source
+from compass.personas import CHAT_PERSONAS, ROUNDTABLE_PERSONAS
 
 router = APIRouter(prefix="/api/v1")
 logger = logging.getLogger("uvicorn.error")
 COLLECTIONS = {"torah", "bible", "quran"}
-PERSONAS = {
-    "supportive": "Listen sensitively, acknowledge grief and uncertainty, and offer gentle reflection.",
-    "wisdom": "Explore practical choices and ethical questions without claiming religious authority.",
-    "textual": "Examine the actual wording, named edition, translation limits and textual context.",
-    "comparative": "Compare attributed readings and differences without forcing agreement.",
-    "critical": "Test assumptions, alternate explanations and the limits of the available evidence.",
-}
 SYSTEM = """You are Euraika Compass, a neutral assistant for personal theological research.
 Apply the same evidence standards to Torah, Bible and Quran. No religion has priority.
 Distinguish textual observation, an attributed interpretation, and personal reflection.
@@ -118,7 +112,7 @@ class ChatRequest(BaseModel):
     @field_validator("persona_id")
     @classmethod
     def known_persona(cls, value):
-        if value not in PERSONAS:
+        if value not in CHAT_PERSONAS:
             raise ValueError("Choose a known persona")
         return value
 
@@ -349,9 +343,10 @@ class ChatService:
         self, scope: dict, participant: dict, *, external_processing: bool,
         expected_signature: str, allow_manuscript_cloud: bool,
     ) -> dict:
+        # Preparing a shared snapshot does not use the selected speaker's persona.
         request = ChatRequest.model_validate({
             **scope, "message": scope["topic"], "connection_id": participant["connection_id"],
-            "persona_id": participant["persona_id"], "allow_manuscript_cloud": allow_manuscript_cloud,
+            "allow_manuscript_cloud": allow_manuscript_cloud,
             "history": [], "session_id": None, "conversation_id": None,
         })
         async with self.gate:
@@ -411,7 +406,7 @@ class ChatService:
         )
         prompt = json.dumps({
             "question": scope["topic"], "answer_language": language,
-            "participant": participant.get("name"), "persona_method": PERSONAS[participant["persona_id"]],
+            "participant": participant.get("name"), "persona_method": ROUNDTABLE_PERSONAS[participant["persona_id"]],
             "perspective": participant.get("perspective"), "moderator_note": moderator_note,
             "earlier_contributions": [{
                 "speaker": item.get("name") or item.get("participant_name") or item.get("participant_id"),
@@ -709,7 +704,7 @@ class ChatService:
                     "grounding": {"mode": "roundtable", "retrieved_count": len(evidence), "collections": covered,
                                   "retrieved_collections": covered, "web_research": web_grounding}}
         prompt = json.dumps({"question": body.message, "answer_language": response_language,
-                             "persona_method": PERSONAS[body.persona_id],
+                             "persona_method": CHAT_PERSONAS[body.persona_id],
                              "evidence": model_sources(evidence)},
                             ensure_ascii=False)
         answer_messages = [
