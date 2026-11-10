@@ -180,6 +180,7 @@ export interface RoundtableScope {
 }
 export interface RoundtableTurn extends Pick<ChatResponse, 'answer' | 'citations' | 'warnings' | 'connection_id' | 'model_id' | 'grounding'> {
   id: string; participant_id: string; moderator_note?: string | null; synthesis?: boolean; created_at: string;
+  request_revision?: number;
 }
 export interface RoundtableRoom {
   id: string; topic: string; language: string; participants: RoundtableParticipant[]; turns: RoundtableTurn[];

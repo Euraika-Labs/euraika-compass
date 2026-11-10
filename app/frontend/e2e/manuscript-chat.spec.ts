@@ -142,7 +142,7 @@ test('chat uses selected manuscript revisions and preserves image coordinates an
   await expectRegion(region);
 });
 
-test('a local first speaker needs shared manuscript consent in a mixed roundtable', async ({ page }) => {
+test('a mixed manuscript roundtable keeps its conversation and moderator controls in the chat window', async ({ page }) => {
   const topic = 'How do manuscript witnesses change this reading?';
   const room: RoundtableRoom = {
     id: 'roundtable-fixture', topic, language: 'auto', status: 'awaiting_moderator', revision: 0,
@@ -157,6 +157,10 @@ test('a local first speaker needs shared manuscript consent in a mixed roundtabl
     ],
   };
   const firstAnswer = 'The folio records a particular reading [S1].';
+  const followUp = 'Please explain what can be learned from the transcription.';
+  const followUpAnswer = 'The transcription supports a comparison of wording [S1].';
+  const teamMessage = 'Give me both perspectives on that comparison.';
+  const teamAnswers = ['The wording suggests one possible reading.', 'The comparison still has limits.'];
   const submitted: unknown[] = [];
   const assignments: unknown[] = [];
   let evidenceReady = false;
@@ -186,12 +190,24 @@ test('a local first speaker needs shared manuscript consent in a mixed roundtabl
         ? { ...snapshot, evidence_version: 1, evidence: [citation] }
         : snapshot;
     } else if (path === `/roundtables/${room.id}/turns` || path === `/roundtables/${room.id}/rounds`) {
-      submitted.push(request.postDataJSON());
-      snapshot = { ...room, revision: 1, status: 'running', active_participant_id: 'local-speaker' };
-      await firstReplyPending;
-      snapshot = { ...room, revision: 2, evidence_version: 1, evidence: [citation], grounding: reply.grounding, turns: [{
-        ...reply, id: 'local-turn', participant_id: 'local-speaker', created_at: time, answer: firstAnswer, citations: [citation],
-      }] };
+      const command = request.postDataJSON();
+      submitted.push(command);
+      if (snapshot.turns.length === 0) {
+        snapshot = { ...room, revision: 1, status: 'running', active_participant_id: 'local-speaker' };
+        await firstReplyPending;
+        snapshot = { ...room, revision: 2, evidence_version: 1, evidence: [citation], grounding: reply.grounding, turns: [{
+          ...reply, id: 'local-turn', participant_id: 'local-speaker', created_at: time, answer: firstAnswer,
+          request_revision: command.expected_revision, citations: [citation],
+        }] };
+      } else {
+        const speakers: string[] = command.participant_ids ?? [command.participant_id];
+        const contributions = speakers.map((speaker, index) => ({
+          ...reply, id: `turn-${command.expected_revision}-${index}`, participant_id: speaker, created_at: time,
+          request_revision: command.expected_revision, moderator_note: command.moderator_note,
+          answer: command.participant_ids ? `${teamAnswers[index]} [S1]` : followUpAnswer, citations: [citation],
+        }));
+        snapshot = { ...snapshot, revision: snapshot.revision + 2, turns: [...snapshot.turns, ...contributions] };
+      }
       body = { room: snapshot };
     } else if (path === `/roundtables/${room.id}/participants/local-speaker`) {
       const assignment = request.postDataJSON();
@@ -229,9 +245,20 @@ test('a local first speaker needs shared manuscript consent in a mixed roundtabl
   const cloudFloor = page.getByRole('button', { name: 'Give the floor · Critical reader' });
   const consent = page.getByRole('checkbox', { name: 'Allow cloud speakers in this turn or round to receive permitted reading excerpts' });
   const transcript = page.getByRole('region', { name: 'Roundtable transcript' });
+  const feed = transcript.getByRole('log');
+  const message = transcript.getByRole('textbox', { name: 'Message to the roundtable' });
+  const recipient = transcript.getByRole('combobox', { name: 'Send to' });
+  const send = transcript.getByRole('button', { name: 'Send message' });
   const evidence = page.getByRole('region', { name: 'Shared evidence' });
   const pendingReply = transcript.getByRole('status');
   await expect(transcript.getByRole('heading', { name: 'Discussion', exact: true })).toBeVisible();
+  await expect(feed.getByText(topic, { exact: true })).toBeVisible();
+  await expect(feed).toHaveCSS('overflow-y', 'auto');
+  await expect(message).toBeVisible();
+  await expect(feed.getByRole('textbox')).toHaveCount(0);
+  await expect(recipient).toHaveValue('everyone');
+  await expect(send).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Ask a round', exact: true })).toBeVisible();
   await expect(transcript.getByText('No replies yet. Choose Give the floor for one participant, or Ask a round to hear the team.')).toBeVisible();
   await expect(evidence).toBeVisible();
   const evidenceNode = await evidence.elementHandle();
@@ -247,14 +274,31 @@ test('a local first speaker needs shared manuscript consent in a mixed roundtabl
     evidenceReady = true;
     await expect(evidence.getByText('Evidence version 1')).toBeVisible();
     await expect(pendingReply).toHaveText('Writing the first reply…');
-    await expect(transcript.getByText(firstAnswer.split(' [S1]')[0])).toHaveCount(0);
+    await expect(feed.getByText(firstAnswer.split(' [S1]')[0])).toHaveCount(0);
   } finally { finishFirstReply(); }
-  await expect(transcript.getByText(firstAnswer.split(' [S1]')[0])).toBeVisible();
+  await expect(feed.getByText(firstAnswer.split(' [S1]')[0])).toBeVisible();
   await expect(pendingReply).toHaveCount(0);
   expect(submitted).toEqual([expect.objectContaining({ participant_id: 'local-speaker', expected_revision: 0, allow_manuscript_cloud: true })]);
   await expect(consent).not.toBeChecked();
   await expect(localFloor).toBeEnabled();
   await expect(cloudFloor).toBeDisabled();
+
+  await recipient.selectOption('local-speaker');
+  await message.fill(followUp);
+  await expect(send).toBeEnabled();
+  await send.click();
+  await expect(feed.getByText(followUp, { exact: true })).toBeVisible();
+  const followUpMessage = feed.getByRole('article').filter({ hasText: followUpAnswer.split(' [S1]')[0] });
+  await expect(followUpMessage.getByRole('heading', { name: 'Text analyst', exact: true })).toBeVisible();
+  await expect(message).toHaveValue('');
+  await expect(send).toBeDisabled();
+  expect(submitted[1]).toEqual(expect.objectContaining({
+    participant_id: 'local-speaker', moderator_note: followUp, expected_revision: 2, allow_manuscript_cloud: false,
+  }));
+  await followUpMessage.getByRole('button', { name: '[S1]', exact: true }).click();
+  const citationDetails = page.getByRole('complementary', { name: 'Citation details' });
+  await expect(citationDetails.locator('blockquote')).toHaveText(citation.quote);
+  await citationDetails.getByRole('button', { name: 'Close' }).click();
 
   await page.getByRole('button', { name: 'One-to-one', exact: true }).click();
   await expect(transcript).toBeHidden();
@@ -286,9 +330,19 @@ test('a local first speaker needs shared manuscript consent in a mixed roundtabl
   await expect(analyst.getByText(/Manual assignment/)).toBeVisible();
   await expect(analyst.getByText('Pinned', { exact: true })).toBeVisible();
   expect(assignments).toEqual([
-    { connection_id: 'local-fixture', pinned: true, expected_revision: 2 },
-    { connection_id: 'local-fixture', pinned: false, expected_revision: 3 },
-    { connection_id: 'cloud-fixture', pinned: true, expected_revision: 4 },
+    { connection_id: 'local-fixture', pinned: true, expected_revision: 4 },
+    { connection_id: 'local-fixture', pinned: false, expected_revision: 5 },
+    { connection_id: 'cloud-fixture', pinned: true, expected_revision: 6 },
   ]);
-  expect(submitted).toHaveLength(1);
+  await recipient.selectOption('everyone');
+  await message.fill(teamMessage);
+  await expect(send).toBeDisabled();
+  await consent.check();
+  await send.click();
+  for (const answer of teamAnswers) await expect(feed.getByText(answer, { exact: false })).toBeVisible();
+  await expect(feed.getByText(teamMessage, { exact: true })).toHaveCount(1);
+  expect(submitted).toHaveLength(3);
+  expect(submitted[2]).toMatchObject({
+    participant_ids: ['local-speaker', 'cloud-speaker'], moderator_note: teamMessage, allow_manuscript_cloud: true,
+  });
 });

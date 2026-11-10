@@ -73,6 +73,7 @@ async def test_explicit_round_and_synthesis_reuse_the_same_evidence_and_reject_r
     assert not chat.replied and not chat.prepared
     result = await service.speak(room, speakers, command)
     assert [turn["participant_id"] for turn in result["turns"]] == [str(item) for item in speakers]
+    assert [turn["request_revision"] for turn in result["turns"]] == [0, 0]
     assert len(chat.prepared) == 1
     assert chat.prepared[0][2]["external_processing"] is True
     assert chat.replied[0][2] is chat.replied[1][2]
@@ -87,6 +88,7 @@ async def test_explicit_round_and_synthesis_reuse_the_same_evidence_and_reject_r
     assert len(chat.replied) == 2
     summary = await service.speak(room, [speakers[1]], SpeakingRequest(expected_revision=room.revision), synthesis=True)
     assert summary["turns"][0]["synthesis"]
+    assert summary["turns"][0]["request_revision"] > result["turns"][0]["request_revision"]
     assert chat.replied[-1][0]["synthesis"]
     assert chat.replied[-1][0]["resolved_language"] == "nl"
     assert summary["room"]["evidence_sha256"] == result["room"]["evidence_sha256"]

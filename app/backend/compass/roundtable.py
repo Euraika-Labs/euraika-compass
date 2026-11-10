@@ -364,7 +364,7 @@ class RoundtableService:
         turn = {
             **reply, "id": str(uuid4()), "participant_id": participant["id"], "name": participant["name"],
             "connection_id": participant["connection_id"], "persona_id": participant["persona_id"],
-            "moderator_note": body.moderator_note, "synthesis": synthesis,
+            "moderator_note": body.moderator_note, "request_revision": body.expected_revision, "synthesis": synthesis,
             "warnings": [*room.source_warnings, *reply["warnings"]], "grounding": room.grounding,
             "created_at": datetime.now(timezone.utc).isoformat(),
         }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { api, ApiError } from './api';
 import { AnswerText, CitationChips, CitationPanel } from './ChatEvidence';
 import { chatTranslate } from './chat-i18n';
@@ -34,6 +34,8 @@ function RoundtableSession({ initialRoom, locale, connections, settings, sources
   const c = (key: Parameters<typeof chatTranslate>[1]) => chatTranslate(locale, key);
   const [room, setRoom] = useState(initialRoom);
   const [note, setNote] = useState('');
+  const [audience, setAudience] = useState('everyone');
+  const [pendingMessage, setPendingMessage] = useState<{ text: string; revision: number } | null>(null);
   const [synthesis, setSynthesis] = useState(false);
   const [consent, setConsent] = useState(false);
   const [citation, setCitation] = useState<Citation | null>(null);
@@ -45,6 +47,8 @@ function RoundtableSession({ initialRoom, locale, connections, settings, sources
   const [assignment, setAssignment] = useState<Assignment | null>(null);
   const generation = useRef<AbortController | null>(null);
   const controlling = useRef(false);
+  const feed = useRef<HTMLDivElement>(null);
+  const followMessages = useRef(true);
   const stopped = room.status === 'stopped';
   const working = running || room.status === 'running';
   const firstReply = room.turns.length === 0;
@@ -71,6 +75,15 @@ function RoundtableSession({ initialRoom, locale, connections, settings, sources
   const consentNeeded = (speakers: RoundtableParticipant[]) => hasManuscripts
     && (room.evidence_version === null ? room.participants : speakers).some(item => !item.local);
   const cloudConsentNeeded = consentNeeded(eligible);
+  const sendToEveryone = audience === 'everyone';
+  const recipients = sendToEveryone ? eligible : eligible.filter(participant => participant.id === audience);
+  const canSend = !locked && !!note.trim() && recipients.length > 0
+    && !(sendToEveryone && synthesis) && (!consentNeeded(recipients) || consent);
+  const visiblePending = pendingMessage && !room.turns.some(turn => turn.request_revision === pendingMessage.revision);
+
+  useLayoutEffect(() => {
+    if (feed.current && followMessages.current) feed.current.scrollTop = feed.current.scrollHeight;
+  }, [room.turns.length, visiblePending, working, replyStatus]);
 
   useEffect(() => () => { generation.current?.abort(); }, []);
   useEffect(() => {
@@ -98,9 +111,12 @@ function RoundtableSession({ initialRoom, locale, connections, settings, sources
     setError(null);
     setRunning(true);
     setRequestedSpeaker(round ? '' : participants[0].id);
+    const message = note.trim();
+    followMessages.current = true;
+    setPendingMessage(message ? { text: message, revision: room.revision } : null);
     const payload = {
       ...(round ? { participant_ids: participants.map(item => item.id) } : { participant_id: participants[0].id, synthesis }),
-      moderator_note: note.trim() || undefined,
+      moderator_note: message || undefined,
       expected_revision: room.revision,
       allow_manuscript_cloud: needsConsent && consent,
     };
@@ -123,6 +139,7 @@ function RoundtableSession({ initialRoom, locale, connections, settings, sources
     } finally {
       if (generation.current === operation) {
         generation.current = null;
+        setPendingMessage(null);
         setRunning(false);
         setRequestedSpeaker('');
       }
@@ -138,6 +155,7 @@ function RoundtableSession({ initialRoom, locale, connections, settings, sources
       const operation = generation.current;
       generation.current = null;
       operation?.abort();
+      setPendingMessage(null);
       setConsent(false);
     }
     try {
@@ -168,60 +186,73 @@ function RoundtableSession({ initialRoom, locale, connections, settings, sources
   }
 
   return <section className="roundtable-room">
-    <header className="panel roundtable-room-header">
-      <div><p className="eyebrow">{r('temporary')}</p><h2 dir="auto">{room.topic}</h2></div>
-      <p className="pill" role="status">{r(stopped ? 'stopped' : working ? 'running' : 'waiting')}</p>
-    </header>
     <RoundtableRequestError error={error} locale={locale} manuscriptSearch={hasManuscripts} />
     {needsSync && <p className="notice warning" role="alert">{r('requestFailed')}</p>}
-    <details className="panel roundtable-scope">
-      <summary>{r('fixedScope')}</summary>
-      <p className="helper">{r('scopeEdits')}</p>
-      <dl>
-        <dt>{c('answerLanguage')}</dt><dd>{currentLanguage?.label ?? (room.language === 'auto' ? c('questionLanguage') : room.language)}</dd>
-        {room.scope.collection_filter.length > 0 && <><dt>{c('collections')}</dt><dd>{room.scope.collection_filter.map(item => c(item)).join(' · ')}</dd></>}
-        {!!room.scope.source_ids?.length && <><dt>{c('sources')}</dt><dd>{room.scope.source_ids.map(id => sources.find(item => item.id === id)?.title ?? id).join(' · ')}</dd></>}
-        {room.scope.manuscript_dossier_id && <><dt>{r('manuscriptsScope')}</dt><dd>{dossier?.title ?? room.scope.manuscript_dossier_id} · {room.scope.manuscript_revision_ids?.length ?? 0}</dd></>}
-        <dt>{r('webScope')}</dt><dd>{c(room.scope.web_research ? 'webUsed' : 'webOff')}</dd>
-      </dl>
-      <p className="helper">{r('sharedRights')}</p>
-    </details>
-    <div className="roundtable-moderator panel">
-      <div className="panel-heading"><h2>{r('moderator')}</h2><div className="button-row">
-        <button type="button" className="button secondary" disabled={!!control || running} onClick={() => void updateRoom('refresh')}>{r('refresh')}</button>
-        {working && !stopped && <button type="button" className="button secondary" disabled={!!control} onClick={() => void updateRoom('cancel')}>{r('cancelTurn')}</button>}
-        {!stopped && <button type="button" className="button secondary" disabled={!!control} onClick={() => void updateRoom('stop')}>{r('end')}</button>}
-        {stopped && <button type="button" className="button primary" onClick={onNew}>{r('newRoom')}</button>}
-      </div></div>
-      {!stopped && <>
-        {room.participants.some(participant => !participant.local) && <p className="helper">{r('cloudTopic')}</p>}
-        <label>{r('moderatorNote')}<textarea dir="auto" rows={2} value={note} maxLength={2000} disabled={locked} onChange={event => setNote(event.target.value)} /></label>
-        {room.turns.length >= 2 && <label className="checkbox-label"><input type="checkbox" checked={synthesis} disabled={locked}
-          onChange={event => setSynthesis(event.target.checked)} />{r('synthesis')}</label>}
-        {cloudConsentNeeded && <label className="checkbox-label"><input type="checkbox" checked={consent} disabled={locked}
-          onChange={event => setConsent(event.target.checked)} />{r('manuscriptConsent')}</label>}
-        <div className="button-row"><button type="button" className={firstReply ? 'button primary' : 'button secondary'} disabled={locked || synthesis || !eligible.length || (cloudConsentNeeded && !consent)}
-          onClick={() => void speak(eligible, true)}>{t('askRound')}</button>
-          <span className="helper">{r('roundHint')}{eligible.length > 0 && <> <bdi>{eligible.map(item => item.name).join(' · ')}</bdi></>}</span></div>
-      </>}
-    </div>
     <div className="roundtable-reading-grid">
       <section className="panel roundtable-transcript" aria-label={r('transcript')}>
-        <h2>{r('discussion')}</h2>
-        {firstReply && !stopped && !working && <p className="helper">{r('noTurns')}</p>}
-        {room.turns.map(turn => <article className="panel roundtable-turn" key={turn.id}>
-          <div className="panel-heading"><h3 dir="auto">{room.participants.find(item => item.id === turn.participant_id)?.name ?? turn.participant_id}</h3>
-            {turn.synthesis && <span className="pill">{r('synthesisTurn')}</span>}</div>
-          {turn.moderator_note && <p className="helper">{r('noteLabel')} · <bdi>{turn.moderator_note}</bdi></p>}
-          <AnswerText answer={turn.answer} citations={turn.citations} onCitation={setCitation} />
-          <div className="turn-meta"><code>{turn.model_id}</code></div>
-          {turn.grounding?.web_research && <WebResearchStatus research={turn.grounding.web_research} locale={locale} />}
-          {turn.grounding?.manuscripts && <ManuscriptReadingStatus evidence={turn.grounding.manuscripts} locale={locale} />}
-          <CitationChips citations={turn.citations} locale={locale} onCitation={setCitation} />
-          {turn.warnings.length > 0 && <details className="turn-warnings"><summary>{c('warnings')} ({turn.warnings.length})</summary>
-            <ul>{turn.warnings.map((warning, index) => <li key={index} dir="auto">{warning}</li>)}</ul></details>}
-        </article>)}
-        {working && !stopped && <p className="helper" role="status">{r(replyStatus)}</p>}
+        <header className="roundtable-chat-header">
+          <div><p className="eyebrow">{r('temporary')}</p><h2>{r('discussion')}</h2></div>
+          <div className="button-row" role="group" aria-label={r('moderator')}>
+            <span className="pill">{r(stopped ? 'stopped' : working ? 'running' : 'waiting')}</span>
+            <button type="button" className="button secondary" disabled={!!control || running} onClick={() => void updateRoom('refresh')}>{r('refresh')}</button>
+            {working && !stopped && <button type="button" className="button secondary" disabled={!!control} onClick={() => void updateRoom('cancel')}>{r('cancelTurn')}</button>}
+            {!stopped && <button type="button" className="button secondary" disabled={!!control} onClick={() => void updateRoom('stop')}>{r('end')}</button>}
+            {stopped && <button type="button" className="button primary" onClick={onNew}>{r('newRoom')}</button>}
+          </div>
+        </header>
+        <div className="roundtable-feed" ref={feed} role="log" aria-label={r('discussion')} tabIndex={0}
+          onScroll={event => {
+            const { scrollHeight, scrollTop, clientHeight } = event.currentTarget;
+            followMessages.current = scrollHeight - scrollTop - clientHeight <= 48;
+          }}>
+          <ModeratorMessage label={r('yourMessage')} text={room.topic} />
+          {firstReply && !stopped && !working && <p className="helper">{r('noTurns')}</p>}
+          {room.turns.map((turn, index) => {
+            const startsExchange = turn.request_revision === undefined
+              || room.turns[index - 1]?.request_revision !== turn.request_revision;
+            return <Fragment key={turn.id}>
+              {turn.moderator_note && startsExchange && <ModeratorMessage label={r('yourMessage')} text={turn.moderator_note} />}
+              <article className="roundtable-message roundtable-turn">
+                <div className="roundtable-message-meta">
+                  <h3 dir="auto">{room.participants.find(item => item.id === turn.participant_id)?.name ?? turn.participant_id}</h3>
+                  <code>{turn.model_id}</code>
+                  {turn.synthesis && <span className="pill">{r('synthesisTurn')}</span>}
+                </div>
+                <div className="roundtable-message-body">
+                  <AnswerText answer={turn.answer} citations={turn.citations} onCitation={setCitation} />
+                  {turn.grounding?.web_research && <WebResearchStatus research={turn.grounding.web_research} locale={locale} />}
+                  {turn.grounding?.manuscripts && <ManuscriptReadingStatus evidence={turn.grounding.manuscripts} locale={locale} />}
+                  <CitationChips citations={turn.citations} locale={locale} onCitation={setCitation} />
+                  {turn.warnings.length > 0 && <details className="turn-warnings"><summary>{c('warnings')} ({turn.warnings.length})</summary>
+                    <ul>{turn.warnings.map((warning, warningIndex) => <li key={warningIndex} dir="auto">{warning}</li>)}</ul></details>}
+                </div>
+              </article>
+            </Fragment>;
+          })}
+          {visiblePending && pendingMessage && <ModeratorMessage label={r('yourMessage')} text={pendingMessage.text} />}
+          {working && !stopped && <p className="helper" role="status">{r(replyStatus)}</p>}
+        </div>
+        {!stopped && <form className="roundtable-composer" onSubmit={event => {
+          event.preventDefault();
+          if (canSend) void speak(recipients, sendToEveryone);
+        }}>
+          <label>{r('moderatorNote')}<textarea dir="auto" rows={2} value={note} maxLength={2000} disabled={locked} onChange={event => setNote(event.target.value)} /></label>
+          {room.turns.length >= 2 && <label className="checkbox-label"><input type="checkbox" checked={synthesis} disabled={locked}
+            onChange={event => setSynthesis(event.target.checked)} />{r('synthesis')}</label>}
+          {cloudConsentNeeded && <label className="checkbox-label"><input type="checkbox" checked={consent} disabled={locked}
+            onChange={event => setConsent(event.target.checked)} />{r('manuscriptConsent')}</label>}
+          <div className="roundtable-composer-actions">
+            <label>{r('sendTo')}<select value={audience} disabled={locked} onChange={event => setAudience(event.target.value)}>
+              <option value="everyone">{r('everyone')}</option>
+              {room.participants.map(participant => <option key={participant.id} value={participant.id} disabled={!canSpeak(participant)}>{participant.name}</option>)}
+            </select></label>
+            <button type="submit" className="button primary" disabled={!canSend}>{r('sendMessage')}</button>
+            <button type="button" className="button secondary" disabled={locked || synthesis || !eligible.length || (cloudConsentNeeded && !consent)}
+              onClick={() => void speak(eligible, true)}>{t('askRound')}</button>
+          </div>
+          <p className="helper">{r('roundHint')}</p>
+          {room.participants.some(participant => !participant.local) && <p className="helper">{r('cloudTopic')}</p>}
+        </form>}
       </section>
       <div className="roundtable-side">
         <section className="roundtable-roster" aria-label={t('participants')}>
@@ -269,9 +300,28 @@ function RoundtableSession({ initialRoom, locale, connections, settings, sources
           <CitationChips citations={room.evidence} locale={locale} onCitation={setCitation} />
           {room.evidence_sha256 && <details className="passage-hash"><summary>SHA-256</summary><code dir="ltr">{room.evidence_sha256}</code></details>}
         </section>
+        <details className="panel roundtable-scope">
+          <summary>{r('fixedScope')}</summary>
+          <p className="helper">{r('scopeEdits')}</p>
+          <dl>
+            <dt>{c('answerLanguage')}</dt><dd>{currentLanguage?.label ?? (room.language === 'auto' ? c('questionLanguage') : room.language)}</dd>
+            {room.scope.collection_filter.length > 0 && <><dt>{c('collections')}</dt><dd>{room.scope.collection_filter.map(item => c(item)).join(' · ')}</dd></>}
+            {!!room.scope.source_ids?.length && <><dt>{c('sources')}</dt><dd>{room.scope.source_ids.map(id => sources.find(item => item.id === id)?.title ?? id).join(' · ')}</dd></>}
+            {room.scope.manuscript_dossier_id && <><dt>{r('manuscriptsScope')}</dt><dd>{dossier?.title ?? room.scope.manuscript_dossier_id} · {room.scope.manuscript_revision_ids?.length ?? 0}</dd></>}
+            <dt>{r('webScope')}</dt><dd>{c(room.scope.web_research ? 'webUsed' : 'webOff')}</dd>
+          </dl>
+          <p className="helper">{r('sharedRights')}</p>
+        </details>
       </div>
     </div>
     {citation && <CitationPanel citation={citation} locale={locale} onClose={() => setCitation(null)} />}
     {error instanceof ApiError && <code className="sr-only">{error.code}</code>}
   </section>;
+}
+
+function ModeratorMessage({ label, text }: { label: string; text: string }) {
+  return <article className="roundtable-message roundtable-message-moderator">
+    <div className="roundtable-message-meta"><strong>{label}</strong></div>
+    <p className="roundtable-message-body" dir="auto">{text}</p>
+  </article>;
 }

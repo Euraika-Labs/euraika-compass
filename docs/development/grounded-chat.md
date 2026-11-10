@@ -111,10 +111,11 @@ and select or pin a specific model.
 Confirm before replacing a roster you have edited. The topic and selected
 sources carry over when you use a starter team.
 
-Set the source scope before opening the room. **Discussion** shows the replies
-and their progress. Use **Give the floor** for one participant, or **Ask a round**
-to give each available participant one turn in the displayed order. You can add
-a moderator note to direct their contribution. After two contributions, you can request a synthesis
+Set the source scope before opening the room. **Discussion** is a chat window
+with the opening topic, moderator messages and participant replies. To send a
+follow-up, type in the composer, select a participant or **Everyone**, and use
+**Send message**. Use **Give the floor** for one participant, or **Ask a round**
+to give each available participant one turn in the displayed order. After two contributions, you can request a synthesis
 from the next speaker. Cancel an active generation to return to moderator
 control, or end the room.
 
