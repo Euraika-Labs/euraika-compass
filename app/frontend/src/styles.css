@@ -195,15 +195,20 @@ details[open] summary { margin-bottom: 12px; }
 .participant-card > .text-button { font-size: 10px; padding-top: 5px; }
 .roundtable-workspace { margin-top: 20px; }
 .roundtable-room { display: grid; gap: 16px; }
+.roundtable-reading-grid { display: grid; gap: 16px; align-items: start; }
+.roundtable-side { display: grid; gap: 16px; min-width: 0; }
+@media (min-width: 1200px) {
+  .roundtable-reading-grid { grid-template-columns: minmax(0, 1fr) minmax(270px, 34%); }
+}
 .roundtable-topic, .roundtable-moderator, .roundtable-evidence, .roundtable-scope,
-.roundtable-turn, .roundtable-speaker { padding: 16px; display: grid; gap: 10px; }
+.roundtable-transcript, .roundtable-turn, .roundtable-speaker { padding: 16px; display: grid; gap: 10px; min-width: 0; }
 .roundtable-room-header { padding: 16px; display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
 .roundtable-room-header h2 { overflow-wrap: anywhere; }
 .roundtable-roster { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 245px), 1fr)); gap: 12px; }
 .roundtable-participant-form { min-width: 0; margin: 0; }
 .roundtable-participant-form legend { color: var(--navy); font-weight: 600; padding-inline: 6px; }
 .roundtable-participant-form .participant-fields { grid-template-columns: repeat(auto-fit, minmax(min(100%, 205px), 1fr)); }
-.roundtable-transcript, .roundtable-assignment { display: grid; gap: 10px; }
+.roundtable-assignment { display: grid; gap: 10px; }
 .roundtable-moderator > .panel-heading, .roundtable-speaker > .panel-heading,
 .roundtable-evidence > .panel-heading, .roundtable-turn > .panel-heading { padding: 0; flex-wrap: wrap; }
 .roundtable-scope dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); column-gap: 12px; row-gap: 6px; font-size: 12px; }

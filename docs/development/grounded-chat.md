@@ -111,10 +111,10 @@ and select or pin a specific model.
 Confirm before replacing a roster you have edited. The topic and selected
 sources carry over when you use a starter team.
 
-Set the source scope before opening the room. Choose a participant to give
-them the floor. You can add a moderator note to direct their contribution.
-You can also start a round that gives each available participant one turn
-in the displayed order. After two contributions, you can request a synthesis
+Set the source scope before opening the room. **Discussion** shows the replies
+and their progress. Use **Give the floor** for one participant, or **Ask a round**
+to give each available participant one turn in the displayed order. You can add
+a moderator note to direct their contribution. After two contributions, you can request a synthesis
 from the next speaker. Cancel an active generation to return to moderator
 control, or end the room.
 
