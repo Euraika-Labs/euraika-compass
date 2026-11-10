@@ -156,11 +156,18 @@ def json_object(text: str) -> dict:
     return value
 
 
-def checked_answer(text: str, evidence: list[dict]) -> tuple[str, list[dict], list[str]]:
+def checked_answer(
+    text: str, evidence: list[dict], *, grouped_citations: bool = False,
+) -> tuple[str, list[dict], list[str]]:
     value = json_object(text)
     answer = value.get("answer")
     if not isinstance(answer, str) or not answer.strip() or len(answer) > 24_000:
         raise APIError(502, "invalid_model_response", "The model returned an empty or oversized answer.")
+    if grouped_citations:
+        # Expand explicit lists without adding or substituting source identifiers.
+        answer = re.sub(r"\[(S\d+(?:\s*[,;]\s*S\d+)+)\]",
+                        lambda match: " ".join(f"[{label}]" for label in re.findall(r"S\d+", match[1])),
+                        answer)
     supplied = {item["id"]: item for item in evidence}
     mentioned = re.findall(r"\[(S\d+)\]", answer)
     all_markers = re.findall(r"\[(S[^\]]*)\]", answer)
@@ -387,7 +394,9 @@ class ChatService:
         messages = [
             {"role": "system", "content": SYSTEM + "\nThis is a human-moderated discussion. " + action
              + " Use only the shared frozen evidence IDs for citations. Keep the turn under 240 words. "
-             "You have no authority to assign speakers or change the evidence."},
+             "You have no authority to assign speakers or change the evidence. "
+             "Write each citation separately in square brackets. The available markers are: "
+             + " ".join(f"[{item['id']}]" for item in evidence)},
             {"role": "user", "content": prompt},
         ]
         large4 = route.get("provider") == "mistral" and route.get("model_id", "").startswith("mistral-large-4")
@@ -402,15 +411,17 @@ class ChatService:
         async with self.gate:
             result = await complete(messages)
             try:
-                answer, citations, warnings = checked_answer(result["text"], evidence)
+                answer, citations, warnings = checked_answer(result["text"], evidence, grouped_citations=True)
             except APIError as exc:
                 result = await complete([
                     *messages,
+                    {"role": "assistant", "content": result["text"][:12_000]},
                     {"role": "user", "content": "Return the same requested contribution as JSON with answer and limitations. "
-                     f"The previous draft failed the {exc.code} check. Paraphrase without quotation marks and cite only "
-                     "the supplied source markers, with at least one citation next to a relevant claim."},
+                     f"The previous draft failed the {exc.code} check. Paraphrase without quotation marks. "
+                     "Write at least one exact bracketed marker next to the claim it supports. "
+                     "Choose only from this list: " + " ".join(f"[{item['id']}]" for item in evidence)},
                 ])
-                answer, citations, warnings = checked_answer(result["text"], evidence)
+                answer, citations, warnings = checked_answer(result["text"], evidence, grouped_citations=True)
                 warnings.append("The selected model regenerated the contribution to correct its citation format.")
         return {"answer": answer, "citations": citations, "warnings": warnings, "model_id": result["model_id"]}
 

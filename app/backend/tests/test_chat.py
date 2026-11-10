@@ -52,6 +52,16 @@ def test_visible_ellipsis_can_omit_but_not_invent_quoted_words():
         checked_answer(json.dumps({"answer": "It says «The exact visible ... invented edition.» [S1]"}), EVIDENCE)
 
 
+def test_roundtable_expands_explicit_citation_lists_without_admitting_unknown_ids():
+    evidence = [*EVIDENCE, {"id": "S2", "quote": "Another visible source."}]
+    answer, citations, _ = checked_answer('{"answer":"Compare these sources [S1, S2]."}', evidence,
+                                          grouped_citations=True)
+    assert answer == "Compare these sources [S1] [S2]."
+    assert citations == evidence
+    with pytest.raises(APIError, match="unknown passage"):
+        checked_answer('{"answer":"Compare these sources [S1, S99]."}', evidence, grouped_citations=True)
+
+
 def test_full_temporary_session_can_still_be_saved():
     service = ChatService(None, None)
     key, value = service.session(None)
