@@ -88,9 +88,31 @@ English translation. Opening the reader does not send text to a model.
 
 There is **no vector-embedding retrieval or dedicated local reranker worker yet**,
 despite the pgvector foundations. The current relevance selector is the selected
-chat model. Manuscripts have a [separate catalog and reader workflow](manuscript-workflow.md);
-image-derived readings are not automatically admitted as chat passages.
+chat model. Manuscripts have a [catalog and reader workflow](manuscript-workflow.md).
+Chat uses saved reading revisions when you explicitly include them.
 Roundtable generation remains future work. Starter imports are explicit catalog downloads.
+
+## Manuscript readings in Chat
+
+Open **Source grounding** and include manuscript readings from a dossier.
+Select the specific saved revisions to use with the question. You can ask
+using those readings alone or alongside imported editions. When the selected
+model runs in the cloud, the source must allow processing and you confirm
+sending the matching transcript excerpts for that question. The chat model
+receives the excerpts as text.
+
+A manuscript citation opens the saved scan, the cited excerpt and the exact
+reading revision. An aligned region marks the reported location on that scan.
+A crop marks the part of the image used for the reading. If the reading has no
+usable coordinates, the citation opens the whole folio. Automatic readings
+and user corrections have separate status labels. Corrections made later
+create another revision and preserve the earlier citation.
+
+The 10 November 2026 live check cited a Kraken line from a Codex Bezae
+crop using local Ollama and a Kraken line from The Met's open Mamluk Qur'an
+folio using Mistral. Both saved citations reopened with the exact earlier
+revision and original image coordinates after a later correction was saved.
+Chrome confirmed that both markers landed at those positions on the displayed scans.
 
 ## Optional web research
 

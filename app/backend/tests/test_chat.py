@@ -9,7 +9,16 @@ from compass.adapters.base import AdapterError
 from compass.chat import ChatService, checked_answer, web_queries, while_connected
 from compass.corpus import STARTERS
 from compass.errors import APIError
-from compass.models import ChatTurn, Conversation, Edition, Passage, Source
+from compass.models import (
+    ChatTurn,
+    Conversation,
+    Dossier,
+    Edition,
+    ImageAsset,
+    Passage,
+    Source,
+    Transcription,
+)
 
 EVIDENCE = [{"id": "S1", "quote": "The exact visible words in the named edition.", "reference": "Example 1:1"}]
 
@@ -92,6 +101,7 @@ class ControlledConnection:
         self.ranked_ids = ["C1"]
         self.reference = None
         self.web_queries = []
+        self.manuscript_ranking = ["M1"]
         self.answer = "A gentle reflection on the retrieved test passage [S1]."
 
     def get(self, connection_id):
@@ -112,8 +122,11 @@ class ControlledConnection:
         if max_tokens == 1200:
             text = json.dumps({"queries": ["mourning comfort"], "references": [self.reference] if self.reference else [], "web_queries": self.web_queries})
         elif max_tokens == 800:
-            collections = json.loads(messages[-1]["content"])["collections"]
-            text = json.dumps({"selections": {collection: self.ranked_ids for collection in collections}})
+            payload = json.loads(messages[-1]["content"])
+            selection = {"selections": {collection: self.ranked_ids for collection in payload["collections"]}}
+            if "manuscript_candidates" in payload:
+                selection["manuscript_selections"] = self.manuscript_ranking
+            text = json.dumps(selection)
         elif self.invalid:
             text = json.dumps({"answer": "A fabricated source [S99]"})
         else:
@@ -139,6 +152,150 @@ def configure_chat(application, invalid=False):
     application.state.connections = connection
     application.state.chat = ChatService(application.state.database, connection)
     return connection
+
+
+MANUSCRIPT_TEXT = "Mourning comfort in this PRIVATE_FOLIO_MARKER reading."
+
+
+def add_manuscript_reading(application, *, external_processing=False):
+    with application.state.database.sessions() as session:
+        dossier = Dossier(title="Folio experiment")
+        session.add(dossier)
+        session.flush()
+        image = ImageAsset(
+            dossier_id=dossier.id, filename="folio-5v.jpg", media_type="image/jpeg", width=800, height=1200,
+            sha256="3" * 64, provenance={"kind": "manuscript", "manuscript_id": "fixture-witness",
+                "manuscript_title": "Manuscript fixture", "institution": "Fixture University Library",
+                "shelfmark": "MS Fixture 8", "folio_label": "fol. 5v", "folio_id": "folio-5v",
+                "image_sha256": "3" * 64, "manifest_sha256": "4" * 64,
+                "catalog_url": "https://example.org/manuscript", "language": "en",
+                "use_limits": {"local_ocr": True, "local_storage": True, "preview": True,
+                               "external_processing": external_processing}},
+        )
+        session.add(image)
+        session.flush()
+        reading = Transcription(
+            image_id=image.id, text=MANUSCRIPT_TEXT, kind="automatic", engine="kraken", language="en",
+            input_region={"x": 100, "y": 300, "width": 300, "height": 250},
+            regions=[{"text": MANUSCRIPT_TEXT, "page": 0, "type": "line", "coordinate_system": "input_pixels",
+                      "bbox": {"x": 12, "y": 20, "width": 90, "height": 15}}],
+        )
+        session.add(reading)
+        session.commit()
+        return str(dossier.id), str(reading.id), str(image.id)
+
+
+@pytest.mark.postgres
+@pytest.mark.parametrize("remote", [False, True])
+def test_manuscript_only_citation_keeps_saved_revision_after_correction(postgres_app, remote):
+    client, application, _ = postgres_app
+    connection = configure_chat(application)
+    connection.remote = remote
+    dossier, reading, image = add_manuscript_reading(application, external_processing=remote)
+    response = client.post("/api/v1/chat", json={
+        "message": "What about mourning comfort in this folio?", "connection_id": "actual-test-boundary",
+        "source_ids": [], "manuscript_dossier_id": dossier, "manuscript_revision_ids": [reading],
+        "allow_manuscript_cloud": remote,
+    })
+    assert response.status_code == 200, response.text
+    turn = response.json()
+    assert turn["grounding"]["manuscripts"] == {
+        "status": "used", "retrieved_count": 1, "source_count": 1, "blocked_count": 0, "dossier_id": dossier,
+    }
+    assert turn["grounding"]["cited_collections"] == []
+    citation = turn["citations"][0]
+    assert citation["kind"] == "manuscript" and citation["quote"] == MANUSCRIPT_TEXT
+    assert citation["transcription_id"] == reading and citation["image_id"] == image
+    assert citation["image_sha256"] == "3" * 64
+    assert citation["region"] == {"kind": "text_region", "coordinate_system": "original_image_pixels",
+                                  "x": 112, "y": 320, "width": 90, "height": 15}
+    prompt = json.loads(connection.calls[-1][1][-1]["content"])
+    assert prompt["evidence"][0]["quote"] == MANUSCRIPT_TEXT
+    assert "image_id" not in prompt["evidence"][0]
+
+    saved = client.post("/api/v1/conversations", json={"title": "Saved folio citation", "session_id": turn["session_id"]})
+    assert saved.status_code == 201
+    correction = client.post(f"/api/v1/transcriptions/{reading}/revisions", json={"text": "Later correction"})
+    assert correction.status_code == 201
+    reopened = client.get("/api/v1/conversations/" + saved.json()["id"]).json()["turns"][0]
+    assert reopened["citations"] == turn["citations"]
+
+
+@pytest.mark.postgres
+@pytest.mark.parametrize("case,code", [
+    ("wrong_dossier", "invalid_manuscript_selection"),
+    ("no_consent", "manuscript_cloud_consent_required"),
+    ("no_rights", "manuscript_processing_blocked"),
+])
+def test_manuscript_scope_and_cloud_permissions_checked_before_provider(postgres_app, case, code):
+    client, application, _ = postgres_app
+    connection = configure_chat(application)
+    connection.remote = True
+    dossier, reading, _ = add_manuscript_reading(application, external_processing=case != "no_rights")
+    if case == "wrong_dossier":
+        dossier = client.post("/api/v1/dossiers", json={"title": "Other dossier"}).json()["id"]
+    response = client.post("/api/v1/chat", json={
+        "message": "Read this folio", "connection_id": "actual-test-boundary", "source_ids": [],
+        "manuscript_dossier_id": dossier, "manuscript_revision_ids": [reading],
+        "allow_manuscript_cloud": case != "no_consent",
+    })
+    assert response.status_code in {403, 422}
+    assert response.json()["error"]["code"] == code
+    assert connection.calls == []
+
+
+@pytest.mark.postgres
+def test_uncited_private_manuscript_does_not_enter_later_cloud_history(postgres_app):
+    client, application, _ = postgres_app
+    connection = configure_chat(application)
+    add_test_source(application)
+    dossier, reading, _ = add_manuscript_reading(application)
+    question = {"message": "What evidence mentions mourning comfort?", "connection_id": "actual-test-boundary"}
+    connection.answer = "The private reading mentions PRIVATE_FOLIO_MARKER, and here is a passage [S1]."
+    first = client.post("/api/v1/chat", json={**question, "manuscript_dossier_id": dossier, "manuscript_revision_ids": [reading]})
+    assert first.status_code == 200, first.text
+    assert first.json()["grounding"]["manuscripts"]["status"] == "not_used"
+    assert first.json()["citations"][0].get("kind") != "manuscript"
+    assert "PRIVATE_FOLIO_MARKER" in json.dumps(connection.calls[-1][1])
+    connection.calls.clear()
+    connection.remote = True
+    connection.answer = "This edition refers to mourning and comfort [S1]."
+    response = client.post("/api/v1/chat", json={**question, "session_id": first.json()["session_id"]})
+    assert response.status_code == 200, response.text
+    assert all("PRIVATE_FOLIO_MARKER" not in json.dumps(messages) for _, messages in connection.calls)
+
+
+@pytest.mark.postgres
+def test_restricted_folio_is_excluded_while_permitted_edition_still_answers(postgres_app):
+    client, application, _ = postgres_app
+    connection = configure_chat(application)
+    connection.remote = True
+    add_test_source(application)
+    dossier, reading, _ = add_manuscript_reading(application)
+    response = client.post("/api/v1/chat", json={
+        "message": "What evidence mentions mourning comfort?", "connection_id": "actual-test-boundary",
+        "manuscript_dossier_id": dossier, "manuscript_revision_ids": [reading], "allow_manuscript_cloud": True,
+    })
+    assert response.status_code == 200, response.text
+    grounding = response.json()["grounding"]["manuscripts"]
+    assert grounding["status"] == "restricted" and grounding["blocked_count"] == 1
+    assert all("PRIVATE_FOLIO_MARKER" not in json.dumps(messages) for _, messages in connection.calls)
+
+
+@pytest.mark.postgres
+def test_dossier_bound_conversation_rejects_valid_reading_from_other_dossier(postgres_app):
+    client, application, _ = postgres_app
+    connection = configure_chat(application)
+    own_dossier = client.post("/api/v1/dossiers", json={"title": "Conversation dossier"}).json()["id"]
+    conversation = client.post("/api/v1/conversations", json={"title": "Bound conversation", "dossier_id": own_dossier}).json()["id"]
+    other_dossier, reading, _ = add_manuscript_reading(application)
+    response = client.post("/api/v1/chat", json={
+        "message": "Read this folio", "connection_id": "actual-test-boundary", "conversation_id": conversation,
+        "manuscript_dossier_id": other_dossier, "manuscript_revision_ids": [reading],
+    })
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "manuscript_dossier_conflict"
+    assert connection.calls == []
 
 
 @pytest.mark.postgres

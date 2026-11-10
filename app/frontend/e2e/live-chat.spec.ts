@@ -24,7 +24,7 @@ test('live Mistral chat answers with inspectable stored passages and saves expli
   expect(reply.citations.length).toBeGreaterThan(0);
   expect(reply.grounding.collections).toEqual(expect.arrayContaining(['torah', 'bible', 'quran']));
   for (const citation of reply.citations) {
-    if (citation.kind === 'web') throw new Error('Unexpected web citation without web research opt-in.');
+    if (citation.kind === 'web' || citation.kind === 'manuscript') throw new Error('Unexpected citation outside the imported text editions.');
     const original = await page.request.get(`/api/v1/passages/${citation.passage_id}`);
     expect(original.ok()).toBeTruthy();
     const passage = await original.json();

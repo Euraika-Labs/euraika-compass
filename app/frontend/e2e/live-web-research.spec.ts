@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { expect, test } from '@playwright/test';
-import type { ChatResponse, Connection } from '../src/types';
+import type { ChatResponse, Connection, WebCitation } from '../src/types';
 
 test('live research cites both a stored edition and an online source', async ({ page }, testInfo) => {
   test.skip(process.env.COMPASS_LIVE_WEB !== '1', 'Explicit opt-in: this uses web services and a configured Mistral model.');
@@ -28,14 +28,14 @@ test('live research cites both a stored edition and an online source', async ({ 
   expect(reply.model_id).toBe('mistral-large-4-0');
   expect(reply.grounding.web_research?.status, JSON.stringify(reply.grounding.web_research)).toBe('used');
   expect(reply.grounding.web_research?.queries?.length).toBeGreaterThan(0);
-  const web = reply.citations.find(item => item.kind === 'web' && item.provider === 'doaj');
-  const edition = reply.citations.find(item => item.kind !== 'web' && item.reference === 'John 1:1' && item.language === 'grc');
+  const web = reply.citations.find((item): item is WebCitation => item.kind === 'web' && item.provider === 'doaj');
+  const edition = reply.citations.find(item => item.kind !== 'web' && item.kind !== 'manuscript' && item.reference === 'John 1:1' && item.language === 'grc');
   expect(web, 'The model should cite a retrieved publisher abstract. ' + JSON.stringify({
     searches: reply.grounding.web_research, providers: reply.citations.filter(item => item.kind === 'web').map(item => item.provider),
   })).toBeTruthy();
   expect(edition, 'The model should cite the stored Greek passage from John.').toBeTruthy();
-  expect(reply.citations.some(item => item.kind !== 'web' && item.reference === 'John 1:1' && item.language === 'en')).toBeTruthy();
-  if (!web || !edition || edition.kind === 'web') throw new Error('Missing mixed evidence');
+  expect(reply.citations.some(item => item.kind !== 'web' && item.kind !== 'manuscript' && item.reference === 'John 1:1' && item.language === 'en')).toBeTruthy();
+  if (!web || !edition || edition.kind === 'web' || edition.kind === 'manuscript') throw new Error('Missing mixed evidence');
   expect(web.source_url).toMatch(/^https:\/\//);
   expect(web.content_sha256).toMatch(/^[0-9a-f]{64}$/);
   expect(web).toHaveProperty('quote_sha256', createHash('sha256').update(web.quote).digest('hex'));

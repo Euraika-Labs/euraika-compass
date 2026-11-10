@@ -5,16 +5,27 @@ import { locales, translate } from './i18n';
 import { answerSegments, canUseConnection, chatRequest, collections, RequestError } from './research-chat';
 import { ParallelPassageReader } from './ParallelPassageReader';
 import { WebEvidenceCard, WebResearchStatus } from './WebEvidenceCard';
-import type { ChatResponse, ChatSettings, ChatTurn, Citation, Collection, Connection, ConversationRecord, ConversationSummary, CorpusSource, Locale, Participant, Persona } from './types';
+import { emptyManuscriptSelection, ManuscriptChatSources } from './ManuscriptChatSources';
+import { ManuscriptEvidenceCard, ManuscriptReadingStatus } from './ManuscriptEvidenceCard';
+import { manuscriptTranslate } from './manuscript-i18n';
+import type { ChatResponse, ChatSettings, ChatTurn, Citation, Collection, Connection, ConversationRecord, ConversationSummary, CorpusSource, Dossier, Locale, Participant, Persona } from './types';
 
 const personaIds = ['supportive', 'wisdom', 'textual', 'comparative', 'critical'] as const;
-export function ChatPanel({ locale, connections, settings, sources, personas, ready, webResearchAvailable, draft, setDraft, openConnections, openSources, openResearch }: {
+function citationClass(kind: Citation['kind']) {
+  if (kind === 'web') return ' web-citation';
+  if (kind === 'manuscript') return ' manuscript-citation';
+  return '';
+}
+
+export function ChatPanel({ locale, connections, settings, sources, dossiers, personas, ready, webResearchAvailable, draft, setDraft, openConnections, openSources, openResearch }: {
   locale: Locale; connections: Connection[]; settings: ChatSettings | null; sources: CorpusSource[]; personas: Persona[]; ready: boolean;
+  dossiers: Dossier[];
   webResearchAvailable: boolean;
   draft: string; setDraft: (value: string) => void; openConnections: () => void; openSources: () => void; openResearch: () => void;
 }) {
   const c = (key: Parameters<typeof chatTranslate>[1]) => chatTranslate(locale, key);
   const t = (key: Parameters<typeof translate>[1]) => translate(locale, key);
+  const m = (key: Parameters<typeof manuscriptTranslate>[1]) => manuscriptTranslate(locale, key);
   const [connectionId, setConnectionId] = useState('');
   const [persona, setPersona] = useState('supportive');
   const [answerLanguage, setAnswerLanguage] = useState('auto');
@@ -23,6 +34,7 @@ export function ChatPanel({ locale, connections, settings, sources, personas, re
   const [filter, setFilter] = useState<Collection[]>([...collections]);
   const [restrictSources, setRestrictSources] = useState(false);
   const [sourceIds, setSourceIds] = useState<string[]>([]);
+  const [manuscripts, setManuscripts] = useState(emptyManuscriptSelection);
   const [turns, setTurns] = useState<ChatTurn[]>([]);
   const [citation, setCitation] = useState<Citation | null>(null);
   const [error, setError] = useState<unknown>(null);
@@ -46,6 +58,16 @@ export function ChatPanel({ locale, connections, settings, sources, personas, re
   const canResearchWeb = ready && webResearchAvailable && settings?.local_only === false;
   const selected = connections.find(item => item.id === connectionId);
   const allowed = (connection: Connection) => canUseConnection(connection, settings);
+  const remote = selected?.local === false;
+  const sourceDossiers = conversation?.dossier_id ? dossiers.filter(item => item.id === conversation.dossier_id) : dossiers;
+  const manuscriptDossier = manuscripts.enabled && sourceDossiers.find(item => item.id === manuscripts.dossierId);
+  const manuscriptReady = !!manuscriptDossier && manuscripts.readings.length > 0 && manuscripts.readings.length <= 6;
+  const manuscriptPermitted = manuscriptReady && (!remote || (manuscripts.cloudConsent && manuscripts.readings.every(reading => reading.external_processing === true)));
+  const hasCorpus = sources.length > 0;
+  const useCorpus = hasCorpus && !(manuscripts.enabled && manuscripts.only);
+  const corpusReady = useCorpus && filter.length > 0 && (!restrictSources || sourceIds.length > 0);
+  const canSend = ready && !busy && !!draft.trim() && !!selected && allowed(selected)
+    && (!useCorpus || corpusReady) && (corpusReady || manuscriptPermitted) && (!manuscripts.enabled || manuscriptPermitted);
   const personaOptions = personas.length ? personas.map(item => item.id) : [...personaIds];
   const name = (id: string) => { const known = personaIds.find(item => item === id); return known ? t(known) : personas.find(item => item.id === id)?.name ?? id; };
 
@@ -60,7 +82,7 @@ export function ChatPanel({ locale, connections, settings, sources, personas, re
   useEffect(() => { if (!canResearchWeb) setWebResearch(false); }, [canResearchWeb]);
 
   async function send() {
-    if (request.current || !draft.trim() || !selected || !allowed(selected) || !filter.length || (restrictSources && !sourceIds.length)) return;
+    if (request.current || !canSend || !selected) return;
     const message = draft.trim();
     setBusy('chat'); setError(null); setStopped(false);
     const controller = new AbortController(); request.current = controller;
@@ -68,21 +90,24 @@ export function ChatPanel({ locale, connections, settings, sources, personas, re
     try {
       const answer = await api<ChatResponse>('/chat', { method: 'POST', signal: controller.signal, body: JSON.stringify(chatRequest({
         message, connectionId: selected.id, personaId: persona, answerLanguage, turns,
-        conversationId: conversation?.id, sessionId, filter, sourceIds: restrictSources ? sourceIds : undefined,
+        conversationId: conversation?.id, sessionId, filter: useCorpus ? filter : [],
+        sourceIds: !useCorpus ? [] : restrictSources ? sourceIds : undefined,
         webResearch: canResearchWeb && webResearch,
+        manuscriptScope: manuscriptDossier ? { dossierId: manuscriptDossier.id, revisionIds: manuscripts.readings.map(item => item.id), allowCloud: remote && manuscripts.cloudConsent } : undefined,
       })) });
       if (version !== requestVersion.current) return;
       setTurns(items => [...items, { ...answer, question: message, id: answer.turn_id ?? crypto.randomUUID() }]);
       if (answer.session_id) setSessionId(answer.session_id);
       setDraft('');
       setWebResearch(false);
+      setManuscripts(value => ({ ...value, cloudConsent: false }));
     } catch (problem) {
       if (version !== requestVersion.current) return;
       if (controller.signal.aborted) setStopped(true); else setError(problem);
     } finally { if (version === requestVersion.current) { setBusy(''); request.current = null; } }
   }
   function cancel() { ++requestVersion.current; request.current?.abort(); request.current = null; setBusy(''); setStopped(true); }
-  function newChat() { setTurns([]); setConversation(null); setSessionId(undefined); setCitation(null); setError(null); setStopped(false); setSaveOpen(false); setDraft(''); setWebResearch(false); }
+  function newChat() { setTurns([]); setConversation(null); setSessionId(undefined); setCitation(null); setError(null); setStopped(false); setSaveOpen(false); setDraft(''); setWebResearch(false); setManuscripts(emptyManuscriptSelection); }
   async function save() {
     if (!saveTitle.trim()) return;
     if (turns.length && !sessionId) { setError(new ApiError('session_expired', 'The temporary server session is no longer available.', 409)); return; }
@@ -99,6 +124,7 @@ export function ChatPanel({ locale, connections, settings, sources, personas, re
     try {
       const record = await api<ConversationRecord>(`/conversations/${encodeURIComponent(id)}`);
       setConversation(record); setSessionId(undefined); setCitation(null); setStopped(false); setSaveOpen(false); setDraft(''); setWebResearch(false);
+      setManuscripts(emptyManuscriptSelection);
       setTurns(record.turns.map(turn => ({
         ...turn,
         grounding: {
@@ -106,6 +132,7 @@ export function ChatPanel({ locale, connections, settings, sources, personas, re
           retrieved_count: turn.grounding?.retrieved_count ?? 0,
           collections: turn.grounding?.collections ?? [],
           web_research: turn.grounding?.web_research,
+          manuscripts: turn.grounding?.manuscripts,
         },
       })));
     } catch (problem) { setError(problem); }
@@ -116,34 +143,39 @@ export function ChatPanel({ locale, connections, settings, sources, personas, re
 
   return <section className="chat-view real-chat">
     <div className="section-heading"><div><p className="eyebrow">{conversation ? conversation.title : c('ephemeral')}</p><h1>{t('chat')}</h1></div><div className="segmented-control"><button className={mode === 'one' ? 'active' : ''} disabled={!!busy} onClick={() => setMode('one')}>{t('oneToOne')}</button><button className={mode === 'roundtable' ? 'active' : ''} disabled={!!busy} onClick={() => setMode('roundtable')}>{t('roundtable')}</button></div></div>
-    <RequestError error={error} locale={locale} />{stopped && <div className="notice warning" role="status">{c('cancelled')}</div>}
-    <div className="chat-tools"><label>{c('chooseConnection')}<select value={connectionId} disabled={!!busy} onChange={event => setConnectionId(event.target.value)}><option value="">{c('chooseConnection')}</option>{connections.map(item => <option key={item.id} value={item.id} disabled={!allowed(item)}>{item.title} · {item.model_id}{!allowed(item) ? ` · ${!item.local && settings?.local_only !== false ? c('cloudBlocked') : t('unavailable')}` : ''}</option>)}</select></label><label>{t('persona')}<select value={persona} disabled={!!busy} onChange={event => setPersona(event.target.value)}>{personaOptions.map(id => <option key={id} value={id}>{name(id)}</option>)}</select></label><label>{c('answerLanguage')}<select value={answerLanguage} disabled={!!busy} onChange={event => setAnswerLanguage(event.target.value)}><option value="auto">{c('questionLanguage')}</option>{locales.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label><button className="text-button" onClick={openConnections}>{c('connections')}</button></div>
+    <RequestError error={error} locale={locale} manuscriptSearch={manuscripts.enabled} />{stopped && <div className="notice warning" role="status">{c('cancelled')}</div>}
+    <div className="chat-tools"><label>{c('chooseConnection')}<select value={connectionId} disabled={!!busy} onChange={event => { setConnectionId(event.target.value); setManuscripts(value => ({ ...value, cloudConsent: false })); }}><option value="">{c('chooseConnection')}</option>{connections.map(item => <option key={item.id} value={item.id} disabled={!allowed(item)}>{item.title} · {item.model_id}{!allowed(item) ? ` · ${!item.local && settings?.local_only !== false ? c('cloudBlocked') : t('unavailable')}` : ''}</option>)}</select></label><label>{t('persona')}<select value={persona} disabled={!!busy} onChange={event => setPersona(event.target.value)}>{personaOptions.map(id => <option key={id} value={id}>{name(id)}</option>)}</select></label><label>{c('answerLanguage')}<select value={answerLanguage} disabled={!!busy} onChange={event => setAnswerLanguage(event.target.value)}><option value="auto">{c('questionLanguage')}</option>{locales.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label><button className="text-button" onClick={openConnections}>{c('connections')}</button></div>
     {!connections.some(allowed) && <div className="notice"><span>{c(connections.length ? 'noReadyConnections' : 'noConnections')}</span><button className="text-button" onClick={openConnections}>{c('connections')}</button></div>}
     {mode === 'roundtable' ? <div className="roundtable-setup"><div className="notice">{t('roundtablePending')}</div><div className="panel-heading"><h2>{t('participants')}</h2><button className="button secondary" disabled={participants.length >= 4} onClick={() => setParticipants(items => [...items, { id: nextParticipant.current++, persona: 'comparative', perspective: '', routeId: '', pinned: false }])}>{t('addParticipant')}</button></div>{participants.map((participant, index) => {
       const connection = connections.find(item => item.id === participant.routeId);
       return <article className="participant-card" key={participant.id}><div className="participant-number">{index + 1}</div><div className="participant-fields"><label>{t('persona')}<select value={participant.persona} onChange={event => updateParticipant(participant.id, { persona: event.target.value })}>{personaOptions.map(id => <option key={id} value={id}>{name(id)}</option>)}</select></label><label>{t('perspective')}<input value={participant.perspective} placeholder={t('perspectivePlaceholder')} onChange={event => updateParticipant(participant.id, { perspective: event.target.value })} /></label><label>{t('model')}<select value={participant.routeId} onChange={event => updateParticipant(participant.id, { routeId: event.target.value })}><option value="">{c('chooseConnection')}</option>{connections.map(item => <option key={item.id} value={item.id} disabled={!allowed(item)}>{item.title} · {item.model_id}</option>)}</select></label><label className="checkbox-label"><input type="checkbox" checked={participant.pinned} onChange={event => updateParticipant(participant.id, { pinned: event.target.checked })} />{t('pin')}</label>{participant.pinned && participant.routeId && (!connection || !allowed(connection)) && <p className="inline-warning">{t('pinnedUnavailable')}</p>}</div><button className="text-button" onClick={() => setParticipants(items => items.filter(item => item.id !== participant.id))}>{t('remove')}</button></article>})}<button className="button primary" disabled title={t('roundtablePending')}>{t('askRound')}</button></div> : <>
-      <details className="panel grounding-controls"><summary>{c('grounding')}</summary><fieldset disabled={!!busy}><legend>{c('collections')}</legend><div className="collection-options">{collections.map(id => <label className="checkbox-label" key={id}><input type="checkbox" checked={filter.includes(id)} onChange={event => setFilter(items => event.target.checked ? [...items, id] : items.filter(item => item !== id))} />{c(id)}</label>)}</div></fieldset>{!filter.length && <p className="inline-warning">{c('noCollections')}</p>}
-        <label className="checkbox-label"><input type="checkbox" checked={restrictSources} disabled={!!busy} onChange={event => setRestrictSources(event.target.checked)} />{c('selectedSources')}</label>{restrictSources ? <div className="source-options">{sources.map(source => <label className="checkbox-label" key={source.id}><input type="checkbox" checked={sourceIds.includes(source.id)} disabled={!!busy} onChange={event => setSourceIds(items => event.target.checked ? [...items, source.id] : items.filter(id => id !== source.id))} />{source.title}</label>)}</div> : <p className="helper">{c('allSources')}</p>}
+      <details className="panel grounding-controls" open={!hasCorpus || undefined}>
+        <summary>{c('grounding')}</summary>
+        {useCorpus && <><fieldset disabled={!!busy}><legend>{c('collections')}</legend><div className="collection-options">{collections.map(id => <label className="checkbox-label" key={id}><input type="checkbox" checked={filter.includes(id)} onChange={event => setFilter(items => event.target.checked ? [...items, id] : items.filter(item => item !== id))} />{c(id)}</label>)}</div></fieldset>{!filter.length && <p className="inline-warning">{c('noCollections')}</p>}
+        <label className="checkbox-label"><input type="checkbox" checked={restrictSources} disabled={!!busy} onChange={event => setRestrictSources(event.target.checked)} />{c('selectedSources')}</label>{restrictSources ? <div className="source-options">{sources.map(source => <label className="checkbox-label" key={source.id}><input type="checkbox" checked={sourceIds.includes(source.id)} disabled={!!busy} onChange={event => setSourceIds(items => event.target.checked ? [...items, source.id] : items.filter(id => id !== source.id))} />{source.title}</label>)}</div> : <p className="helper">{c('allSources')}</p>}</>}
+        <ManuscriptChatSources locale={locale} dossiers={sourceDossiers} selection={manuscripts} onChange={setManuscripts}
+          remote={remote} disabled={!!busy || !ready} hasCorpus={hasCorpus} />
         <button className="text-button" onClick={openSources}>{c('sources')}</button>
       </details>
-      {!sources.length && <div className="notice"><span>{c('noSources')}</span><button className="text-button" onClick={openSources}>{c('sources')}</button></div>}
+      {!hasCorpus && !manuscriptReady && <div className="notice"><span>{m('chooseEvidence')}</span><button className="text-button" onClick={openSources}>{c('sources')}</button></div>}
       <div className="chat-reading-layout"><div className="chat-thread" aria-label={t('chat')}>
-        {!turns.length && <p className="chat-intro">{c('chatIntro')}</p>}
+        {!turns.length && (useCorpus || manuscriptReady) && <p className="chat-intro">{useCorpus ? c('chatIntro') : m('readingChatIntro')}</p>}
         {turns.map(turn => <article className="chat-turn" key={turn.id}>
           <div className="user-message" dir="auto">{turn.question}</div>
           <div className="assistant-message" dir="auto">{answerSegments(turn.answer, turn.citations).map((segment, index) => {
             const source = segment.citation;
             if (!source) return <span key={index}>{segment.text}</span>;
-            return <button className={`citation-button${source.kind === 'web' ? ' web-citation' : ''}`} key={index} onClick={() => showCitation(source)}>{segment.text}</button>;
+            return <button className={`citation-button${citationClass(source.kind)}`} key={index} onClick={() => showCitation(source)}>{segment.text}</button>;
           })}</div>
           <div className="turn-meta">
             <code>{turn.model_id}</code>
-            {turn.grounding.mode !== 'saved' && <span>{c('evidenceCount')}: {turn.grounding.retrieved_count} · {turn.grounding.collections.map(id => c(id)).join(' · ')}</span>}
+            {turn.grounding.mode !== 'saved' && <span>{c('evidenceCount')}: {turn.grounding.retrieved_count}{turn.grounding.collections.length > 0 && ` · ${turn.grounding.collections.map(id => c(id)).join(' · ')}`}</span>}
           </div>
           {turn.grounding.web_research && <WebResearchStatus research={turn.grounding.web_research} locale={locale} />}
+          {turn.grounding.manuscripts && <ManuscriptReadingStatus evidence={turn.grounding.manuscripts} locale={locale} />}
           {turn.citations.length > 0 && <div className="citation-list">
-            {turn.citations.map(item => <button className={`citation-chip${item.kind === 'web' ? ' web-citation' : ''}`} key={item.id} onClick={() => showCitation(item)}>
-              [{item.id}] {item.kind === 'web' ? <>{c('webEvidence')} · <bdi>{item.title}</bdi></> : <bdi>{item.reference}</bdi>}
+            {turn.citations.map(item => <button className={`citation-chip${citationClass(item.kind)}`} key={item.id} onClick={() => showCitation(item)}>
+              [{item.id}] {item.kind === 'web' ? <>{c('webEvidence')} · <bdi>{item.title}</bdi></> : item.kind === 'manuscript' ? <>{m('manuscriptEvidence')} · <bdi>{item.reference}</bdi></> : <bdi>{item.reference}</bdi>}
             </button>)}
           </div>}
           {turn.warnings.length > 0 && <details className="turn-warnings">
@@ -156,7 +188,8 @@ export function ChatPanel({ locale, connections, settings, sources, personas, re
           <h2>{c('citationDetails')} [{citation.id}]</h2>
           <button className="text-button" onClick={() => { setCitation(null); citationTrigger.current?.focus(); }}>{c('close')}</button>
         </div>
-        {citation.kind === 'web' ? <WebEvidenceCard citation={citation} locale={locale} /> : <>
+        {citation.kind === 'web' ? <WebEvidenceCard citation={citation} locale={locale} />
+          : citation.kind === 'manuscript' ? <ManuscriptEvidenceCard key={citation.transcription_id} citation={citation} locale={locale} /> : <>
           <ParallelPassageReader key={citation.passage_id} snapshot={citation} locale={locale} cited />
           <p className="helper">{c('citationCaveat')}</p>
         </>}
@@ -179,7 +212,7 @@ export function ChatPanel({ locale, connections, settings, sources, personas, re
           <div className="button-row">
             <button type="button" className="button quiet" onClick={openResearch}>{t('openResearch')} ↗</button>
             {busy === 'chat' ? <button type="button" className="button secondary" onClick={cancel}>{c('cancel')}</button>
-              : <button className="button primary" disabled={!ready || !!busy || !draft.trim() || !selected || !allowed(selected) || !sources.length || !filter.length || (restrictSources && !sourceIds.length)}>{c('ask')}</button>}
+              : <button className="button primary" disabled={!canSend}>{c('ask')}</button>}
           </div>
         </div>
         {busy === 'chat' && <p role="status" className="helper">{c('asking')}</p>}

@@ -136,7 +136,19 @@ export interface WebCitation {
   license?: string; license_url?: string;
   provenance?: { record_url?: string };
 }
-export type Citation = ScriptureCitation | WebCitation;
+export interface ManuscriptReadingChoice {
+  id: string; image_id: string; title: string; folio_label: string; created_at: string;
+  kind: 'automatic' | 'user_corrected'; language: string | null; parent_id?: string | null; external_processing: boolean;
+}
+export interface ManuscriptCitation extends Omit<ManuscriptReadingChoice, 'id' | 'kind' | 'external_processing'> {
+  id: string; kind: 'manuscript'; source_type: 'manuscript_transcription'; evidence_type: ManuscriptReadingChoice['kind'];
+  edition_title?: string; reference: string; quote: string; quote_sha256: string; excerpt_start: number; excerpt_end: number;
+  image_content_url?: string; image_width: number; image_height: number; image_sha256?: string;
+  dossier_id: string; transcription_id: string; lineage_id?: string; engine: string; model_id: string;
+  source_url?: string | null; provenance?: Partial<ManuscriptProvenance> | null; use_limits?: ManuscriptUseLimits;
+  region?: (Region & { coordinate_system: 'original_image_pixels'; kind: 'text_region' | 'input_crop' }) | null;
+}
+export type Citation = ScriptureCitation | WebCitation | ManuscriptCitation;
 export type PassageAlignment = 'same_reference' | 'mapped_reference' | 'compare_only';
 export interface ParallelPassage extends PassageSnapshot {
   alignment: PassageAlignment; alignment_note: string;
@@ -146,8 +158,12 @@ export interface WebResearchGrounding {
   status: 'off' | 'used' | 'not_used' | 'no_results' | 'unavailable' | 'restricted';
   source_count?: number; retrieved_count?: number; queries?: string[]; partial?: boolean;
 }
+export interface ManuscriptGrounding {
+  status: 'used' | 'not_used' | 'no_results' | 'restricted';
+  retrieved_count: number; source_count: number; blocked_count: number;
+}
 export interface ChatGrounding {
-  mode: string; retrieved_count: number; collections: Collection[]; web_research?: WebResearchGrounding;
+  mode: string; retrieved_count: number; collections: Collection[]; web_research?: WebResearchGrounding; manuscripts?: ManuscriptGrounding;
 }
 export interface ChatResponse {
   answer: string; citations: Citation[]; warnings: string[]; connection_id: string; model_id: string;

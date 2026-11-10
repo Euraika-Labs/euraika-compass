@@ -43,6 +43,14 @@ describe('research chat boundaries', () => {
     expect(payload.history.at(-1)).toEqual({ role: 'assistant', content: 'A7' });
     expect(turns).toHaveLength(8);
   });
+  it('excludes an earlier answer exposed to manuscript readings even if it cited none', () => {
+    const manuscriptTurn: ChatTurn = { ...turn, grounding: { ...turn.grounding,
+      manuscripts: { status: 'not_used', retrieved_count: 1, source_count: 0, blocked_count: 0 } } };
+    const payload = chatRequest({ message: 'Follow-up', connectionId: connection.id, personaId: 'textual', turns: [manuscriptTurn], filter: ['torah'] });
+    expect(payload.history).toEqual([{ role: 'user', content: turn.question }]);
+    expect(payload).not.toHaveProperty('manuscript_dossier_id');
+    expect(payload).not.toHaveProperty('allow_manuscript_cloud');
+  });
   it('only attaches citation controls to IDs returned by the backend', () => {
     const parts = answerSegments('Claim [S1] and unknown [S999]. <script> stays text.', [citation]);
     expect(parts.filter(part => part.citation).map(part => part.text)).toEqual(['[S1]']);
