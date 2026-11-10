@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { api } from './api';
+import { api, ApiError } from './api';
 import { chatTranslate } from './chat-i18n';
 import { locales, translate } from './i18n';
 import { emptyManuscriptSelection, ManuscriptChatSources } from './ManuscriptChatSources';
@@ -15,6 +15,16 @@ const newParticipant = (id: number, persona_id: string): ParticipantDraft => ({ 
 export function roundtablePersonaName(id: string, personas: Persona[], locale: Locale) {
   const known = personaIds.find(item => item === id);
   return known ? translate(locale, known) : personas.find(item => item.id === id)?.name ?? id;
+}
+
+const routingErrorKeys: Partial<Record<string, RoundtableKey>> = {
+  roundtable_no_eligible_connection: 'noEligibleConnection', roundtable_source_restricted: 'sourceRestricted',
+};
+
+export function RoundtableRequestError({ error, locale, manuscriptSearch }: Parameters<typeof RequestError>[0]) {
+  const routingError = error instanceof ApiError && routingErrorKeys[error.code];
+  if (routingError) return <p className="notice warning" role="alert">{roundtableTranslate(locale, routingError)}</p>;
+  return <RequestError error={error} locale={locale} manuscriptSearch={manuscriptSearch} />;
 }
 
 export interface RoundtableSetupProps {
@@ -44,8 +54,10 @@ export function RoundtableSetup({ locale, connections, settings, sources, dossie
   const useCorpus = hasCorpus && filter.length > 0 && !(manuscripts.enabled && manuscripts.only);
   const canWeb = webResearchAvailable && settings?.local_only === false;
   const useWeb = canWeb && webResearch;
+  const readyConnections = connections.filter(connection => canUseConnection(connection, settings));
   const assigned = participants.map(participant => connections.find(connection => connection.id === participant.connection_id));
   const remote = assigned.some(connection => connection?.local === false);
+  const hasAutomatic = participants.some(participant => !participant.connection_id);
   const label = (participant: ParticipantDraft, index: number) => participant.name.trim() || `${r('participant')} ${index + 1}`;
   const names = participants.map(label);
   const distinct = new Set(names.map(name => name.toLocaleLowerCase(locale))).size === names.length;
@@ -59,7 +71,8 @@ export function RoundtableSetup({ locale, connections, settings, sources, dossie
     sourceIds.includes(source.id) && source.use_limits.external_processing !== true);
   const hasEvidence = validCorpus || validManuscripts || useWeb;
   const canStart = ready && available && !busy && !!topic.trim() && distinct && participants.length >= 2
-    && assigned.every(connection => !!connection && canUseConnection(connection, settings))
+    && readyConnections.length > 0 && participants.every(participant => !participant.connection_id
+      || readyConnections.some(connection => connection.id === participant.connection_id))
     && hasEvidence && !restrictedSharedSource && (!manuscripts.enabled || validManuscripts);
   const personaOptions = personas.length ? personas.map(item => item.id) : [...personaIds];
 
@@ -81,7 +94,9 @@ export function RoundtableSetup({ locale, connections, settings, sources, dossie
     try {
       const room = await api<RoundtableRoom>('/roundtables', { method: 'POST', body: JSON.stringify({
         topic: topic.trim(), language, ...scope,
-        participants: participants.map(({ persona_id, connection_id, perspective, pinned }, index) => ({ name: names[index], persona_id, connection_id, perspective: perspective.trim(), pinned })),
+        participants: participants.map(({ persona_id, connection_id, perspective, pinned }, index) => ({
+          name: names[index], persona_id, connection_id: connection_id || null, perspective: perspective.trim(), pinned,
+        })),
       }) });
       onCreated(room);
     } catch (problem) { setError(problem); }
@@ -91,7 +106,7 @@ export function RoundtableSetup({ locale, connections, settings, sources, dossie
   return <form className="roundtable-setup" onSubmit={event => { event.preventDefault(); void createRoom(); }}>
     <p className="lead">{r('introduction')}</p>
     {!available && <p className="notice warning" role="status">{r('unavailable')}</p>}
-    <RequestError error={error} locale={locale} />
+    <RoundtableRequestError error={error} locale={locale} />
     <div className="panel roundtable-topic">
       <label>{r('topic')}<textarea value={topic} dir="auto" rows={3} required maxLength={10000} disabled={busy} onChange={event => setTopic(event.target.value)} /></label>
       <label>{c('answerLanguage')}<select value={language} disabled={busy} onChange={event => setLanguage(event.target.value)}>
@@ -101,8 +116,9 @@ export function RoundtableSetup({ locale, connections, settings, sources, dossie
     </div>
     <div className="panel-heading"><h2>{t('participants')}</h2><button className="button secondary" type="button" disabled={busy || participants.length >= 4}
       onClick={() => setParticipants(items => [...items, newParticipant(nextId.current++, 'comparative')])}>{t('addParticipant')}</button></div>
-    {!connections.some(connection => canUseConnection(connection, settings)) && <div className="notice"><span>{c('noReadyConnections')}</span>
+    {readyConnections.length === 0 && <div className="notice"><span>{c('noReadyConnections')}</span>
       <button type="button" className="text-button" onClick={openConnections}>{c('connections')}</button></div>}
+    {hasAutomatic && <p className="helper">{r('automaticHint')}</p>}
     {!distinct && <p className="inline-warning" role="status">{r('duplicateNames')}</p>}
     {participants.map((participant, index) => <fieldset className="participant-card roundtable-participant-form" key={participant.id} disabled={busy}>
       <legend><bdi>{names[index]}</bdi></legend>
@@ -116,7 +132,7 @@ export function RoundtableSetup({ locale, connections, settings, sources, dossie
           onChange={event => updateParticipant(participant.id, { perspective: event.target.value })} /></label>
         <label>{t('model')}<select value={participant.connection_id} disabled={participant.pinned}
           onChange={event => updateParticipant(participant.id, { connection_id: event.target.value })}>
-          <option value="">{c('chooseConnection')}</option>
+          <option value="">{r('chooseAutomatically')}</option>
           {connections.map(connection => <option key={connection.id} value={connection.id} disabled={!canUseConnection(connection, settings)}>
             {connection.title} · {connection.model_id} · {r(connection.local ? 'localRoute' : 'cloudRoute')}
           </option>)}
@@ -151,7 +167,7 @@ export function RoundtableSetup({ locale, connections, settings, sources, dossie
       {useWeb && <p className="helper">{c('webResearchHint')}</p>}
       <p className="helper">{r('sharedRights')}</p>
       {restrictedSharedSource && <p className="inline-warning" role="status">{r('removeRestrictedSources')}</p>}
-      {remote && <p className="helper">{r('cloudTopic')}</p>}
+      {(remote || (hasAutomatic && readyConnections.some(connection => !connection.local))) && <p className="helper">{r('cloudTopic')}</p>}
       {!hasEvidence && <p className="inline-warning">{r('chooseSources')}</p>}
       <button className="text-button" type="button" onClick={openSources}>{c('sources')}</button>
     </section>

@@ -4,16 +4,19 @@ import { AnswerText, CitationChips, CitationPanel } from './ChatEvidence';
 import { chatTranslate } from './chat-i18n';
 import { locales, translate } from './i18n';
 import { ManuscriptReadingStatus } from './ManuscriptEvidenceCard';
-import { canUseConnection, RequestError } from './research-chat';
+import { canUseConnection } from './research-chat';
 import { roundtableTranslate } from './roundtable-i18n';
 import type { RoundtableKey } from './roundtable-i18n';
-import { roundtablePersonaName, RoundtableSetup } from './RoundtableSetup';
+import { roundtablePersonaName, RoundtableRequestError, RoundtableSetup } from './RoundtableSetup';
 import type { RoundtableSetupProps } from './RoundtableSetup';
 import type { Citation, RoundtableParticipant, RoundtableRoom } from './types';
 import { WebResearchStatus } from './WebEvidenceCard';
 
 type SetupProps = Omit<RoundtableSetupProps, 'onCreated'>;
 type Assignment = { participantId: string; connectionId: string; pinned: boolean };
+const allocationBasisKeys = {
+  orchestrator: 'basisOrchestrator', single_candidate: 'basisSingle', configured_order: 'basisConfigured',
+} as const;
 
 export function RoundtablePanel(props: SetupProps) {
   const [room, setRoom] = useState<RoundtableRoom | null>(null);
@@ -50,6 +53,7 @@ function RoundtableSession({ initialRoom, locale, connections, settings, sources
   const hasManuscripts = room.evidence_version === null ? !!room.scope.manuscript_dossier_id : room.evidence.some(item => item.kind === 'manuscript');
   const dossier = dossiers.find(item => item.id === room.scope.manuscript_dossier_id);
   const currentLanguage = locales.find(item => item.id === room.language);
+  const readyConnections = connections.filter(connection => canUseConnection(connection, settings));
 
   function routeAvailable(participant: RoundtableParticipant) {
     const connection = connections.find(item => item.id === participant.connection_id);
@@ -136,7 +140,7 @@ function RoundtableSession({ initialRoom, locale, connections, settings, sources
       let snapshot: RoundtableRoom;
       if (action === 'assignment' && assignment) {
         snapshot = await api<RoundtableRoom>(`${base}/participants/${encodeURIComponent(assignment.participantId)}`, {
-          method: 'PATCH', body: JSON.stringify({ connection_id: assignment.connectionId, pinned: assignment.pinned, expected_revision: room.revision }),
+          method: 'PATCH', body: JSON.stringify({ connection_id: assignment.connectionId || null, pinned: assignment.pinned, expected_revision: room.revision }),
         });
         setAssignment(null);
         setConsent(false);
@@ -164,7 +168,7 @@ function RoundtableSession({ initialRoom, locale, connections, settings, sources
       <div><p className="eyebrow">{r('temporary')}</p><h2 dir="auto">{room.topic}</h2></div>
       <p className="pill" role="status">{r(stopped ? 'stopped' : working ? 'running' : 'waiting')}</p>
     </header>
-    <RequestError error={error} locale={locale} manuscriptSearch={hasManuscripts} />
+    <RoundtableRequestError error={error} locale={locale} manuscriptSearch={hasManuscripts} />
     {needsSync && <p className="notice warning" role="alert">{r('requestFailed')}</p>}
     <details className="panel roundtable-scope">
       <summary>{r('fixedScope')}</summary>
@@ -186,6 +190,7 @@ function RoundtableSession({ initialRoom, locale, connections, settings, sources
         {stopped && <button type="button" className="button primary" onClick={onNew}>{r('newRoom')}</button>}
       </div></div>
       {!stopped && <>
+        {room.participants.some(participant => !participant.local) && <p className="helper">{r('cloudTopic')}</p>}
         <label>{r('moderatorNote')}<textarea dir="auto" rows={2} value={note} maxLength={2000} disabled={locked} onChange={event => setNote(event.target.value)} /></label>
         {room.turns.length >= 2 && <label className="checkbox-label"><input type="checkbox" checked={synthesis} disabled={locked}
           onChange={event => setSynthesis(event.target.checked)} />{r('synthesis')}</label>}
@@ -200,11 +205,17 @@ function RoundtableSession({ initialRoom, locale, connections, settings, sources
       {room.participants.map(participant => {
         const paused = participant.status === 'paused' || !routeAvailable(participant);
         const speaking = working && activeSpeaker === participant.id;
+        const edit = assignment?.participantId === participant.id ? assignment : null;
+        const canSave = edit && (participant.pinned && !edit.pinned
+          || (edit.connectionId ? readyConnections.some(connection => connection.id === edit.connectionId) : readyConnections.length > 0));
+        const basis = participant.allocation_basis;
         return <article className="panel roundtable-speaker" key={participant.id}>
           <div className="panel-heading"><h3 dir="auto">{participant.name}</h3>{participant.pinned && <span className="pill">{r('pinned')}</span>}</div>
           <p className="helper">{r('participant')} · {roundtablePersonaName(participant.persona_id, personas, locale)}</p>
           {participant.perspective && <p className="muted" dir="auto">{participant.perspective}</p>}
           <p className="helper"><bdi>{participant.provider} · {participant.model_id}</bdi> · {r(participant.local ? 'localRoute' : 'cloudRoute')}</p>
+          <p className="helper">{r(participant.allocation === 'automatic' ? 'automaticAssignment' : 'manualAssignment')}
+            {basis && basis !== 'moderator' && <> · {r(allocationBasisKeys[basis])}</>}</p>
           {speaking && <p className="helper" role="status">{r('running')}</p>}
           {paused && <p className="inline-warning">{r('paused')}{participant.last_error?.code && <> · <code>{participant.last_error.code}</code></>}</p>}
           {!stopped && <div className="button-row">
@@ -213,13 +224,16 @@ function RoundtableSession({ initialRoom, locale, connections, settings, sources
             <button type="button" className="text-button" aria-label={`${r('changeAssignment')} · ${participant.name}`} disabled={locked}
               onClick={() => setAssignment({ participantId: participant.id, connectionId: participant.connection_id, pinned: participant.pinned })}>{r('changeAssignment')}</button>
           </div>}
-          {!stopped && assignment?.participantId === participant.id && <form className="roundtable-assignment" onSubmit={event => { event.preventDefault(); void updateRoom('assignment'); }}>
-            <label>{t('model')}<select value={assignment.connectionId} disabled={locked} onChange={event => setAssignment({ ...assignment, connectionId: event.target.value })}>
-              <option value="">{c('chooseConnection')}</option>
+          {!stopped && edit && <form className="roundtable-assignment" onSubmit={event => { event.preventDefault(); if (canSave) void updateRoom('assignment'); }}>
+            <label>{t('model')}<select value={edit.connectionId} disabled={locked || participant.pinned}
+              onChange={event => setAssignment({ ...edit, connectionId: event.target.value, pinned: !!event.target.value && edit.pinned })}>
+              <option value="">{r('chooseAutomatically')}</option>
+              {!connections.some(connection => connection.id === participant.connection_id) && <option value={participant.connection_id} disabled>{participant.model_id}</option>}
               {connections.map(connection => <option key={connection.id} value={connection.id} disabled={!canUseConnection(connection, settings)}>{connection.title} · {connection.model_id}</option>)}
             </select></label>
-            <label className="checkbox-label"><input type="checkbox" checked={assignment.pinned} disabled={locked} onChange={event => setAssignment({ ...assignment, pinned: event.target.checked })} />{t('pin')}</label>
-            <div className="button-row"><button className="button secondary" disabled={locked || !connections.some(item => item.id === assignment.connectionId && canUseConnection(item, settings))}>{r('saveAssignment')}</button>
+            <label className="checkbox-label"><input type="checkbox" checked={edit.pinned} disabled={locked || !edit.connectionId} onChange={event => setAssignment({ ...edit, pinned: event.target.checked })} />{t('pin')}</label>
+            {participant.pinned && <p className="helper">{r('releaseToReassign')}</p>}
+            <div className="button-row"><button className="button secondary" disabled={locked || !canSave}>{r('saveAssignment')}</button>
               <button type="button" className="button quiet" onClick={() => setAssignment(null)}>{t('cancel')}</button></div>
           </form>}
         </article>;

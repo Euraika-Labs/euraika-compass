@@ -14,6 +14,7 @@ from pydantic import BaseModel, ConfigDict, Field, StrictBool, model_validator
 from compass.adapters.base import AdapterError
 from compass.chat import COLLECTIONS, PERSONAS, while_connected
 from compass.errors import APIError
+from compass.roundtable_allocation import rank_roundtable_routes
 
 router = APIRouter(prefix="/api/v1/roundtables", tags=["roundtable"])
 
@@ -24,8 +25,14 @@ class ParticipantCreate(BaseModel):
     name: str = Field(default="", max_length=80)
     perspective: str = Field(default="", max_length=300)
     persona_id: str
-    connection_id: str = Field(min_length=1, max_length=100)
+    connection_id: str | None = Field(default=None, min_length=1, max_length=100)
     pinned: StrictBool = False
+
+    @model_validator(mode="after")
+    def validate_pin(self):
+        if self.pinned and self.connection_id is None:
+            raise ValueError("Choose a model before pinning the assignment.")
+        return self
 
 
 class RoundtableCreate(BaseModel):
@@ -77,8 +84,14 @@ class AssignmentRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
     expected_revision: int = Field(ge=0)
-    connection_id: str = Field(min_length=1, max_length=100)
+    connection_id: str | None = Field(default=None, min_length=1, max_length=100)
     pinned: StrictBool
+
+    @model_validator(mode="after")
+    def validate_pin(self):
+        if self.pinned and self.connection_id is None:
+            raise ValueError("Choose a model before pinning the assignment.")
+        return self
 
 
 @dataclass
@@ -128,6 +141,7 @@ class RoundtableService:
         self.chat = chat
         self.connections = connections
         self.rooms: dict[str, Room] = {}
+        self.allocation_gate = asyncio.Semaphore(2)
 
     def _cleanup(self):
         cutoff = time.monotonic() - 1800
@@ -151,7 +165,7 @@ class RoundtableService:
                 raise APIError(409, "connection_changed", "The selected connection changed.")
         except AdapterError as exc:
             raise APIError(409, exc.code, exc.message) from exc
-        if not route["enabled"] or not route["configured"]:
+        if not route["enabled"] or not route["configured"] or route.get("available") is False:
             raise APIError(409, "connection_unavailable", "Choose an enabled and configured model.")
         if not route["local"] and self.connections.settings()["local_only"]:
             raise APIError(409, "local_only", "Local-only mode blocks this cloud model.")
@@ -159,16 +173,60 @@ class RoundtableService:
             "connection_id": connection_id, "signature": signature,
         }
 
-    def create(self, body):
+    async def _allocate(self, personas, language, *, allow_cloud):
+        candidates = {}
+        for item in self.connections.metadata():
+            try:
+                route = self._route(item["id"])
+            except APIError:
+                continue
+            if route["local"] or allow_cloud:
+                candidates[item["id"]] = route
+        if not candidates:
+            raise APIError(
+                409, "roundtable_no_eligible_connection",
+                "No connected model can be assigned under this roundtable's source and processing settings.",
+            )
+        async with self.allocation_gate:
+            ranked = await rank_roundtable_routes(self.connections, list(candidates.values()), personas, language)
+        allocation = {}
+        for persona in personas:
+            connection_id, basis = ranked[persona]
+            route = self._route(connection_id)
+            if route != candidates[connection_id]:
+                raise APIError(409, "connection_changed", "The selected connection changed. Choose the assignment again.")
+            allocation[persona] = {**route, "allocation": "automatic", "allocation_basis": basis}
+        return allocation
+
+    async def create(self, body):
         self._cleanup()
         if len(self.rooms) >= 32:
             raise APIError(429, "roundtable_limit", "The temporary roundtable limit was reached.")
+        scope = body.model_dump(mode="json", exclude={"topic", "language", "participants"})
+        manual = {item.connection_id: self._route(item.connection_id) for item in body.participants if item.connection_id}
+        auto = list(dict.fromkeys(item.persona_id for item in body.participants if item.connection_id is None))
+        allocation = {}
+        if auto:
+            allow_cloud = not self.connections.settings()["local_only"] and self.chat.roundtable_cloud_allowed(scope)
+            if not allow_cloud and any(not route["local"] for route in manual.values()):
+                raise APIError(403, "roundtable_source_restricted", "Choose eligible sources or a local roster.")
+            allocation = await self._allocate(auto, body.language, allow_cloud=allow_cloud)
+            for connection_id, route in manual.items():
+                if self._route(connection_id) != route:
+                    raise APIError(409, "connection_changed", "A selected connection changed. Create the roundtable again.")
+            if any(not route["local"] for route in (*manual.values(), *allocation.values())):
+                if not self.chat.roundtable_cloud_allowed(scope):
+                    raise APIError(403, "roundtable_source_restricted", "Choose eligible sources or a local roster.")
+            if len(self.rooms) >= 32:
+                raise APIError(429, "roundtable_limit", "The temporary roundtable limit was reached.")
         participants = [{
-            **self._route(item.connection_id), "id": str(uuid4()), "name": item.name or f"AI participant {i}",
+            **(allocation[item.persona_id] if item.connection_id is None else {
+                **manual[item.connection_id], "allocation": "manual", "allocation_basis": "moderator",
+            }),
+            "id": str(uuid4()), "name": item.name or f"AI participant {i}",
             "persona_id": item.persona_id, "perspective": item.perspective, "pinned": item.pinned,
             "status": "ready", "last_error": None,
         } for i, item in enumerate(body.participants, 1)]
-        scope = body.model_dump(mode="json", exclude={"topic", "language", "participants"})
         room = Room(str(uuid4()), body.topic, body.language, scope, participants)
         self.rooms[room.id] = room
         return room.snapshot()
@@ -189,14 +247,34 @@ class RoundtableService:
             raise APIError(404, "participant_not_found", "This participant is unavailable.")
         return participant
 
-    def assign(self, room, participant_id, body):
+    async def assign(self, room, participant_id, body):
         self._idle(room, body.expected_revision)
         participant = self._participant(room, participant_id)
-        if participant["pinned"] and body.pinned and body.connection_id != participant["connection_id"]:
+        same = body.connection_id == participant["connection_id"]
+        if participant["pinned"] and not same and (body.pinned or body.connection_id is None):
             raise APIError(409, "roundtable_pinned", "Release the pinned assignment before choosing another model.")
-        route = self._route(body.connection_id)
-        if not route["local"] and room.evidence_sha256 is not None and not room.shared_with_cloud:
-            raise APIError(403, "roundtable_source_restricted", "Start a new roundtable for cloud processing.")
+        if same and (participant["pinned"] or body.pinned):
+            if participant["pinned"] != body.pinned:
+                participant["pinned"] = body.pinned
+                room.update()
+            return room.snapshot()
+        if body.connection_id is None:
+            allow_cloud = not self.connections.settings()["local_only"] and (
+                room.shared_with_cloud if room.evidence_sha256 is not None
+                else self.chat.roundtable_cloud_allowed(room.scope)
+            )
+            persona = participant["persona_id"]
+            route = (await self._allocate([persona], room.language, allow_cloud=allow_cloud))[persona]
+            self._idle(room, body.expected_revision)
+        else:
+            route = {
+                **self._route(body.connection_id), "allocation": "manual", "allocation_basis": "moderator",
+            }
+        if not route["local"]:
+            if room.evidence_sha256 is not None and not room.shared_with_cloud:
+                raise APIError(403, "roundtable_source_restricted", "Start a new roundtable for cloud processing.")
+            if room.evidence_sha256 is None and not self.chat.roundtable_cloud_allowed(room.scope):
+                raise APIError(403, "roundtable_source_restricted", "Choose a local model for these sources.")
         participant.update(route, pinned=body.pinned, status="ready", last_error=None)
         room.update()
         return room.snapshot()
@@ -323,7 +401,7 @@ def _service(request):
 async def create_roundtable(body: RoundtableCreate, request: Request):
     if not request.app.state.database.ready()[0]:
         raise APIError(503, "database_unavailable", "Research storage is unavailable.")
-    return _service(request).create(body)
+    return await while_connected(request, _service(request).create(body))
 
 
 @router.get("/{room_id}")
@@ -349,7 +427,7 @@ async def roundtable_round(room_id: UUID, body: RoundRequest, request: Request):
 @router.patch("/{room_id}/participants/{participant_id}")
 async def assign_participant(room_id: UUID, participant_id: UUID, body: AssignmentRequest, request: Request):
     service = _service(request)
-    return service.assign(service.room(room_id), participant_id, body)
+    return await while_connected(request, service.assign(service.room(room_id), participant_id, body))
 
 
 @router.post("/{room_id}/cancel")

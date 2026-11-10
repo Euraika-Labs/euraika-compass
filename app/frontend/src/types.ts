@@ -170,6 +170,8 @@ export interface ConversationRecord extends ConversationSummary {
 export interface RoundtableParticipant {
   id: string; name: string; perspective: string; persona_id: string; connection_id: string;
   model_id: string; provider: Provider; local: boolean; pinned: boolean;
+  allocation?: 'automatic' | 'manual';
+  allocation_basis?: 'orchestrator' | 'single_candidate' | 'configured_order' | 'moderator';
   status: 'ready' | 'speaking' | 'paused'; last_error?: { code: string; message: string } | null;
 }
 export interface RoundtableScope {

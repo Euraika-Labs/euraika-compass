@@ -150,13 +150,16 @@ test('a local first speaker needs shared manuscript consent in a mixed roundtabl
     scope: { collection_filter: [], source_ids: [], manuscript_dossier_id: dossier.id, manuscript_revision_ids: [reading.id] },
     participants: [
       { id: 'local-speaker', name: 'Text analyst', persona_id: 'textual', perspective: '', connection_id: 'local-fixture',
-        model_id: reply.model_id, provider: 'local', local: true, pinned: false, status: 'ready' },
+        model_id: reply.model_id, provider: 'local', local: true, pinned: false, status: 'ready',
+        allocation: 'automatic', allocation_basis: 'orchestrator' },
       { id: 'cloud-speaker', name: 'Critical reader', persona_id: 'critical', perspective: '', connection_id: 'cloud-fixture',
         model_id: 'cloud-fixture-model', provider: 'mistral', local: false, pinned: true, status: 'ready' },
     ],
   };
   const firstAnswer = 'The folio records a particular reading [S1].';
   const submitted: unknown[] = [];
+  const assignments: unknown[] = [];
+  let snapshot = room;
   await page.route('**/api/v1/**', async route => {
     const request = route.request();
     const path = new URL(request.url()).pathname.replace('/api/v1', '');
@@ -171,15 +174,28 @@ test('a local first speaker needs shared manuscript consent in a mixed roundtabl
     else if (path === `/dossiers/${dossier.id}/manuscript-readings`) body = { items: [reading], truncated: false };
     else if (path === '/roundtables') {
       expect(request.postDataJSON()).toMatchObject({ topic, manuscript_revision_ids: [reading.id], participants: [
-        { name: 'Text analyst', connection_id: 'local-fixture' },
+        { name: 'Text analyst', connection_id: null },
         { name: 'Critical reader', connection_id: 'cloud-fixture', pinned: true },
       ] });
       body = room;
     } else if (path === `/roundtables/${room.id}/turns`) {
       submitted.push(request.postDataJSON());
-      body = { room: { ...room, revision: 2, evidence_version: 1, evidence: [citation], grounding: reply.grounding, turns: [{
+      snapshot = { ...room, revision: 2, evidence_version: 1, evidence: [citation], grounding: reply.grounding, turns: [{
         ...reply, id: 'local-turn', participant_id: 'local-speaker', created_at: time, answer: firstAnswer, citations: [citation],
-      }] } };
+      }] };
+      body = { room: snapshot };
+    } else if (path === `/roundtables/${room.id}/participants/local-speaker`) {
+      const assignment = request.postDataJSON();
+      assignments.push(assignment);
+      const override = assignment.connection_id === 'cloud-fixture';
+      const original = room.participants[override ? 1 : 0];
+      snapshot = { ...snapshot, revision: snapshot.revision + 1, participants: [
+        { ...snapshot.participants[0], connection_id: original.connection_id, provider: original.provider,
+          model_id: original.model_id, local: original.local, pinned: assignment.pinned,
+          allocation: override ? 'manual' : 'automatic', allocation_basis: override ? 'moderator' : 'orchestrator' },
+        snapshot.participants[1],
+      ] };
+      body = snapshot;
     }
     await route.fulfill({ json: body });
   });
@@ -190,7 +206,7 @@ test('a local first speaker needs shared manuscript consent in a mixed roundtabl
   await page.getByRole('textbox', { name: 'Roundtable topic' }).fill(topic);
   const forms = page.locator('.roundtable-participant-form');
   await forms.nth(0).getByRole('textbox', { name: 'Participant label' }).fill('Text analyst');
-  await forms.nth(0).getByRole('combobox', { name: 'Model route' }).selectOption('local-fixture');
+  await expect(forms.nth(0).getByRole('combobox', { name: 'Model route' })).toHaveValue('');
   await forms.nth(1).getByRole('textbox', { name: 'Participant label' }).fill('Critical reader');
   await forms.nth(1).getByRole('combobox', { name: 'Model route' }).selectOption('cloud-fixture');
   await forms.nth(1).getByRole('checkbox', { name: /pin/i }).check();
@@ -218,4 +234,35 @@ test('a local first speaker needs shared manuscript consent in a mixed roundtabl
   await expect(transcript).toBeHidden();
   await page.getByRole('button', { name: 'Roundtable', exact: true }).click();
   await expect(transcript.getByText(firstAnswer.split(' [S1]')[0])).toBeVisible();
+
+  const analyst = page.getByRole('article').filter({ has: page.getByRole('heading', { name: 'Text analyst', exact: true }) });
+  const edit = analyst.getByRole('button', { name: 'Change assignment · Text analyst' });
+  const model = analyst.getByRole('combobox', { name: 'Model route' });
+  const pin = analyst.getByRole('checkbox', { name: 'Pin assignment' });
+  const save = analyst.getByRole('button', { name: 'Save assignment' });
+  await expect(analyst.getByText(/Automatic assignment/)).toBeVisible();
+  await edit.click();
+  await expect(model).toHaveValue('local-fixture');
+  await pin.check();
+  await save.click();
+  await expect(analyst.getByText('Pinned', { exact: true })).toBeVisible();
+  await edit.click();
+  await expect(model).toBeDisabled();
+  await pin.uncheck();
+  await expect(model).toBeDisabled();
+  await save.click();
+  await expect(analyst.getByText('Pinned', { exact: true })).toBeHidden();
+
+  await edit.click();
+  await model.selectOption('cloud-fixture');
+  await pin.check();
+  await save.click();
+  await expect(analyst.getByText(/Manual assignment/)).toBeVisible();
+  await expect(analyst.getByText('Pinned', { exact: true })).toBeVisible();
+  expect(assignments).toEqual([
+    { connection_id: 'local-fixture', pinned: true, expected_revision: 2 },
+    { connection_id: 'local-fixture', pinned: false, expected_revision: 3 },
+    { connection_id: 'cloud-fixture', pinned: true, expected_revision: 4 },
+  ]);
+  expect(submitted).toHaveLength(1);
 });

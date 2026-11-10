@@ -95,13 +95,27 @@ Starter imports are explicit catalog downloads.
 ## Moderate a Roundtable
 
 In **Chat**, switch to **Roundtable**. Set a topic and choose two to four
-AI participants. Assign a persona and a connected model to each participant.
+AI participants. Select a persona for each. Compass assigns a connected
+model by default, and you can choose a specific route instead.
 Set the source scope before opening the room. Choose a participant to give
 them the floor. You can add a moderator note to direct their contribution.
 You can also start a round that gives each available participant one turn
 in the displayed order. After two contributions, you can request a synthesis
 from the next speaker. Cancel an active generation to return to moderator
 control, or end the room.
+
+Compass filters automatic candidates by connection settings and the shared
+source scope. With multiple candidates, an eligible connected model can
+recommend an assignment using the persona methods, answer language and model
+profiles. The allocation request excludes the topic, moderator notes and
+source contents. Compass shows the basis of each choice. If the ranking
+is unavailable or omits a choice, it uses eligible configured order.
+Recommendations are provisional. Two personas can use the same model.
+
+Use **Change assignment** to select a model or request a fresh automatic
+choice. Select **Pin assignment** and save to keep the displayed route.
+Release the pin before asking Compass to choose again. A failed pinned
+assignment stays paused and retains its model.
 
 The first speaking request prepares a shared evidence snapshot. Every
 participant receives the same excerpts and citation IDs. A room with cloud

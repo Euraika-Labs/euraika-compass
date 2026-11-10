@@ -360,6 +360,34 @@ class ChatService:
                 expected_signature=expected_signature,
             )
 
+    def roundtable_cloud_allowed(self, scope: dict) -> bool:
+        from compass.manuscript_evidence import selected_manuscript_readings
+
+        explicit = scope["source_ids"]
+        selected_ids = None if explicit is None else {UUID(item) for item in explicit}
+        collections = set(scope["collection_filter"])
+        with self.database.sessions() as session:
+            statement = select(Source.id, Source.use_limits, Edition.collection_memberships).select_from(Source).join(
+                Edition, Edition.source_id == Source.id,
+            )
+            if selected_ids is not None:
+                statement = statement.where(Source.id.in_(selected_ids))
+            permitted = [
+                (source_id, memberships) for source_id, limits, memberships in session.execute(statement)
+                if limits.get("external_processing") is True
+            ]
+            if selected_ids is not None and selected_ids - {source_id for source_id, _ in permitted}:
+                return False
+            if scope["manuscript_dossier_id"] is not None:
+                _, blocked = selected_manuscript_readings(
+                    session, UUID(scope["manuscript_dossier_id"]),
+                    [UUID(item) for item in scope["manuscript_revision_ids"]], external_processing=True,
+                )
+                return blocked == 0
+        return scope["web_research"] or any(
+            not collections or collections.intersection(memberships) for _, memberships in permitted
+        )
+
     async def roundtable_reply(
         self, scope: dict, participant: dict, *, evidence: list[dict], history: list[dict],
         moderator_note: str, expected_signature: str, allow_manuscript_cloud: bool,

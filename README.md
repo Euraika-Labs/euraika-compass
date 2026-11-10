@@ -37,7 +37,7 @@ The default data directory is per-user local application data, outside the check
 | Institutional manuscript scans | Search six verified holdings across Hebrew, Greek and Arabic, view live folios, and save eligible image renditions with provenance for OCR |
 | Source-grounded chat | Multilingual query planning, relevant passages and eligible parallel editions, exact edition citations, five personas and explicit saving/reopening |
 | Web research in Chat | Per-question online lookup with disclosed queries, publisher abstracts and page excerpts, separate clickable web citations and provenance snapshots |
-| AI Roundtable turns | Two to four assigned personas and models, shared evidence, moderator-controlled speaking turns, finite rounds and synthesis |
+| AI Roundtable turns | Two to four personas with automatic model assignment, moderator overrides and pins, shared evidence, finite rounds and synthesis |
 | Dossier export/import and complete backup UI | Planned; durable storage and migration foundations are present |
 | Temporary Chat image attachments | Planned; initial image uploads deliberately require a saved research dossier |
 
